@@ -5,8 +5,12 @@ const auth = require('../middlewares/auth');
 const validateRequest = require('../middlewares/validateRequest');
 const authSchema = require('../utils/validationSchema');
 
-// Public routes
-router.post('/signup', validateRequest(authSchema.signup), authController.signup);
+// Registration and verification routes
+router.post('/register', validateRequest(authSchema.signup), authController.register);
+router.post('/verify-email', validateRequest(authSchema.verifyEmail), authController.verifyEmail);
+router.post('/resend-otp', validateRequest(authSchema.resendOTP), authController.resendOTP);
+
+// Login route
 router.post('/login', validateRequest(authSchema.login), authController.login);
 
 // Protected route example

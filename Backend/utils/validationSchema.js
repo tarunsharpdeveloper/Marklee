@@ -2,7 +2,7 @@ const Joi = require('joi');
 
 const authSchema = {
   signup: Joi.object({
-    username: Joi.string()
+    name: Joi.string()
       .alphanum()
       .min(3)
       .max(30)
@@ -47,7 +47,30 @@ const authSchema = {
       .messages({
         'string.empty': 'Password is required'
       })
+  }),
+  verifyEmail: Joi.object({
+    email: Joi.string()
+      .email()
+      .required()
+      .messages({
+        'string.empty': 'Email is required',
+     }),
+     
+     otp: Joi.string()
+      .required()
+      .messages({
+        'string.empty': 'OTP is required',
+      }),
+  }),
+  resendOTP: Joi.object({
+    email: Joi.string()
+      .email()
+      .required()
+      .messages({
+        'string.empty': 'Email is required',
+      })
   })
+  
 };
 
 module.exports = authSchema; 

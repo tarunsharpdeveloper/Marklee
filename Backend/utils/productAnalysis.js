@@ -40,7 +40,7 @@ class ProductAnalysisAgent {
     }
 
     this.llm = new ChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      modelName: "gpt-4o-mini",
       openAIApiKey: apiKey,
       temperature: 0.7
     });
