@@ -159,7 +159,7 @@
 }
 
 .strength_bar.active {
-  background-color: rgb(241, 214, 71);
+  background-color: rgb(255, 144, 77);
 }
 
 .strength_text {
@@ -182,7 +182,7 @@
 }
 
 .terms a {
-  color: rgb(241, 214, 71);
+  color: rgb(255, 144, 77);
   text-decoration: none;
 }
 
@@ -193,7 +193,7 @@
 .signup_button {
   width: 100%;
   padding: 0.625rem;
-  background-color: rgb(241, 214, 71);
+  background-color: rgb(255, 144, 77);
   color: white;
   border: none;
   border-radius: 6px;
