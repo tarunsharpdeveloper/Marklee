@@ -72,10 +72,6 @@ const authController = {
       res.status(500).json({ message: `Server error: ${error.message}` });
     }
   },
-
-  async check(req, res) {
-    res.json({ message: 'User is authenticated' });
-  }
 };
 
 module.exports = authController; 
