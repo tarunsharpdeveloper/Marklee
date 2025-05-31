@@ -1,4 +1,3 @@
-console.log("process.env.DB_PASSWORD", process.env.DB_NAME); 
 const mysql = require('mysql2/promise');
 
 const config = {

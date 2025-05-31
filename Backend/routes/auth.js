@@ -8,10 +8,9 @@ const authSchema = require('../utils/validationSchema');
 // Public routes
 router.post('/signup', validateRequest(authSchema.signup), authController.signup);
 router.post('/login', validateRequest(authSchema.login), authController.login);
-router.get('/check', authController.check);
 
 // Protected route example
-router.get('/me', auth, (req, res) => {
+router.get('/me', (req, res) => {
   res.json({
     user: {
       id: req.user.id,
