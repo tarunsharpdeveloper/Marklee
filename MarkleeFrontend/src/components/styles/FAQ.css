@@ -1,0 +1,116 @@
+.faq-section {
+    padding: 6rem 2rem;
+    background: linear-gradient(135deg, #f0f8ff 0%, #fff 100%);
+  }
+  
+  .faq-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  .faq-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+  
+  .faq-header h2 {
+    font-size: 2.8rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, rgb(0, 122, 255), rgb(0, 102, 204));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+  }
+  
+  .faq-header p {
+    font-size: 1.2rem;
+    color: #000;
+  }
+  
+  .faq-grid {
+    display: grid;
+    gap: 1rem;
+  }
+  
+  .faq-item {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+  }
+  
+  .faq-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  .faq-question {
+    width: 100%;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #000;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .faq-question:hover {
+    color: rgb(0, 122, 255);
+  }
+  
+  .faq-question.active {
+    color: rgb(0, 122, 255);
+  }
+  
+  .faq-question .arrow {
+    color: rgb(0, 122, 255);
+    transition: transform 0.3s ease;
+  }
+  
+  .faq-question.active .arrow {
+    transform: rotate(180deg);
+  }
+  
+  .faq-answer {
+    padding: 0 1.5rem 1.5rem;
+    overflow: hidden;
+  }
+  
+  .faq-answer p {
+    margin: 0;
+    color: #000;
+    line-height: 1.6;
+  }
+  
+  @media (max-width: 768px) {
+    .faq-section {
+      padding: 4rem 1.5rem;
+    }
+  
+    .faq-header h2 {
+      font-size: 2.2rem;
+    }
+  
+    .faq-question {
+      font-size: 1rem;
+      padding: 1.25rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .faq-header h2 {
+      font-size: 1.8rem;
+    }
+  
+    .faq-question {
+      padding: 1rem;
+    }
+  }
+  

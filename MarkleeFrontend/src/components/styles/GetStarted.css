@@ -1,0 +1,191 @@
+.getstarted-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.getstarted-modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 1000px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.getstarted-modal-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.getstarted-modal-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.getstarted-modal-header {
+   padding: 0.4rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.getstarted-modal-title {
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  color: #1a1a1a;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  margin-top: 2.5rem;
+}
+
+.getstarted-modal-subtitle {
+  font-size: 1.25rem;
+  color: #666;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* UPDATED FOR HORIZONTAL SCROLL */
+.getstarted-plans-container {
+  padding: 0 3rem 3rem;
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  /* overflow-x: auto;
+  overflow-y: hidden; */
+  flex-wrap: nowrap;
+  /* flex-grow: 1; */
+  /* scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch; */
+}
+
+.getstarted-plan-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease;
+  min-width: 280px;
+  max-width: 320px;
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+.getstarted-plan-card:hover {
+  transform: translateY(-5px);
+}
+
+.getstarted-plan-header {}
+
+.getstarted-plan-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.getstarted-plan-price {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #007AFF;
+}
+
+.getstarted-plan-billing {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.getstarted-plan-features {
+  list-style: none;
+  padding: 0;
+  /* flex-grow: 1; */
+}
+
+.getstarted-plan-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #444;
+}
+
+.getstarted-feature-icon {
+  color: #007AFF;
+  font-size: 1.2rem;
+}
+
+.getstarted-plan-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1rem;
+  background: #007AFF;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background 0.3s ease;
+  margin-top: 1rem;
+}
+
+.getstarted-plan-cta:hover {
+  background: #0056b3;
+}
+
+.getstarted-plan-card.popular {
+  background: #007AFF;
+  color: white;
+}
+
+.getstarted-plan-card.popular .getstarted-plan-name,
+.getstarted-plan-card.popular .getstarted-plan-price {
+  color: white;
+}
+
+.getstarted-plan-card.popular .getstarted-plan-billing,
+.getstarted-plan-card.popular .getstarted-plan-feature {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.getstarted-plan-card.popular .getstarted-feature-icon {
+  color: white;
+}
+
+.getstarted-plan-card.popular .getstarted-plan-cta {
+  background: white;
+  color: #007AFF;
+  margin-top: 1rem;
+}
+
+.getstarted-plan-card.popular .getstarted-plan-cta:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+@media (max-width: 768px) {
+  .getstarted-modal-header,
+  .getstarted-plans-container {
+    padding: 2rem;
+  }
+}
