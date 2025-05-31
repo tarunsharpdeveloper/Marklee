@@ -13,10 +13,10 @@ npm install
 ```
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=auth_db
-JWT_SECRET=your_jwt_secret_key
-PORT=3000
+DB_PASSWORD=''
+DB_NAME=marklee
+JWT_SECRET=dev_secret_123
+PORT=4000
 ```
 
 3. Set up the database:
