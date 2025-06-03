@@ -69,8 +69,55 @@ const authSchema = {
       .messages({
         'string.empty': 'Email is required',
       })
+  }),
+  onboarding: Joi.object({
+    name: Joi.string()
+      .required()
+      .messages({
+        'string.empty': 'Name is required'
+      }),
+    role: Joi.string()
+      .required()
+      .messages({
+        'string.empty': 'Role is required'
+      }),
+    organizationType: Joi.string()
+      .valid('Business', 'Non-profit', 'Personal Brand')
+      .required()
+      .messages({
+        'string.empty': 'Organization type is required',
+        'any.only': 'Organization type must be Business, Non-profit, or Personal Brand'
+      }),
+    organizationName: Joi.string()
+      .required()
+      .messages({
+        'string.empty': 'Organization name is required'
+      }),
+    supportType: Joi.string()
+      .required()
+      .messages({
+        'string.empty': 'Support type is required'
+      }),
+    productDescription: Joi.string()
+      .required()
+      .messages({
+        'string.empty': 'Product/service description is required'
+      }),
+    businessModel: Joi.string()
+      .valid('Value-add', 'Volume-based', 'Mission-driven')
+      .required()
+      .messages({
+        'string.empty': 'Business model is required',
+        'any.only': 'Business model must be Value-add, Volume-based, or Mission-driven'
+      }),
+    revenueModel: Joi.string()
+      .valid('Accounts', 'Subscriptions', 'Services', 'Other')
+      .required()
+      .messages({
+        'string.empty': 'Revenue model is required',
+        'any.only': 'Revenue model must be Accounts, Subscriptions, Services, or Other'
+      })
   })
-  
 };
 
 module.exports = authSchema; 

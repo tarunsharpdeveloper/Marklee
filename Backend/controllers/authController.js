@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const emailService = require('../utils/emailService');
+const bcrypt = require('bcryptjs');
 
 const authController = {
   async register(req, res) {
@@ -61,11 +62,14 @@ const authController = {
         process.env.JWT_SECRET,
         { expiresIn: '24h' }
       );
+      // remove password from user
+      delete user.password;
 
       res.json({
         success: true,
         message: 'Email verified successfully',
-        token
+        token,
+        user
       });
     } catch (error) {
       console.error('Verification error:', error);
@@ -112,17 +116,19 @@ const authController = {
         process.env.JWT_SECRET,
         { expiresIn: '24h' }
       );
-
+      // remove password from user
+      delete user.password;
       res.json({
         success: true,
         message: 'Login successful',
-        token
+        token,
+        user
       });
     } catch (error) {
       console.error('Login error:', error);
       res.status(500).json({
         success: false,
-        message: 'Login failed'
+        message: 'Login failed ' + error
       });
     }
   },

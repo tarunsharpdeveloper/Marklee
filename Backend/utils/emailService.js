@@ -24,8 +24,8 @@ class EmailService {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
           </head>
-          <body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
-            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-top: 20px;">
+          <body style="margin: 0; padding: 20px; background-color: #f4f4f4; font-family: Arial, sans-serif;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
               <!-- Logo Header -->
               <div style="text-align: center; margin-bottom: 20px;">
                 <img src="https://i.ibb.co/ZR2nKnwd/image-3.png" alt="Company Logo" style="max-height: 60px; margin-bottom: 20px;">
@@ -39,7 +39,7 @@ class EmailService {
                 
                 <!-- OTP Box -->
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 25px 0;">
-                  <h1 style="color:#af4c4c; font-size: 36px; letter-spacing: 8px; margin: 0; font-weight: bold;">${otp}</h1>
+                  <h1 style="color:#333333; font-size: 36px; letter-spacing: 8px; margin: 0; font-weight: bold;">${otp}</h1>
                 </div>
 
                 <p style="color: #999; font-size: 14px; margin-top: 25px;">This code will expire in 10 minutes</p>

@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const productAnalysisRoutes = require('./routes/productAnalysis');
+const onboardingRoutes = require('./routes/onboarding');
 const db = require('./config/database');
 
 const app = express();
@@ -20,6 +21,7 @@ app.get('/api/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/product-analysis', productAnalysisRoutes);
+app.use('/api/onboarding', onboardingRoutes);
 
 // Test database connection
 db.testConnection()
