@@ -1,7 +1,7 @@
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
-const emailService = require("../utils/emailService");
-const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const emailService = require('../utils/emailService');
+const bcrypt = require('bcrypt');
 
 const authController = {
   async register(req, res) {
@@ -89,7 +89,7 @@ const authController = {
       if (!user) {
         return res.status(401).json({
           success: false,
-          message: "Invalid credentials",
+          message: 'Invalid credentials'
         });
       }
 
@@ -115,9 +115,9 @@ const authController = {
 
       res.json({
         success: true,
-        message: "Login successful",
+        message: 'Login successful',
         token,
-        isEmailVerified: user.is_verified,
+        isEmailVerified: user.is_verified
       });
     } catch (error) {
       console.error("Login error:", error);
