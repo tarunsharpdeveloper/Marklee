@@ -126,24 +126,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* padding: 2rem; */
 }
 
 .getstarted_modal {
   background: white;
   border-radius: 16px;
-  width: 100%;
-  max-width: 1000px;
-  height: 100vh;
+  width: 95%;
+  max-width: 1200px;
+  /* height: 90vh; */
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
+  height: 80vh;
 }
 
 .getstarted_modal_close {
   position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
+  top: 1rem;
+  right: 1rem;
   background: none;
   border: none;
   font-size: 1.5rem;
@@ -156,6 +157,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  z-index: 10;
 }
 
 .getstarted_modal_close:hover {
@@ -163,45 +165,40 @@
 }
 
 .getstarted_modal_header {
-  padding: 0.4rem;
+  /* padding: 1.5rem; */
   text-align: center;
-  flex-shrink: 0;
 }
 
 .getstarted_modal_title {
-  font-size: clamp(2rem, 4vw, 2.5rem);
+  font-size: 2rem;
   color: #1a1a1a;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   font-weight: 700;
-  /* margin-top: 2.5rem; */
 }
 
 .getstarted_modal_subtitle {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   color: #666;
   max-width: 600px;
   margin: 0 auto;
 }
 
 .getstarted_plans_container {
-  padding: 0 3rem 3rem;
+  /* flex: 1; */
   display: flex;
-  flex-direction: row;
+  justify-content: center;
   gap: 2rem;
-  flex-wrap: nowrap;
+  /* padding: 1rem 2rem 2rem; */
 }
 
 .getstarted_plan_card {
   background: #f8f9fa;
   border-radius: 12px;
-  padding: 1rem;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
   transition: transform 0.3s ease;
-  min-width: 280px;
-  max-width: 320px;
-  scroll-snap-align: start;
-  flex-shrink: 0;
+  width: 300px;
 }
 
 .getstarted_plan_card:hover {
@@ -209,15 +206,17 @@
 }
 
 .getstarted_plan_name {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #1a1a1a;
+  margin-bottom: 0.5rem;
 }
 
 .getstarted_plan_price {
-  font-size: 1.9rem;
+  font-size: 1.7rem;
   font-weight: 700;
   color: #007AFF;
+  /* margin-bottom: 0.5rem; */
 }
 
 .getstarted_plan_billing {
@@ -229,6 +228,7 @@
   list-style: none;
   padding: 0;
   margin: 1.5rem 0;
+  /* flex: 1; */
 }
 
 .getstarted_plan_feature {
@@ -236,12 +236,14 @@
   align-items: center;
   gap: 0.75rem;
   color: #444;
-  margin-bottom: 0.75rem;
+  /* margin-bottom: 0.75rem; */
+  font-size: 0.95rem;
 }
 
 .getstarted_feature_icon {
   color: #007AFF;
   font-size: 1.2rem;
+  flex-shrink: 0;
 }
 
 .getstarted_plan_cta {
@@ -249,23 +251,41 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 1rem;
+  padding: 0.875rem;
   background: #007AFF;
   color: white;
   text-decoration: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: 600;
-  transition: background 0.3s ease;
-  margin-top: auto;
+  transition: all 0.3s ease;
+  /* margin-top: auto; */
+  border: none;
+  cursor: pointer;
 }
 
 .getstarted_plan_cta:hover {
   background: #0056b3;
+  transform: translateY(-2px);
 }
 
 .getstarted_plan_card.popular {
   background: #007AFF;
   color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.getstarted_plan_card.popular::before {
+  content: 'Popular';
+  position: absolute;
+  top: 1.25rem;
+  right: -2rem;
+  background: rgb(241, 214, 71);
+  color: #1a1a1a;
+  padding: 0.25rem 2rem;
+  transform: rotate(45deg);
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .getstarted_plan_card.popular .getstarted_plan_name,
@@ -273,13 +293,12 @@
   color: white;
 }
 
-.getstarted_plan_card.popular .getstarted_plan_billing,
 .getstarted_plan_card.popular .getstarted_plan_feature {
   color: rgba(255, 255, 255, 0.9);
 }
 
 .getstarted_plan_card.popular .getstarted_feature_icon {
-  color: white;
+  color: rgb(241, 214, 71);
 }
 
 .getstarted_plan_card.popular .getstarted_plan_cta {
@@ -291,19 +310,72 @@
   background: rgba(255, 255, 255, 0.9);
 }
 
-@media (max-width: 768px) {
-  .getstarted_modal_header,
-  .getstarted_plans_container {
-    padding: 2rem;
+/* Tablet Styles */
+@media (max-width: 1024px) {
+  .getstarted_modal_overlay {
+    padding: 1.5rem;
   }
-  
+
+  .getstarted_modal {
+    width: 100%;
+    height: 95vh;
+  }
+
+  .getstarted_plans_container {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .getstarted_plan_card {
+    width: 280px;
+  }
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .getstarted_modal_overlay {
+    padding: 0;
+  }
+
+  .getstarted_modal {
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+    overflow-y: auto;
+  }
+
+  .getstarted_modal_header {
+    padding: 1rem;
+  }
+
   .getstarted_plans_container {
     flex-direction: column;
     align-items: center;
+    padding: 1rem;
   }
 
   .getstarted_plan_card {
     width: 100%;
-    max-width: 100%;
+    max-width: 400px;
+  }
+
+  .getstarted_modal_close {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+}
+
+/* Small Mobile Styles */
+@media (max-width: 480px) {
+  .getstarted_modal_header {
+    padding: 1rem 0.75rem;
+  }
+
+  .getstarted_plans_container {
+    padding: 0.75rem;
+  }
+
+  .getstarted_plan_card {
+    padding: 1rem;
   }
 } 

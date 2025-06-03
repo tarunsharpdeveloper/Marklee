@@ -1,18 +1,17 @@
 .hero_wrapper {
   width: 100%;
   min-height: 100vh;
-  margin-top: 10px;
-  padding-top: 20px;
+  padding-top: 70px;
   background: rgb(255, 255, 255);
 }
 
 .hero_section {
-  height: 100vh;
+  min-height: calc(100vh - 80px);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 0 2rem;
+  padding: 2rem;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -59,7 +58,6 @@
   font-weight: 800;
   letter-spacing: 1.5px;
   color: #007AFF;
-  margin-top: 1rem;
   margin-bottom: 1.5rem;
 }
 
@@ -120,7 +118,27 @@
   background: rgba(255, 255, 255, 0.15);
 }
 
+@media (max-width: 768px) {
+  .hero_wrapper {
+    padding-top: 70px;
+  }
+
+  .hero_section {
+    min-height: calc(100vh - 70px);
+    padding: 1.5rem;
+  }
+}
+
 @media (max-width: 640px) {
+  .hero_wrapper {
+    padding-top: 64px;
+  }
+
+  .hero_section {
+    min-height: calc(100vh - 64px);
+    padding: 1rem;
+  }
+
   .button_group {
     flex-direction: column;
     align-items: flex-start;
@@ -132,5 +150,17 @@
   .secondary_button {
     width: 100%;
     justify-content: center;
+  }
+
+  .title {
+    font-size: clamp(2.5rem, 4vw, 3rem);
+  }
+
+  .description {
+    font-size: 1.125rem;
+  }
+
+  .overline {
+    font-size: 1.25rem;
   }
 } 
