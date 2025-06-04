@@ -236,7 +236,7 @@
   }
 
   .social_buttons {
-    flex-direction: column;
+    flex-direction: row;
     gap: 0.5rem;
   }
 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './styles.module.css';
 import Navbar from '../components/Navbar';
+import PreHomeNavbar from '../components/PreHomeNavbar';
 
 export default function PreHomePage() {
   const router = useRouter();
@@ -177,7 +178,7 @@ export default function PreHomePage() {
 
   return (
     <>
-    <Navbar />
+    <PreHomeNavbar/>
     <div className={styles.container}>
       <div className={styles.formCard}>
         {/* Back Button */}

@@ -52,8 +52,8 @@ export const Login = ({ isOpen, onClose }) => {
       setSuccessMessage('Logged in successfully!');
       
       // Close modal and navigate to pre-homepage
-      setTimeout(() => {
-        onClose();
+        setTimeout(() => {
+          onClose();
         router.push('/pre-homepage');
       }, 2000);
 
@@ -77,7 +77,7 @@ export const Login = ({ isOpen, onClose }) => {
       email={email}
       onVerificationSuccess={() => {
         setShowVerification(false);
-        onClose();
+          onClose();
         router.push('/pre-homepage');
       }}
       onBack={() => setShowVerification(false)}
