@@ -3,13 +3,15 @@ const Joi = require('joi');
 const authSchema = {
   signup: Joi.object({
     name: Joi.string()
-      .min(2)
-      .max(50)
+      .alphanum()
+      .min(3)
+      .max(30)
       .required()
       .messages({
-        'string.empty': 'Name is required',
-        'string.min': 'Name must be at least 2 characters long',
-        'string.max': 'Name cannot exceed 50 characters'
+        'string.empty': 'Username is required',
+        'string.min': 'Username must be at least 3 characters long',
+        'string.max': 'Username cannot exceed 30 characters',
+        'string.alphanum': 'Username must contain only alphanumeric characters'
       }),
 
     email: Joi.string()
@@ -22,16 +24,16 @@ const authSchema = {
 
     password: Joi.string()
       .min(6)
-      .max(100)
       .required()
+      .pattern(new RegExp('^[a-zA-Z0-9!@#$%^&*()_+\\-=\\[\\]{};:\'",.<>/?]{6,}$'))
       .messages({
         'string.empty': 'Password is required',
         'string.min': 'Password must be at least 6 characters long',
-        'string.max': 'Password cannot exceed 100 characters'
+        'string.pattern.base': 'Password must contain valid characters'
       })
   }),
 
-  login: Joi.object({ 
+  login: Joi.object({
     email: Joi.string()
       .email()
       .required()
@@ -46,32 +48,74 @@ const authSchema = {
         'string.empty': 'Password is required'
       })
   }),
-
   verifyEmail: Joi.object({
     email: Joi.string()
       .email()
       .required()
       .messages({
         'string.empty': 'Email is required',
-      }),
+     }),
      
-    otp: Joi.string()
-      .length(6)
-      .pattern(/^[0-9]+$/)
+     otp: Joi.string()
       .required()
       .messages({
         'string.empty': 'OTP is required',
-        'string.length': 'OTP must be 6 digits',
-        'string.pattern.base': 'OTP must contain only numbers'
       }),
   }),
-
   resendOTP: Joi.object({
     email: Joi.string()
       .email()
       .required()
       .messages({
         'string.empty': 'Email is required',
+      })
+  }),
+  onboarding: Joi.object({
+    name: Joi.string()
+      .required()
+      .messages({
+        'string.empty': 'Name is required'
+      }),
+    role: Joi.string()
+      .required()
+      .messages({
+        'string.empty': 'Role is required'
+      }),
+    organizationType: Joi.string()
+      .valid('Business', 'Non-profit', 'Personal Brand')
+      .required()
+      .messages({
+        'string.empty': 'Organization type is required',
+        'any.only': 'Organization type must be Business, Non-profit, or Personal Brand'
+      }),
+    organizationName: Joi.string()
+      .required()
+      .messages({
+        'string.empty': 'Organization name is required'
+      }),
+    supportType: Joi.string()
+      .required()
+      .messages({
+        'string.empty': 'Support type is required'
+      }),
+    productDescription: Joi.string()
+      .required()
+      .messages({
+        'string.empty': 'Product/service description is required'
+      }),
+    businessModel: Joi.string()
+      .valid('Value-add', 'Volume-based', 'Mission-driven')
+      .required()
+      .messages({
+        'string.empty': 'Business model is required',
+        'any.only': 'Business model must be Value-add, Volume-based, or Mission-driven'
+      }),
+    revenueModel: Joi.string()
+      .valid('Accounts', 'Subscriptions', 'Services', 'Other')
+      .required()
+      .messages({
+        'string.empty': 'Revenue model is required',
+        'any.only': 'Revenue model must be Accounts, Subscriptions, Services, or Other'
       })
   })
 };
