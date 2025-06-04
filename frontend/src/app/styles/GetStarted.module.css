@@ -215,7 +215,7 @@
 .getstarted_plan_price {
   font-size: 1.7rem;
   font-weight: 700;
-  color: #007AFF;
+  color: #ff904d;
   /* margin-bottom: 0.5rem; */
 }
 
@@ -241,7 +241,7 @@
 }
 
 .getstarted_feature_icon {
-  color: #007AFF;
+  color: black;
   font-size: 1.2rem;
   flex-shrink: 0;
 }
@@ -252,7 +252,7 @@
   justify-content: center;
   width: 100%;
   padding: 0.875rem;
-  background: #007AFF;
+  background: #ff904d;
   color: white;
   text-decoration: none;
   border-radius: 8px;
@@ -269,7 +269,7 @@
 }
 
 .getstarted_plan_card.popular {
-  background: #007AFF;
+  background: #ff904d;
   color: white;
   position: relative;
   overflow: hidden;
@@ -298,12 +298,13 @@
 }
 
 .getstarted_plan_card.popular .getstarted_feature_icon {
-  color: rgb(241, 214, 71);
+  color: rgba(255, 255, 255, 0.9);
+  ;
 }
 
 .getstarted_plan_card.popular .getstarted_plan_cta {
   background: white;
-  color: #007AFF;
+  color: #ff904d;
 }
 
 .getstarted_plan_card.popular .getstarted_plan_cta:hover {

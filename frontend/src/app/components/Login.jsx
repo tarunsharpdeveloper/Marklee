@@ -33,12 +33,21 @@ export const Login = ({ isOpen, onClose }) => {
 
       const data = await response.json();
 
+      if (data.requiresVerification) {
+        setError(data.message);
+        setTimeout(() => {
+          setShowVerification(true);
+        }, 3000);
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(data.message || 'Login failed');
       }
 
-      // Store the token in localStorage
+      // Store the token and user data in localStorage
       localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       
       setSuccessMessage('Logged in successfully!');
       
@@ -64,15 +73,15 @@ export const Login = ({ isOpen, onClose }) => {
 
   if (showVerification) {
     return <OtpVerification 
+      isOpen={true}
       email={email}
       onVerificationSuccess={() => {
         setShowVerification(false);
-        setSuccessMessage('Email verified successfully!');
-        setTimeout(() => {
-          onClose();
-        }, 2000);
+        onClose();
+        router.push('/pre-homepage');
       }}
       onBack={() => setShowVerification(false)}
+      onClose={onClose}
     />;
   }
 
@@ -80,7 +89,7 @@ export const Login = ({ isOpen, onClose }) => {
     <div className={styles.login_overlay} onClick={onClose}>
       <div className={styles.login_modal} onClick={e => e.stopPropagation()}>
         <div className={styles.login_modal_content}>
-          <button className={styles.close_button} onClick={onClose}>×</button>
+          <button className={styles.close_button} onClick={onClose}></button>
           
           <div className={styles.login_header}>
             <h2>Welcome Back</h2>

@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from '../styles/Login.module.css';
 import { motion } from 'framer-motion';
 
-export const OtpVerification = ({ isOpen, email, onVerificationSuccess, onBack, onClose }) => {
+export const OtpVerification = ({ isOpen, email, onVerificationSuccess, onClose }) => {
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const router = useRouter();
 
   if (!isOpen) return null;
 
@@ -31,12 +33,19 @@ export const OtpVerification = ({ isOpen, email, onVerificationSuccess, onBack, 
         throw new Error(data.message || 'Verification failed');
       }
 
-      // Store the token if provided
+      // Store the token and user data if provided
       if (data.token) {
         localStorage.setItem('token', data.token);
       }
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
 
       onVerificationSuccess();
+      
+      // Remove the timeout and redirect since it's now handled in Login component
+      onClose();
+
     } catch (error) {
       console.error('OTP verification failed:', error);
       setError(error.message || 'Invalid OTP. Please try again.');
@@ -74,7 +83,7 @@ export const OtpVerification = ({ isOpen, email, onVerificationSuccess, onBack, 
   };
 
   return (
-    <div className={styles.login_overlay} onClick={onClose}>
+    <div className={styles.login_overlay}>
       <motion.div 
         className={styles.login_modal}
         initial={{ scale: 0.95, opacity: 0 }}
@@ -83,8 +92,7 @@ export const OtpVerification = ({ isOpen, email, onVerificationSuccess, onBack, 
         onClick={e => e.stopPropagation()}
       >
         <div className={styles.login_modal_content}>
-          <button className={styles.close_button} onClick={onClose}>×</button>
-          <button className={styles.back_button} onClick={onBack}>
+          <button className={styles.back_button} onClick={onClose}>
             <svg viewBox="0 0 24 24" width="24" height="24">
               <path fill="currentColor" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/>
             </svg>

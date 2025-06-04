@@ -63,14 +63,17 @@ const authController = {
         process.env.JWT_SECRET,
         { expiresIn: "24h" }
       );
-      // remove password from user
-      delete user.password;
+      
+      // Remove sensitive data before sending
+      const userResponse = { ...user };
+      delete userResponse.password;
 
       res.json({
         success: true,
         message: "Email verified successfully",
         token,
-        user,
+        user: userResponse,
+        isEmailVerified: true
       });
     } catch (error) {
       console.error("Verification error:", error);
@@ -101,23 +104,36 @@ const authController = {
         });
       }
 
+      // Check if email is verified
+      if (!user.is_verified) {
+        // Generate new OTP for unverified users
+        const otp = await User.regenerateOTP(email);
+        await emailService.sendOTP(email, otp);
+        
+        return res.status(403).json({
+          success: false,
+          message: "Email not verified. A new verification code has been sent to your email.",
+          requiresVerification: true,
+          email: user.email
+        });
+      }
+
       const token = jwt.sign(
         { userId: user.id, email: user.email },
         process.env.JWT_SECRET,
         { expiresIn: "24h" }
       );
 
-      // If user is not verified, generate a new OTP but still allow login
-      if (!user.is_verified) {
-        const otp = await User.regenerateOTP(email);
-        await emailService.sendOTP(email, otp);
-      }
+      // Remove sensitive data before sending
+      const userResponse = { ...user };
+      delete userResponse.password;
 
       res.json({
         success: true,
         message: 'Login successful',
         token,
-        isEmailVerified: user.is_verified
+        user: userResponse,
+        isEmailVerified: true
       });
     } catch (error) {
       console.error("Login error:", error);

@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../styles/Signup.module.css';
 import { OtpVerification } from './OtpVerification';
-import { VerifyOption } from './VerifyOption';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 export const Signup = ({ isOpen, onClose, onBack }) => {
+  const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -16,7 +17,6 @@ export const Signup = ({ isOpen, onClose, onBack }) => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showVerifyOption, setShowVerifyOption] = useState(false);
   const [showOtpVerification, setShowOtpVerification] = useState(false);
 
   useEffect(() => {
@@ -85,8 +85,8 @@ export const Signup = ({ isOpen, onClose, onBack }) => {
         throw new Error(data.message || 'Signup failed');
       }
 
-      // Show verify option modal
-      setShowVerifyOption(true);
+      // Show OTP verification immediately after successful signup
+      setShowOtpVerification(true);
       
     } catch (error) {
       console.error('Signup failed:', error);
@@ -96,42 +96,18 @@ export const Signup = ({ isOpen, onClose, onBack }) => {
     }
   };
 
-  const handleVerifyNow = () => {
-    setShowVerifyOption(false);
-    setShowOtpVerification(true);
-  };
-
-  const handleVerifyLater = () => {
-    setShowVerifyOption(false);
-    onBack(); // Go back to login
-  };
-
-  const handleVerificationSuccess = () => {
-    setShowOtpVerification(false);
-    onBack(); // Go back to login after successful verification
-  };
-
   if (!isOpen) return null;
-
-  if (showVerifyOption) {
-    return (
-      <VerifyOption 
-        isOpen={true}
-        onClose={onClose}
-        email={formData.email}
-        onVerifyNow={handleVerifyNow}
-        onVerifyLater={handleVerifyLater}
-      />
-    );
-  }
 
   if (showOtpVerification) {
     return (
       <OtpVerification 
         isOpen={true}
         email={formData.email}
-        onVerificationSuccess={handleVerificationSuccess}
-        onBack={() => setShowOtpVerification(false)}
+        onVerificationSuccess={() => {
+          // Close modal and redirect to pre-homepage
+          onClose();
+          router.push('/pre-homepage');
+        }}
         onClose={onClose}
       />
     );
@@ -154,7 +130,7 @@ export const Signup = ({ isOpen, onClose, onBack }) => {
           onClick={e => e.stopPropagation()}
         >
           <div className={styles.signup_modal_content}>
-            <button className={styles.close_button} onClick={onClose}>×</button>
+            <button className={styles.close_button} onClick={onClose}></button>
             
             <button className={styles.back_button} onClick={onBack}>
               <svg viewBox="0 0 24 24" width="24" height="24">
