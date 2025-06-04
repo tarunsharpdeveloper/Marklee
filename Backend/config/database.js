@@ -3,14 +3,14 @@ const mysql = require('mysql2/promise');
 const config = {
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
-  database: process.env.DB_NAME || 'markle',
+  database: process.env.DB_NAME || 'marklee',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
 };
 // Only add password if it's set in env
 if (process.env.DB_PASSWORD) {
-  config.password = process.env.DB_PASSWORD;
+  config.password = process.env.DB_PASSWORD
 }
 
 const pool = mysql.createPool(config);

@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.75);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,16 +21,19 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   animation: slideUp 0.3s ease-out;
   margin: 1rem;
-  height: min(95vh, 700px);
+  min-height: min-content;
+  max-height: calc(100vh - 2rem);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .signup_modal_content {
   padding: 1.5rem;
-  height: 100%;
   display: flex;
   flex-direction: column;
+  /* gap: 1rem; */
+  overflow-y: auto;
 }
 
 .back_button {
@@ -41,7 +44,7 @@
   border: none;
   color: #666;
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 0.5rem;
   display: flex;
   align-items: center;
   gap: 0.375rem;
@@ -52,7 +55,7 @@
 }
 
 .back_button:hover {
-  color: rgb(241, 214, 71);
+  color: #FF904D;
 }
 
 .back_button svg {
@@ -96,23 +99,10 @@
 }
 
 .signup_form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.form_container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.name_fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
 }
 
 .form_group {
@@ -138,62 +128,24 @@
 
 .form_group input:focus {
   outline: none;
-  border-color: rgb(241, 214, 71);
+  border-color: #FF904D;
 }
 
-.password_strength {
-  margin-top: 0.25rem;
-}
-
-.strength_bars {
-  display: flex;
-  gap: 0.25rem;
-  margin-bottom: 0.25rem;
-}
-
-.strength_bar {
-  height: 3px;
-  flex: 1;
-  background-color: #e0e0e0;
-  border-radius: 1.5px;
-}
-
-.strength_bar.active {
-  background-color: rgb(241, 214, 71);
-}
-
-.strength_text {
-  font-size: 0.75rem;
-  color: #666;
-}
-
-.terms {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  color: #666;
-  font-size: 0.85rem;
-}
-
-.terms input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  margin-top: 0.125rem;
-}
-
-.terms a {
-  color: rgb(241, 214, 71);
-  text-decoration: none;
-}
-
-.terms a:hover {
-  text-decoration: underline;
+.error_message {
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+  text-align: center;
 }
 
 .signup_button {
   width: 100%;
   padding: 0.625rem;
-  background-color: rgb(241, 214, 71);
+  background-color: #FF904D;
   color: white;
   border: none;
   border-radius: 6px;
@@ -201,6 +153,11 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  /* margin-top: 1rem; */
+}
+
+.signup_button:hover:not(:disabled) {
+  background-color: #ff9f61;
 }
 
 .signup_button:disabled {
@@ -223,66 +180,6 @@
   animation: spin 0.8s linear infinite;
 }
 
-.social_signup {
-  border-top: 1px solid #e0e0e0;
-  padding-top: 1rem;
-  margin-top: auto;
-}
-
-.social_signup p {
-  color: #666;
-  font-size: 0.85rem;
-  margin-bottom: 0.75rem;
-  text-align: center;
-  position: relative;
-}
-
-.social_signup p::before,
-.social_signup p::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  width: 30%;
-  height: 1px;
-  background-color: #e0e0e0;
-}
-
-.social_signup p::before {
-  left: 0;
-}
-
-.social_signup p::after {
-  right: 0;
-}
-
-.social_buttons {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: center;
-}
-
-.social_button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  background: white;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.social_button:hover {
-  background-color: #f5f5f5;
-}
-
-.social_button svg {
-  width: 18px;
-  height: 18px;
-}
-
 .signup_success {
   text-align: center;
   display: flex;
@@ -296,7 +193,7 @@
 .success_icon {
   width: 48px;
   height: 48px;
-  background-color: rgb(241, 214, 71);
+  background-color: #FF904D;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -329,24 +226,22 @@
   .signup_modal {
     margin: 0;
     height: 100vh;
+    max-height: 100vh;
     border-radius: 0;
   }
 
   .signup_modal_content {
-    padding: 1rem;
-  }
-
-  .name_fields {
-    grid-template-columns: 1fr;
+    padding: 1.25rem 1rem;
+    height: auto;
   }
 
   .social_buttons {
     flex-direction: column;
+    gap: 0.5rem;
   }
 
   .social_button {
-    width: 100%;
-    justify-content: center;
+    max-width: none;
   }
 }
 
@@ -367,7 +262,92 @@
     padding: 0.4rem 0.75rem;
   }
 
-  .social_signup {
-    padding-top: 0.75rem;
+  .social_login {
+    margin-top: 0.75rem;
   }
+
+  .social_login p {
+    margin-bottom: 0.5rem;
+  }
+
+  .social_buttons {
+    margin-bottom: 0.75rem;
+  }
+}
+
+.social_login {
+  margin-top: auto;
+  padding-top: 1rem;
+  text-align: center;
+}
+
+.social_login p {
+  color: #666;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+  position: relative;
+}
+
+.social_login p::before,
+.social_login p::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 25%;
+  height: 1px;
+  background-color: #e0e0e0;
+}
+
+.social_login p::before {
+  left: 0;
+}
+
+.social_login p::after {
+  right: 0;
+}
+
+.social_buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.social_button {
+  flex: 1;
+  min-width: 120px;
+  max-width: 160px;
+  padding: 0.6rem;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.social_button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.social_button.google {
+  color: #ea4335;
+  border-color: #ea4335;
+}
+
+.social_button.google:hover {
+  background-color: #fef2f2;
+}
+
+.social_button.facebook {
+  color: #1877f2;
+  border-color: #1877f2;
+}
+
+.social_button.facebook:hover {
+  background-color: #f0f6ff;
 } 

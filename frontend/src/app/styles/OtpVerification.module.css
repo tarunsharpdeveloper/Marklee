@@ -1,0 +1,139 @@
+.verification_container {
+  padding: 2rem;
+  position: relative;
+}
+
+.back_button {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  color: #666;
+  transition: color 0.3s ease;
+}
+
+.back_button:hover {
+  color: #333;
+}
+
+.verification_content {
+  text-align: center;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.verification_content h2 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.verification_content p {
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.email {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2rem !important;
+}
+
+.error_message {
+  background-color: #fee2e2;
+  color: #FF904D;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.otp_input_container {
+  margin-bottom: 1.5rem;
+}
+
+.otp_input_container input {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1.25rem;
+  text-align: center;
+  letter-spacing: 0.5rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.otp_input_container input:focus {
+  border-color: rgb(0, 74, 173);
+}
+
+.verify_button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #FF904D;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.verify_button:hover:not(:disabled) {
+  background-color: #FF904D
+}
+
+.verify_button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.resend_container {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.resend_button {
+  background: none;
+  border: none;
+  color: #FF904D;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: color 0.3s ease;
+}
+
+.resend_button:hover:not(:disabled) {
+  color: #FF904D;
+  text-decoration: underline;
+}
+
+.resend_button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.loading_spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+} 

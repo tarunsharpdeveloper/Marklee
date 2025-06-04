@@ -1,11 +1,21 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import styles from '../styles/Hero.module.css';
 import { Typewriter } from 'react-simple-typewriter';
 
 const Hero = () => {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null; // or a loading state
+  }
+
   return (
     <div className={styles.hero_wrapper} id="hero">
       <section className={styles.hero_section}>

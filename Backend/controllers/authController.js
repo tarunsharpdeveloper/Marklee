@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const emailService = require('../utils/emailService');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 const authController = {
   async register(req, res) {
@@ -13,7 +13,7 @@ const authController = {
       if (existingUser) {
         return res.status(400).json({
           success: false,
-          message: 'Email already registered'
+          message: "Email already registered",
         });
       }
 
@@ -25,20 +25,21 @@ const authController = {
       if (!emailSent) {
         return res.status(500).json({
           success: false,
-          message: 'Failed to send verification email'
+          message: "Failed to send verification email",
         });
       }
 
       res.status(201).json({
         success: true,
-        message: 'Registration successful. Please check your email for OTP verification.',
-        userId
+        message:
+          "Registration successful. Please check your email for OTP verification.",
+        userId,
       });
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error("Registration error:", error);
       res.status(500).json({
         success: false,
-        message: 'Registration failed'
+        message: "Registration failed",
       });
     }
   },
@@ -51,7 +52,7 @@ const authController = {
       if (!isVerified) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid or expired OTP'
+          message: "Invalid or expired OTP",
         });
       }
 
@@ -60,22 +61,25 @@ const authController = {
       const token = jwt.sign(
         { userId: user.id, email: user.email },
         process.env.JWT_SECRET,
-        { expiresIn: '24h' }
+        { expiresIn: "24h" }
       );
-      // remove password from user
-      delete user.password;
+      
+      // Remove sensitive data before sending
+      const userResponse = { ...user };
+      delete userResponse.password;
 
       res.json({
         success: true,
-        message: 'Email verified successfully',
+        message: "Email verified successfully",
         token,
-        user
+        user: userResponse,
+        isEmailVerified: true
       });
     } catch (error) {
-      console.error('Verification error:', error);
+      console.error("Verification error:", error);
       res.status(500).json({
         success: false,
-        message: 'Verification failed'
+        message: "Verification failed",
       });
     }
   },
@@ -92,43 +96,50 @@ const authController = {
         });
       }
 
-      if (!user.is_verified) {
-        // Regenerate OTP for unverified users
-        const otp = await User.regenerateOTP(email);
-        await emailService.sendOTP(email, otp);
-
-        return res.status(403).json({
-          success: false,
-          message: 'Email not verified. New OTP has been sent to your email.'
-        });
-      }
-
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid credentials'
+          message: "Invalid credentials",
+        });
+      }
+
+      // Check if email is verified
+      if (!user.is_verified) {
+        // Generate new OTP for unverified users
+        const otp = await User.regenerateOTP(email);
+        await emailService.sendOTP(email, otp);
+        
+        return res.status(403).json({
+          success: false,
+          message: "Email not verified. A new verification code has been sent to your email.",
+          requiresVerification: true,
+          email: user.email
         });
       }
 
       const token = jwt.sign(
         { userId: user.id, email: user.email },
         process.env.JWT_SECRET,
-        { expiresIn: '24h' }
+        { expiresIn: "24h" }
       );
-      // remove password from user
-      delete user.password;
+
+      // Remove sensitive data before sending
+      const userResponse = { ...user };
+      delete userResponse.password;
+
       res.json({
         success: true,
         message: 'Login successful',
         token,
-        user
+        user: userResponse,
+        isEmailVerified: true
       });
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       res.status(500).json({
         success: false,
-        message: 'Login failed ' + error
+        message: "Login failed " + error,
       });
     }
   },
@@ -141,14 +152,14 @@ const authController = {
       if (!user) {
         return res.status(404).json({
           success: false,
-          message: 'User not found'
+          message: "User not found",
         });
       }
 
       if (user.is_verified) {
         return res.status(400).json({
           success: false,
-          message: 'Email already verified'
+          message: "Email already verified",
         });
       }
 
@@ -158,22 +169,22 @@ const authController = {
       if (!emailSent) {
         return res.status(500).json({
           success: false,
-          message: 'Failed to send OTP email'
+          message: "Failed to send OTP email",
         });
       }
 
       res.json({
         success: true,
-        message: 'OTP sent successfully'
+        message: "OTP sent successfully",
       });
     } catch (error) {
-      console.error('Resend OTP error:', error);
+      console.error("Resend OTP error:", error);
       res.status(500).json({
         success: false,
-        message: 'Failed to resend OTP'
+        message: "Failed to resend OTP",
       });
     }
-  }
+  },
 };
 
-module.exports = authController; 
+module.exports = authController;
