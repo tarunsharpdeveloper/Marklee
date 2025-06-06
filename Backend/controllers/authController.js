@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const emailService = require('../utils/emailService');
 const bcrypt = require('bcrypt');
+const UserMetadata = require('../models/UserMetadata');
 
 const authController = {
   async register(req, res) {
@@ -96,6 +97,9 @@ const authController = {
         });
       }
 
+      const metadata = await UserMetadata.findByUserId(user.id);
+      const isUserMetaData = (metadata.length > 0);
+
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
         return res.status(401).json({
@@ -114,6 +118,7 @@ const authController = {
           success: false,
           message: "Email not verified. A new verification code has been sent to your email.",
           requiresVerification: true,
+          isUserMetaData: isUserMetaData,
           email: user.email
         });
       }
@@ -133,7 +138,8 @@ const authController = {
         message: 'Login successful',
         token,
         user: userResponse,
-        isEmailVerified: true
+        isEmailVerified: true,
+        isUserMetaData: isUserMetaData,
       });
     } catch (error) {
       console.error("Login error:", error);
