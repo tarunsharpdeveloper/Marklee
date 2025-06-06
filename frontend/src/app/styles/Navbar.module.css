@@ -21,9 +21,8 @@
 }
 
 .logo {
-  height: 62px;
-  width: 110px;
-  padding: 4px;
+  
+  padding-top:10px;
   position: relative;
 }
 
@@ -167,11 +166,16 @@
   background: rgba(255, 144, 77, 0.1);
 } */
 
-@media (max-width: 768px) {
+@media (max-width: 867px) {
   .nav {
     height: 70px;
   }
-
+  .user_info {
+    display: flex;
+    align-items: start;
+    gap: 1rem;
+    flex-direction: column;
+  }
   .hamburger {
     display: flex;
   }
@@ -240,16 +244,14 @@
   }
 
   .login_button {
-    background-color: rgb(241, 214, 71);
+    background-color: #ff904d;
     margin-bottom: 0.3rem;
   }
 
-  .login_button:hover {
-    background: rgba(0, 74, 173, 0.1);
-  }
+
 
   .action_button {
-    background: rgb(0, 74, 173);
+    background: #ff904d;
     color: white;
     border: none;
   }
@@ -261,7 +263,7 @@
 
   .user_profile {
     width: 100%;
-    padding: 0.5rem 1rem;
+    /* padding: 0.5rem 1rem; */
   }
 
   .user_icon {
@@ -273,11 +275,11 @@
   }
 
   .logout_button {
-    width: 100%;
-    text-align: left;
-    padding: 0.8rem 1rem;
-    color: #FF904D;
-    background: transparent;
+    width: 90%;
+    text-align: center;
+    padding: 0.8rem;
+    background: #FF904D;
+    color: white;
   }
 }
 

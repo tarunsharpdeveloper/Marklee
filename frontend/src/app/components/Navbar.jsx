@@ -42,7 +42,7 @@ const Navbar = () => {
               src="/Bold.png"
               alt="Marklee Logo"
               width={110}
-              height={62}
+              height={96}
               priority
             />
           </div>
