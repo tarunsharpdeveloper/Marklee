@@ -1,0 +1,409 @@
+.container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #ffffff;
+}
+
+.sidebar {
+  width: 14%;
+  background-color: rgb(0, 74, 173);
+  padding: 2rem 1rem;
+  border-right: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.sidebar.collapsed {
+  width: 7%;
+  padding: 2rem 0.5rem;
+}
+
+.sidebarHeader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  /* gap: 0.75rem; */
+  /* padding: 0 0.5rem; */
+  transition: all 0.3s ease;
+}
+
+.logoImage {
+  transition: all 0.3s ease;
+}
+
+.sidebar.collapsed .logoImage {
+  width: 70px;
+  height: 60px;
+  /* margin-right: 15px; */
+}
+
+.toggleButton {
+  background: none;
+  border: none;
+  color: rgb(5, 5, 5);
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.toggleButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.toggleButton svg {
+  transition: transform 0.3s ease;
+}
+
+.toggleButton svg.rotated {
+  transform: rotate(180deg);
+}
+
+.logo span {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.7rem;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #f8f9fa;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.nav li:hover {
+  background-color: #f8f9fa;
+  color: #1a1a1a;
+}
+
+.nav li.active {
+  background-color: #ffffffde;
+  color: #1a1a1a;
+}
+
+.nav li svg {
+  width: 20px;
+  height: 20px;
+}
+
+.nav li span {
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .nav li span {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+.sidebar.collapsed .nav li {
+  padding: 0.75rem;
+  justify-content: center;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  height: 70px;
+  background-color: white;
+  border-bottom: 1px solid #e9ecef;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: #f8f9fa;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  width: 300px;
+}
+
+.searchBar input {
+  border: none;
+  background: none;
+  outline: none;
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+.userProfile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #5b47fb;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.sections {
+  display: flex;
+  flex-direction: row;
+  /* padding: 2rem; */
+  gap: 2rem;
+  justify-content: flex-start;
+  overflow-y: auto;
+  flex-wrap: wrap;
+}
+
+.section {
+  background-color: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); */
+  flex: 1;
+  min-width: 300px;
+  max-width: 450px;
+  height: fit-content;
+  /* border: 1px solid #f0f0f0; */
+  transition: all 0.3s ease;
+}
+
+/* .section:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+} */
+
+.section h2 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.25rem;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.questionCategory {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 1.2rem;
+  /* margin-bottom: 1.2rem; */
+  border: 1px solid #eaeaea;
+}
+
+.questionCategory h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  font-weight: 600;
+}
+
+.questionItem {
+  padding: 0.8rem;
+  border-radius: 8px;
+  background-color: white;
+  /* margin-bottom: 0.8rem; */
+  transition: all 0.2s ease;
+  border: 1px solid #f0f0f0;
+}
+
+.questionItem:hover {
+  background-color: #ffffff;
+  transform: translateX(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.questionItem p {
+  margin: 0;
+  color: #444;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.questionItem:last-child {
+  margin-bottom: 0;
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  /* gap: 1rem; */
+}
+
+.activityItem {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  transition: all 0.2s ease;
+}
+
+.activityItem:hover {
+  background-color: #f0f0f0;
+  transform: translateX(4px);
+}
+
+.activityContent {
+  flex: 1;
+}
+
+.activityContent p {
+  margin: 0;
+  color: #444;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 1200px) {
+  .sections {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .section {
+    max-width: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .sections {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .section {
+    padding: 1rem;
+  }
+}
+
+.folderStructure {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  width: 100%;
+}
+
+.folder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.folderHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.folderHeader:hover {
+  background-color: #e9ecef;
+  transform: translateX(4px);
+}
+
+.folderHeader:hover svg {
+  fill: #ffb300;
+}
+
+.folderHeader svg {
+  color: #333;
+  fill: #ffd54f;
+  stroke: #ffa000;
+  transition: all 0.2s ease;
+}
+
+.folderHeader span {
+  flex: 1;
+  font-weight: 500;
+  color: #333;
+}
+
+.arrowIcon {
+  transition: transform 0.2s ease;
+}
+
+.iconExpanded + span + .arrowIcon {
+  transform: rotate(180deg);
+}
+
+.subFolders {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-left: 2.5rem;
+}
+
+.subFolder {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.subFolder:hover {
+  background-color: #f8f9fa;
+  transform: translateX(4px);
+}
+
+.subFolder:hover svg {
+  fill: #ffb300;
+}
+
+.subFolder svg {
+  color: #333;
+  fill: #ffd54f;
+  stroke: #ffa000;
+  width: 18px;
+  height: 18px;
+  transition: all 0.2s ease;
+}
+
+.subFolder span {
+  color: #666;
+  font-size: 0.875rem;
+}
