@@ -39,7 +39,7 @@ const Navbar = () => {
         <div className={styles.container}>
           <div className={styles.logo}>
             <Image
-              src="/MarkleeLogoTP.png"
+              src="/Bold.png"
               alt="Marklee Logo"
               width={110}
               height={62}
