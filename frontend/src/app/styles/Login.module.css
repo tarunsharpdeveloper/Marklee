@@ -18,7 +18,7 @@
   max-width: 400px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
 }
 
 .login_modal_content {
@@ -325,9 +325,16 @@
 
 /* Responsive design */
 @media (max-width: 480px) {
+  .login_overlay{
+    background-color: #ffff;
+  }
   .login_modal {
-    width: 95%;
-    margin: 1rem;
+    margin: 0;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    width: 100vw;
+    justify-content: center;
   }
 
   .login_modal_content {

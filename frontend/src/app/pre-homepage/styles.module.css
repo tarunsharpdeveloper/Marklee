@@ -1,15 +1,22 @@
 .container {
-  min-height: 70vh;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #f5f7ff 0%, #e8ecff 100%);
-  padding: 6rem;
+  background: url('/BackgroundPREHOME.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  padding: 6rem 2rem 2rem;
+  position: relative;
+  overflow-x: hidden;
 }
 
 .formCard {
   position: relative;
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 2rem;
   width: 100%;
@@ -41,7 +48,7 @@
 }
 
 .step.active {
-  background: #FF904D;
+  background: #8075ff;
   color: white;
 }
 
@@ -58,7 +65,7 @@
 
 .progressFill {
   height: 100%;
-  background: #FF904D;
+  background: #8075ff;
   transition: width 0.3s ease;
 }
 
@@ -101,7 +108,7 @@
 
 .input:focus, .select:focus {
   outline: none;
-  border-color: #FF904D;
+  border-color: #8075ff;
 }
 
 .select {
@@ -118,7 +125,7 @@
 .continueButton {
   width: 100%;
   padding: 0.75rem;
-  background: #FF904D;
+  background: #8075ff;
   color: white;
   border: none;
   border-radius: 8px;
@@ -130,7 +137,7 @@
 }
 
 .continueButton:hover {
-  background: #FF904D;
+  background: #8075ff;
 }
 
 .textarea {
@@ -147,7 +154,7 @@
 
 .textarea:focus {
   outline: none;
-  border-color: #FF904D;
+  border-color: #8075ff;
 }
 
 .backButton {
@@ -169,5 +176,28 @@
 
 .backButton:hover {
   background: #f5f7ff;
-  color: #5b47fb;
+  color: #8075ff;
+}
+
+/* Tablet Styles */
+@media (max-width: 768px) {
+  .container {
+    padding: 5rem 1.5rem 1.5rem;
+    background-attachment: scroll;
+  }
+
+  .formCard {
+    padding: 1.5rem;
+  }
+}
+
+/* Mobile Styles */
+@media (max-width: 480px) {
+  .container {
+    /* padding: 4rem 1rem 1rem; */
+  }
+
+  .formCard {
+    padding: 1.25rem;
+  }
 } 
