@@ -2,6 +2,7 @@
   display: flex;
   min-height: 100vh;
   background-color: #ffffff;
+  position: relative;
 }
 
 .sidebar {
@@ -13,7 +14,19 @@
   flex-direction: column;
   gap: 0.3rem;
   transition: all 0.3s ease;
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebarContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - 4rem);
+  justify-content: space-between;
 }
 
 .sidebar.collapsed {
@@ -139,6 +152,12 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  margin-left: 14%; /* Same as sidebar width */
+  min-height: 100vh;
+}
+
+.sidebar.collapsed + .main {
+  margin-left: 5%; /* Same as collapsed sidebar width */
 }
 
 .header {
@@ -149,6 +168,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .searchBar {
@@ -197,11 +219,12 @@
 .sections {
   display: flex;
   flex-direction: row;
-  /* padding: 2rem; */
+  padding: 2rem;
   gap: 2rem;
   justify-content: flex-start;
   overflow-y: auto;
   flex-wrap: wrap;
+  height: calc(100vh - 70px); /* Subtract header height */
 }
 
 .section {
@@ -424,4 +447,36 @@
 .subFolder span {
   color: #666;
   font-size: 0.875rem;
+}
+
+.logoutButton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.7rem;
+  background: none;
+  border: none;
+  color: #f8f9fa;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  width: 100%;
+  margin-top: auto;
+}
+
+.logoutButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.logoutButton svg {
+  min-width: 20px;
+}
+
+.sidebar.collapsed .logoutButton {
+  padding: 0.7rem 0.3rem;
+  justify-content: center;
+}
+
+.sidebar.collapsed .logoutButton span {
+  display: none;
 }
