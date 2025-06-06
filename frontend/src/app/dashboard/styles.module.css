@@ -17,7 +17,7 @@
 }
 
 .sidebar.collapsed {
-  width: 7%;
+  width: 5%;
   padding: 2rem 0.5rem;
 }
 
@@ -45,7 +45,11 @@
   height: 60px;
   /* margin-right: 15px; */
 }
-
+.sidebar.collapsed .logo {
+  display: none;
+    /* margin-right: 15px; */
+  }
+  
 .toggleButton {
   background: none;
   border: none;
@@ -118,16 +122,19 @@
 }
 
 .sidebar.collapsed .nav li span {
-  opacity: 0;
-  width: 0;
-  overflow: hidden;
+  display: none;
 }
 
 .sidebar.collapsed .nav li {
-  padding: 0.75rem;
+  padding: 0.7rem 0.3rem;
   justify-content: center;
+  gap: 0rem;
 }
-
+.sidebar.collapsed .nav li svg{
+   height: 20px;
+   width: 20px;
+  }
+  
 .main {
   flex: 1;
   display: flex;
@@ -138,7 +145,7 @@
   height: 70px;
   background-color: white;
   border-bottom: 1px solid #e9ecef;
-  padding: 0 2rem;
+  padding: 0 0.6rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -168,16 +175,23 @@
   gap: 1rem;
 }
 
+.userName {
+  font-size: 0.95rem;
+  color: #333;
+  font-weight: 500;
+}
+
 .avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: #5b47fb;
+  background-color: rgb(40, 42, 179);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .sections {
@@ -310,6 +324,10 @@
 
   .section {
     padding: 1rem;
+  }
+
+  .userName {
+    display: none;
   }
 }
 
