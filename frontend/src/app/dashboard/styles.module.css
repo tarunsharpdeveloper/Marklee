@@ -221,7 +221,7 @@
   flex-direction: row;
   padding: 2rem;
   gap: 2rem;
-  justify-content: flex-start;
+  justify-content: center;
   overflow-y: auto;
   flex-wrap: wrap;
   height: calc(100vh - 70px); /* Subtract header height */
@@ -230,16 +230,29 @@
 .section {
   background-color: white;
   border-radius: 16px;
-  padding: 1.5rem;
+  /* padding: 1.5rem; */
   /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); */
   flex: 1;
-  min-width: 300px;
-  max-width: 450px;
+  /* min-width: 300px; */
+  max-width: 750px;
   height: fit-content;
   /* border: 1px solid #f0f0f0; */
   transition: all 0.3s ease;
 }
-
+.activityText{
+  font-size: 1rem;
+  font-weight: 700;
+  color: #333;
+  margin-top: 1rem;
+}
+.activityItemButton{
+  background-color: #5d78f2;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
+  margin-top: 0.7rem;
+}
 /* .section:hover {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);

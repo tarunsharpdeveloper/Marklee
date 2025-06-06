@@ -42,34 +42,7 @@ export default function Dashboard() {
     router.push('/');
   };
 
-  const folderStructure = [
-    {
-      id: 'marketing',
-      name: 'Marketing',
-      subFolders: [
-        { id: 'social', name: 'Social Media' },
-        { id: 'email', name: 'Email Camp' },
-        { id: 'ads', name: 'Advertising' }
-      ]
-    },
-    {
-      id: 'sales',
-      name: 'Sales',
-      subFolders: [
-        { id: 'leads', name: 'Lead Generation' },
-        { id: 'pipeline', name: 'Sales Pipeline' }
-      ]
-    },
-    {
-      id: 'finance',
-      name: 'Finance',
-      subFolders: [
-        { id: 'revenue', name: 'Revenue' },
-        { id: 'expenses', name: 'Expenses' },
-        { id: 'reports', name: 'Reports' }
-      ]
-    }
-  ];
+
 
   return (
     <div className={styles.container}>
@@ -90,11 +63,11 @@ export default function Dashboard() {
                 <span>Dashboard</span>
               </li>
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-                <span>Profile</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="64" height="74" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+</svg>
+
+                <span>Library</span>
               </li>
               <li>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -129,72 +102,20 @@ export default function Dashboard() {
           </div>
         </header>
         <div className={styles.sections}>
-          <section className={styles.section}>
-            <div className={styles.folderStructure}>
-              {folderStructure.map((folder) => (
-                <div key={folder.id} className={styles.folder}>
-                  <div 
-                    className={styles.folderHeader}
-                    onClick={() => toggleFolder(folder.id)}
-                  >
-                    <svg 
-                      width="24" 
-                      height="24" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="1.5"
-                      className={expandedFolders[folder.id] ? styles.iconExpanded : ''}
-                    >
-                      <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
-                    </svg>
-                    <span>{folder.name}</span>
-                    <svg 
-                      className={styles.arrowIcon} 
-                      width="16" 
-                      height="16" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2"
-                    >
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </div>
-                  {expandedFolders[folder.id] && (
-                    <div className={styles.subFolders}>
-                      {folder.subFolders.map((subFolder) => (
-                        <div key={subFolder.id} className={styles.subFolder}>
-                          <svg 
-                            width="20" 
-                            height="20" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            strokeWidth="1.5"
-                          >
-                            <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
-                          </svg>
-                          <span>{subFolder.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
+          
           <section className={styles.section}>
             <h2>Greetings🚀!!</h2>
             <div className={styles.activityList}>
               <div className={styles.activityItem}>
                 <div className={styles.activityContent}>
                   <p>Hello and welcome! I'm your AI partner for business growth — here to help you streamline strategies, boost performance, and unlock new opportunities. Whether you're scaling up, starting fresh, or optimizing what already works, let's turn your goals into results — smarter, faster, and with confidence.</p>
+                  <p className={styles.activityText}>What are you writing copy for today?</p>
+                  <button className={styles.activityItemButton}>Create Copy</button>
                 </div>
               </div>
             </div>
           </section>
-  
+{/*   
           <section className={styles.section}>
             <div className={styles.activityList}>
               <div className={styles.questionCategory}>
@@ -262,7 +183,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          </section>
+          </section> */}
         </div>
       </div>
     </div>
