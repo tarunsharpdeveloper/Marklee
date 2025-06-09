@@ -51,10 +51,11 @@ export const Login = ({ isOpen, onClose }) => {
       
       setSuccessMessage('Logged in successfully!');
       
-      // Close modal and navigate to pre-homepage
+      // Close modal and navigate based on isUserMetaData
       setTimeout(() => {
         onClose();
-        router.push('/pre-homepage');
+        // If user has completed onboarding, go to dashboard, otherwise go to pre-homepage
+        router.push(data.isUserMetaData ? '/dashboard' : '/pre-homepage');
       }, 2000);
 
     } catch (error) {
