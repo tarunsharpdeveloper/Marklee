@@ -26,9 +26,9 @@ class Project {
         }
     }
 
-    static async findAll() {
+    static async findByUser(userId) {
         try {
-            const [rows] = await db.execute('SELECT * FROM projects');
+            const [rows] = await db.execute('SELECT * FROM projects WHERE user_id = ?', [userId]);
             return rows;
         } catch (error) {
             console.error('Error fetching projects:', error);

@@ -12,9 +12,8 @@ class GeneratedContent {
     }
 
     static async create(contentData) {
-        const connection = await db.getConnection();
         try {
-            const [result] = await connection.execute(
+            const [result] = await db.execute(
                 `INSERT INTO generated_content 
                 (brief_id, audience_id, asset_type, content) 
                 VALUES (?, ?, ?, ?)`,
@@ -26,49 +25,54 @@ class GeneratedContent {
                 ]
             );
             return result.insertId;
-        } finally {
-            await connection.end();
+        }
+        catch (error) {
+            console.error('Error creating generated content:', error);
+            throw error;
         }
     }
 
     static async findByBriefId(briefId) {
-        const connection = await db.getConnection();
         try {
-            const [rows] = await connection.execute(
+            const [rows] = await db.execute(
                 'SELECT * FROM generated_content WHERE brief_id = ?',
                 [briefId]
             );
             return rows.map(row => new GeneratedContent(row));
-        } finally {
-            await connection.end();
+        }
+        catch (error) {
+            console.error('Error fetching generated content by brief ID:', error);
+            throw error;
         }
     }
 
     static async findById(id) {
-        const connection = await db.getConnection();
         try {
-            const [rows] = await connection.execute(
+            const [rows] = await db.execute(
                 'SELECT * FROM generated_content WHERE id = ?',
                 [id]
             );
             return rows[0] ? new GeneratedContent(rows[0]) : null;
-        } finally {
-            await connection.end();
+        }
+        catch (error) {
+            console.error('Error fetching generated content by ID:', error);
+            throw error;
         }
     }
 
     static async update(id, contentData) {
-        const connection = await db.getConnection();
         try {
-            await connection.execute(
+            await db.execute(
                 `UPDATE generated_content 
                 SET content = ?
                 WHERE id = ?`,
                 [contentData.content, id]
             );
             return true;
-        } finally {
-            await connection.end();
+        }
+        catch (error) {
+            console.error('Error updating generated content:', error);
+            throw error;
         }
     }
 }

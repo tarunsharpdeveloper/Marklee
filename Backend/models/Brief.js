@@ -17,9 +17,8 @@ class Brief {
     }
 
     static async create(briefData) {
-        const connection = await db.getConnection();
         try {
-            const [result] = await connection.execute(
+            const [result] = await db.execute(
                 `INSERT INTO briefs 
                 (project_id, project_name, purpose, main_message, special_features, beneficiaries, 
                 benefits, call_to_action, importance, additional_info) 
@@ -38,11 +37,8 @@ class Brief {
                 ]
             );
             return result.insertId;
-        } catch (error) {
-            console.error('Error in Brief.create:', error);
-            throw error;
         } finally {
-            connection.release();
+            await db.end();
         }
     }
 
@@ -54,11 +50,8 @@ class Brief {
                 [id]
             );
             return rows[0] ? new Brief(rows[0]) : null;
-        } catch (error) {
-            console.error('Error in Brief.findById:', error);
-            throw error;
         } finally {
-            connection.release();
+            await connection.end();
         }
     }
 
@@ -70,11 +63,8 @@ class Brief {
                 [projectName]
             );
             return rows.map(row => new Brief(row));
-        } catch (error) {
-            console.error('Error in Brief.findByProject:', error);
-            throw error;
         } finally {
-            connection.release();
+            await connection.end();
         }
     }
 }
