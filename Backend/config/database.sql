@@ -25,3 +25,59 @@ CREATE TABLE IF NOT EXISTS user_metadata (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ); 
+
+-- Create projects table
+CREATE TABLE IF NOT EXISTS projects (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    project_name VARCHAR(255) NOT NULL,
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Create briefs table
+CREATE TABLE IF NOT EXISTS briefs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    project_id INT NOT NULL,
+    project_name VARCHAR(255) NOT NULL,
+    purpose TEXT NOT NULL,
+    main_message TEXT NOT NULL,
+    special_features TEXT,
+    beneficiaries TEXT,
+    benefits TEXT,
+    call_to_action TEXT,
+    importance TEXT,
+    additional_info TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Create audiences table
+CREATE TABLE IF NOT EXISTS audiences (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    brief_id INT NOT NULL,
+    segment TEXT NOT NULL,
+    insights TEXT,
+    messaging_angle TEXT,
+    support_points TEXT,
+    tone VARCHAR(255),
+    persona_profile TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (brief_id) REFERENCES briefs(id) ON DELETE CASCADE
+);
+
+-- Create generated_content table
+CREATE TABLE IF NOT EXISTS generated_content (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    brief_id INT NOT NULL,
+    audience_id INT,
+    asset_type VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (brief_id) REFERENCES briefs(id) ON DELETE CASCADE,
+    FOREIGN KEY (audience_id) REFERENCES audiences(id) ON DELETE SET NULL
+); 
