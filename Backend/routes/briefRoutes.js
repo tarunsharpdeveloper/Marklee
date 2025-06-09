@@ -4,7 +4,7 @@ const briefController = require('../controllers/briefController');
 const auth = require('../middlewares/auth');
 
 // Apply authentication middleware to all routes
-// router.use(auth);
+router.use(auth);
 
 // Project routes
 router.post('/project', briefController.createProject);

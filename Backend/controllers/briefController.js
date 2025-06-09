@@ -38,7 +38,7 @@ const briefController = {
     // Get Projects
     async getProjects(req, res) {
         try {
-            const projects = await Project.findAll();
+            const projects = await Project.findByUser(req.user.id);
             res.status(200).json({
                 success: true,
                 data: projects
