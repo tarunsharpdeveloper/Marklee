@@ -6,9 +6,44 @@ import styles from './styles.module.css';
 
 export default function Dashboard() {
   const router = useRouter();
-  const [expandedFolders, setExpandedFolders] = useState({});
+  const [expandedFolders, setExpandedFolders] = useState({
+    marketing: false,
+    content: false,
+    social: false
+  });
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [user, setUser] = useState({ name: '', initials: '' });
+  const [activeSection, setActiveSection] = useState('greeting');
+
+  const folderStructure = {
+    marketing: {
+      name: 'Marketing',
+      subfolders: ['Email Campaigns', 'Ad Copies', 'Landing Pages']
+    },
+    content: {
+      name: 'Content',
+      subfolders: ['Blog Posts', 'Newsletters', 'Case Studies']
+    },
+    social: {
+      name: 'Social Media',
+      subfolders: ['Instagram', 'Twitter', 'LinkedIn']
+    }
+  };
+
+  const qaPairs = [
+    {
+      question: "What type of content are you looking to create?",
+      options: ["Blog Post", "Social Media", "Email", "Ad Copy"]
+    },
+    {
+      question: "Who is your target audience?",
+      options: ["B2B", "B2C", "Technical", "General"]
+    },
+    {
+      question: "What's your content goal?",
+      options: ["Engagement", "Lead Generation", "Brand Awareness", "Sales"]
+    }
+  ];
 
   useEffect(() => {
     // Get user data from localStorage
@@ -42,7 +77,114 @@ export default function Dashboard() {
     router.push('/');
   };
 
+  const handleCreateProject = () => {
+    setActiveSection('library');
+  };
 
+  const renderFolderSection = () => {
+    return (
+      <div className={styles.folderSection}>
+        {/* <div className={styles.sectionHeader}>
+          <h2>Project Folders</h2>
+          <button className={styles.newFolderButton}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            New Folder
+          </button>
+        </div> */}
+        <div className={styles.folderList}>
+          {Object.entries(folderStructure).map(([key, folder]) => (
+            <div key={key} className={styles.folderItem}>
+              <div 
+                className={styles.folderHeader} 
+                onClick={() => toggleFolder(key)}
+              >
+                <div className={styles.folderIcon}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  </svg>
+                </div>
+                <span>{folder.name}</span>
+                <svg 
+                  className={`${styles.arrowIcon} ${expandedFolders[key] ? styles.expanded : ''}`} 
+                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                >
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+              {expandedFolders[key] && (
+                <div className={styles.subfolderList}>
+                  {folder.subfolders.map((subfolder, index) => (
+                    <div key={index} className={styles.subfolderItem}>
+                      <div className={styles.subfolderIcon}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                        </svg>
+                      </div>
+                      <span>{subfolder}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderQASection = () => {
+    return (
+      <div className={styles.qaSection}>
+        <div className={styles.sectionHeader}>
+          <h2>Content Assistant</h2>
+        </div>
+        <div className={styles.qaList}>
+          {qaPairs.map((qa, index) => (
+            <div key={index} className={styles.qaCard}>
+              <h3>{qa.question}</h3>
+              <div className={styles.optionsList}>
+                {qa.options.map((option, optIndex) => (
+                  <button key={optIndex} className={styles.optionButton}>
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+          <button className={styles.generateButton}>
+            Generate Content Ideas
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13 5l7 7-7 7M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderLibrarySection = () => {
+    return (
+      <section className={`${styles.section} ${styles.librarySection}`}>
+        {/* <div className={styles.libraryHeader}>
+          <h2>Content Library</h2>
+          <div className={styles.libraryActions}>
+            <div className={styles.searchBar}>
+              <svg className={styles.searchIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <input type="text" placeholder="Search content..." />
+            </div>
+          </div>
+        </div> */}
+        <div className={styles.librarySections}>
+          {renderFolderSection()}
+          {renderQASection()}
+        </div>
+      </section>
+    );
+  };
 
   return (
     <div className={styles.container}>
@@ -55,18 +197,17 @@ export default function Dashboard() {
           </div>
           <nav className={styles.nav}>
             <ul>
-              <li className={styles.active}>
+              <li className={activeSection === 'greeting' ? styles.active : ''} onClick={() => setActiveSection('greeting')}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                   <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
                 <span>Dashboard</span>
               </li>
-              <li>
-              <svg xmlns="http://www.w3.org/2000/svg" width="64" height="74" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-</svg>
-
+              <li className={activeSection === 'library' ? styles.active : ''} onClick={() => setActiveSection('library')}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                </svg>
                 <span>Library</span>
               </li>
               <li>
@@ -88,7 +229,7 @@ export default function Dashboard() {
           </button>
         </div>
       </aside>
-      <div className={styles.main}>
+      <div className={`${styles.main} ${isSidebarCollapsed ? styles.collapsedMain : ''}`}>
         <header className={styles.header}>
         <div style={{display: 'flex', alignItems: 'center', justifyContent:"start"}}>
         <button onClick={toggleSidebar} className={styles.toggleButton}>
@@ -102,88 +243,24 @@ export default function Dashboard() {
           </div>
         </header>
         <div className={styles.sections}>
-          
-          <section className={styles.section}>
-            <h2>Greetings🚀!!</h2>
-            <div className={styles.activityList}>
-              <div className={styles.activityItem}>
-                <div className={styles.activityContent}>
-                  <p>Hello and welcome! I'm your AI partner for business growth — here to help you streamline strategies, boost performance, and unlock new opportunities. Whether you're scaling up, starting fresh, or optimizing what already works, let's turn your goals into results — smarter, faster, and with confidence.</p>
-                  <p className={styles.activityText}>What are you writing copy for today?</p>
-                  <button className={styles.activityItemButton}>Create Copy</button>
+          {activeSection === 'greeting' ? (
+            <section className={`${styles.section} ${styles.greetingSection}`}>
+              <div className={styles.greetingContainer}>
+                <div className={styles.welcomeText}>
+                  <h1>Hello, <span className={styles.userName}>{user.name || 'Guest'}</span> 👋</h1>
+                  <p className={styles.copyQuestion}>What are you writing copy for today?</p>
                 </div>
+                <button className={styles.createButton} onClick={handleCreateProject}>
+                  <span>Create New Project</span>
+                  <svg className={styles.arrowIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
               </div>
-            </div>
-          </section>
-{/*   
-          <section className={styles.section}>
-            <div className={styles.activityList}>
-              <div className={styles.questionCategory}>
-                <h3>🔍 Market & Audience</h3>
-                <div className={styles.questionItem}>
-                  <p>Define your ideal customer profile</p>
-                </div>
-                <div className={styles.questionItem}>
-                  <p>List top 3 customer pain points addressed</p>
-                </div>
-                <div className={styles.questionItem}>
-                  <p>Marketing channels effectiveness analysis</p>
-                </div>
-              </div>
-
-              <div className={styles.questionCategory}>
-                <h3>📈 Growth & Strategy</h3>
-                <div className={styles.questionItem}>
-                  <p>6-month growth target projection</p>
-                </div>
-                <div className={styles.questionItem}>
-                  <p>Identify potential market segments</p>
-                </div>
-                <div className={styles.questionItem}>
-                  <p>Current KPI measurement review</p>
-                </div>
-              </div>
-
-              <div className={styles.questionCategory}>
-                <h3>🧠 Operations & Efficiency</h3>
-                <div className={styles.questionItem}>
-                  <p>Automation opportunity assessment</p>
-                </div>
-                <div className={styles.questionItem}>
-                  <p>Time-consuming task identification</p>
-                </div>
-                <div className={styles.questionItem}>
-                  <p>Customer feedback system evaluation</p>
-                </div>
-              </div>
-
-              <div className={styles.questionCategory}>
-                <h3>💸 Sales & Revenue</h3>
-                <div className={styles.questionItem}>
-                  <p>Most profitable product analysis</p>
-                </div>
-                <div className={styles.questionItem}>
-                  <p>Upsell/cross-sell opportunity review</p>
-                </div>
-                <div className={styles.questionItem}>
-                  <p>Sales funnel conversion assessment</p>
-                </div>
-              </div>
-
-              <div className={styles.questionCategory}>
-                <h3>🤖 AI & Tech Integration</h3>
-                <div className={styles.questionItem}>
-                  <p>AI-ready workflow identification</p>
-                </div>
-                <div className={styles.questionItem}>
-                  <p>AI implementation opportunity scan</p>
-                </div>
-                <div className={styles.questionItem}>
-                  <p>Team AI readiness evaluation</p>
-                </div>
-              </div>
-            </div>
-          </section> */}
+            </section>
+          ) : (
+            renderLibrarySection()
+          )}
         </div>
       </div>
     </div>
