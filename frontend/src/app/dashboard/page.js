@@ -14,21 +14,12 @@ export default function Dashboard() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [user, setUser] = useState({ name: '', initials: '' });
   const [activeSection, setActiveSection] = useState('greeting');
+  const [isProjectPopupOpen, setIsProjectPopupOpen] = useState(false);
+  const [projectName, setProjectName] = useState('');
 
-  const folderStructure = {
-    marketing: {
-      name: 'Marketing',
-      subfolders: ['Email Campaigns', 'Ad Copies', 'Landing Pages']
-    },
-    content: {
-      name: 'Content',
-      subfolders: ['Blog Posts', 'Newsletters', 'Case Studies']
-    },
-    social: {
-      name: 'Social Media',
-      subfolders: ['Instagram', 'Twitter', 'LinkedIn']
-    }
-  };
+  const [folderStructure, setFolderStructure] = useState({
+  
+  });
 
   const qaPairs = [
     {
@@ -78,21 +69,93 @@ export default function Dashboard() {
   };
 
   const handleCreateProject = () => {
-    setActiveSection('library');
+    setIsProjectPopupOpen(true);
+  };
+
+  const handleProjectSubmit = (e) => {
+    e.preventDefault();
+    if (projectName.trim()) {
+      const projectKey = projectName.toLowerCase().replace(/\s+/g, '_');
+      
+      // Update folder structure with new project
+      setFolderStructure(prev => ({
+        ...prev,
+        [projectKey]: {
+          name: projectName,
+          subfolders: ['Content Strategy', 'Marketing Materials', 'Brand Assets', 'Social Media']
+        }
+      }));
+
+      // Reset and close popup
+      setProjectName('');
+      setIsProjectPopupOpen(false);
+      
+      // Switch to library view
+      setActiveSection('library');
+      
+      // Expand the new folder
+      setExpandedFolders(prev => ({
+        ...prev,
+        [projectKey]: true
+      }));
+    }
+  };
+
+  const renderProjectPopup = () => {
+    if (!isProjectPopupOpen) return null;
+
+    return (
+      <div className={styles.popupOverlay}>
+        <div className={styles.popup}>
+          <div className={styles.popupHeader}>
+            <h2>Create New Project</h2>
+            <button 
+              className={styles.closeButton}
+              onClick={() => setIsProjectPopupOpen(false)}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <form onSubmit={handleProjectSubmit}>
+            <div className={styles.formGroup}>
+              <label htmlFor="projectName">Project Name</label>
+              <input
+                id="projectName"
+                type="text"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                placeholder="Enter project name"
+                className={styles.input}
+                autoFocus
+              />
+            </div>
+            <div className={styles.popupActions}>
+              <button 
+                type="button" 
+                className={styles.cancelButton}
+                onClick={() => setIsProjectPopupOpen(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                className={styles.submitButton}
+                disabled={!projectName.trim()}
+              >
+                Create Project
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
   };
 
   const renderFolderSection = () => {
     return (
       <div className={styles.folderSection}>
-        {/* <div className={styles.sectionHeader}>
-          <h2>Project Folders</h2>
-          <button className={styles.newFolderButton}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            New Folder
-          </button>
-        </div> */}
         <div className={styles.folderList}>
           {Object.entries(folderStructure).map(([key, folder]) => (
             <div key={key} className={styles.folderItem}>
@@ -113,7 +176,7 @@ export default function Dashboard() {
                   <path d="M6 9l6 6 6-6"/>
                 </svg>
               </div>
-              {expandedFolders[key] && (
+              {/* {expandedFolders[key] && (
                 <div className={styles.subfolderList}>
                   {folder.subfolders.map((subfolder, index) => (
                     <div key={index} className={styles.subfolderItem}>
@@ -126,7 +189,7 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
-              )}
+              )} */}
             </div>
           ))}
         </div>
@@ -164,30 +227,9 @@ export default function Dashboard() {
     );
   };
 
-  const renderLibrarySection = () => {
-    return (
-      <section className={`${styles.section} ${styles.librarySection}`}>
-        {/* <div className={styles.libraryHeader}>
-          <h2>Content Library</h2>
-          <div className={styles.libraryActions}>
-            <div className={styles.searchBar}>
-              <svg className={styles.searchIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <input type="text" placeholder="Search content..." />
-            </div>
-          </div>
-        </div> */}
-        <div className={styles.librarySections}>
-          {renderFolderSection()}
-          {renderQASection()}
-        </div>
-      </section>
-    );
-  };
-
   return (
     <div className={styles.container}>
+      {renderProjectPopup()}
       <aside className={`${styles.sidebar} ${isSidebarCollapsed ? styles.collapsed : ''}`}>
         <div className={styles.sidebarContent}>
           <div className={styles.sidebarHeader}>
@@ -259,7 +301,12 @@ export default function Dashboard() {
               </div>
             </section>
           ) : (
-            renderLibrarySection()
+            <section className={`${styles.section} ${styles.librarySection}`}>
+              <div className={styles.librarySections}>
+                {renderFolderSection()}
+                {renderQASection()}
+              </div>
+            </section>
           )}
         </div>
       </div>
