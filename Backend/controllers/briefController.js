@@ -72,7 +72,7 @@ const briefController = {
     // Get Briefs by Project
     async getBriefsByProject(req, res) {
         try {
-            const briefs = await Brief.findByProject(req.params.projectName);
+            const briefs = await Brief.findByProject(req.params.projectId);
             
             res.status(200).json({
                 success: true,

@@ -15,9 +15,8 @@ class Audience {
     }
 
     static async create(audienceData) {
-        const connection = await db.getConnection();
         try {
-            const [result] = await connection.execute(
+            const [result] = await db.execute(
                 `INSERT INTO audiences 
                 (brief_id, segment, insights, messaging_angle, support_points, 
                 tone, persona_profile) 
@@ -33,34 +32,38 @@ class Audience {
                 ]
             );
             return result.insertId;
-        } finally {
-            await connection.end();
+        }
+        catch (error) {
+            console.error('Error creating audience:', error);
+            throw error;
         }
     }
 
     static async findByBriefId(briefId) {
-        const connection = await db.getConnection();
         try {
-            const [rows] = await connection.execute(
+            const [rows] = await db.execute(
                 'SELECT * FROM audiences WHERE brief_id = ?',
                 [briefId]
             );
             return rows.map(row => new Audience(row));
-        } finally {
-            await connection.end();
+        }
+        catch (error) {
+            console.error('Error fetching audience by brief ID:', error);
+            throw error;
         }
     }
 
     static async findById(id) {
-        const connection = await db.getConnection();
         try {
-            const [rows] = await connection.execute(
+            const [rows] = await db.execute(
                 'SELECT * FROM audiences WHERE id = ?',
                 [id]
             );
             return rows[0] ? new Audience(rows[0]) : null;
-        } finally {
-            await connection.end();
+        }
+        catch (error) {
+            console.error('Error fetching audience by ID:', error);
+            throw error;
         }
     }
 }
