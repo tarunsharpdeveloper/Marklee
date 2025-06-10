@@ -3,6 +3,10 @@
   min-height: 100vh;
   background-color: #ffffff;
   position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
 }
 
 .sidebar {
@@ -868,13 +872,11 @@
 }
 
 .qaSection {
-  flex: 1;
-  /* padding: 2rem; */
   background: #ffffff;
   border-radius: 20px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-  overflow-y: auto; /* Make Q&A section scrollable */
-  max-height: 100%; /* Ensure it doesn't exceed container height */
+  /* overflow-y: auto; */
+  max-height: 70vh; /* Fixed height for QA section */
+  /* padding: 2rem; */
 }
 
 .sectionHeader {
@@ -1221,12 +1223,9 @@
 } */
 
 .briefForm {
-  max-width: 800px;
-  margin: 0 auto;
-  background: linear-gradient(145deg, #ffffff, #f8fafc);
-  border-radius: 16px;
-  padding: 2.5rem;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.04);
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 1rem;
 }
 
 .briefForm h2 {
@@ -1559,4 +1558,172 @@
   .main.collapsed {
     margin-left: 5%;
   }
+}
+
+.audienceSegments {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.audienceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.audienceHeader h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.newBriefButton {
+  background-color: #2563eb;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.newBriefButton:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.segmentsList {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+  width: 100%;
+  margin-top: 1rem;
+  overflow: visible;
+}
+
+.segmentCard {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  height: 100%;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+}
+
+.segmentCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+  border-color: #2563eb;
+}
+
+.segmentCard h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+.segmentCard p {
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+  flex-grow: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .segmentsList {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .segmentsList {
+    grid-template-columns: 1fr;
+  }
+}
+
+.loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loadingContainer {
+  background: white;
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 300px;
+  max-height: 300px;
+  /* max-width: 90%; */
+  position: relative;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.loader {
+  width: 60px;
+  height: 60px;
+  border: 5px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 5px solid #2563eb;
+  animation: spin 1s linear infinite;
+  margin-bottom: 2rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loadingMessage {
+  font-size: 1.2rem;
+  color: #1a1a1a;
+  text-align: center;
+  margin: 0;
+  min-height: 1.5em;
+  animation: fadeInOut 2s ease-in-out infinite;
+  font-weight: 500;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
 }

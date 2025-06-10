@@ -37,17 +37,7 @@ export default function Dashboard() {
     additional_info: ''
   });
 
-  const [showAudienceForm, setShowAudienceForm] = useState(false);
-  const [audienceData, setAudienceData] = useState({
-    segment: '',
-    insights: '',
-    messaging_angle: '',
-    support_points: '',
-    tone: '',
-    persona_profile: ''
-  });
-
-  const [createdBriefId, setCreatedBriefId] = useState(null);
+  const [audiences, setAudiences] = useState([]);
 
   const qaPairs = [
     {
@@ -55,14 +45,86 @@ export default function Dashboard() {
       options: ["Blog Post", "Social Media", "Email", "Ad Copy"]
     },
     {
-      question: "Who is your target audience?",
-      options: ["B2B", "B2C", "Technical", "General"]
-    },
-    {
       question: "What's your content goal?",
       options: ["Engagement", "Lead Generation", "Brand Awareness", "Sales"]
     }
   ];
+
+  // Add loading state
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+
+  const loadingMessages = [
+    'Thinking about the best approach...',
+    'Analyzing your request in detail...',
+    'Consulting my AI colleagues...',
+    'Working on a personalized solution...',
+    'Generating some creative ideas...',
+    'Putting the finishing touches on your response...',
+    'Almost ready with something great...',
+    'Just a few more calculations...',
+    'Cross-checking for accuracy...',
+    'Preparing your tailored answer...'
+  ];
+  
+  useEffect(() => {
+    let messageIndex = 0;
+    let intervalId;
+
+    if (isLoading) {
+      intervalId = setInterval(() => {
+        setLoadingMessage(loadingMessages[messageIndex]);
+        messageIndex = (messageIndex + 1) % loadingMessages.length;
+      }, 2000); // Change message every 2 seconds
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isLoading]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
+
+      if (!token || !userData) {
+        router.push('/');
+        return;
+      }
+
+      try {
+        // Check if user has completed onboarding
+        const response = await fetch('http://localhost:4000/api/onboarding/get', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok || !data.data) {
+          // If no onboarding data found, redirect to pre-homepage
+          router.push('/pre-homepage');
+          return;
+        }
+
+        // Set user data if everything is ok
+        const user = JSON.parse(userData);
+        setUser({
+          name: user.name,
+          initials: user.name.split(' ').map(n => n[0]).join('').toUpperCase()
+        });
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        router.push('/');
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   useEffect(() => {
     // Get user data from localStorage
@@ -224,6 +286,7 @@ export default function Dashboard() {
   const handleBriefSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setIsLoading(true);
     setError('');
 
     try {
@@ -255,26 +318,18 @@ export default function Dashboard() {
       });
 
       const responseData = await response.json();
-      console.log('Full brief creation response:', JSON.stringify(responseData, null, 2));
 
       if (response.ok) {
-        // Log the structure of the response
-        console.log('Response data type:', typeof responseData);
-        console.log('Response data keys:', Object.keys(responseData));
-        console.log('Response data.data:', responseData.data);
-        
-        // Try to get the ID from the response
-        const briefId = responseData.data?.brief?.id || responseData.id;
-        console.log('Extracted Brief ID:', briefId);
-        
-        if (!briefId) {
-          console.error('Failed to extract brief ID from response:', responseData);
-          throw new Error('Could not get brief ID from server response');
-        }
-
-        // Store the brief ID
-        setCreatedBriefId(briefId);
-        console.log('Successfully stored Brief ID in state:', briefId);
+        // Parse and store audiences
+        const newAudiences = responseData.data.audiences.map(audience => {
+          const segmentData = JSON.parse(audience.segment);
+          return {
+            id: audience.id,
+            name: segmentData.name,
+            description: segmentData.description
+          };
+        });
+        setAudiences(newAudiences);
 
         setBriefData({
           purpose: '',
@@ -286,7 +341,7 @@ export default function Dashboard() {
           importance: '',
           additional_info: ''
         });
-        setShowAudienceForm(true);
+        setIsBriefFormOpen(false);
         setError('');
       } else {
         const errorMessage = responseData.message || 'Failed to create brief';
@@ -298,66 +353,7 @@ export default function Dashboard() {
       setError(error.message || 'Failed to create brief. Please try again.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleAudienceSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const token = localStorage.getItem('token');
-      
-      console.log('Current brief ID when creating audience:', createdBriefId);
-      
-      if (!createdBriefId) {
-        throw new Error('No brief ID available. Please create a brief first.');
-      }
-
-      // Make sure we're using a valid brief ID
-      const briefId = parseInt(createdBriefId);
-      if (isNaN(briefId)) {
-        throw new Error('Invalid brief ID format');
-      }
-
-      const response = await fetch(`http://localhost:4000/api/brief/${briefId}/audience`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ...audienceData,
-          brief_id: briefId // Include the brief_id in the payload as well
-        })
-      });
-
-      const responseData = await response.json();
-      console.log('Audience creation response:', responseData);
-
-      if (response.ok) {
-        setAudienceData({
-          segment: '',
-          insights: '',
-          messaging_angle: '',
-          support_points: '',
-          tone: '',
-          persona_profile: ''
-        });
-        setShowAudienceForm(false);
-        setIsBriefFormOpen(false);
-        setCreatedBriefId(null);
-      } else {
-        const errorMessage = responseData.message || 'Failed to create audience';
-        console.error('Server error:', errorMessage);
-        throw new Error(errorMessage);
-      }
-    } catch (error) {
-      console.error('Error in audience creation:', error);
-      setError(error.message || 'Failed to create audience. Please try again.');
-    } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -470,221 +466,153 @@ export default function Dashboard() {
   const renderQASection = () => {
     return (
       <div className={styles.qaSection}>
-        {isBriefFormOpen && selectedFolder && (
+        {isBriefFormOpen && selectedFolder && !audiences.length && (
           <div className={styles.briefForm}>
-            <h2>{showAudienceForm ? 'Define Your Audience' : `Create Brief for ${selectedFolder.name}`}</h2>
+            <h2>Create Brief for {selectedFolder.name}</h2>
             {error && <div className={styles.error}>{error}</div>}
             
-            {!showAudienceForm ? (
-              <form onSubmit={handleBriefSubmit}>
-                <div className={styles.formGroup}>
-                  <label>Purpose</label>
-                  <textarea
-                    value={briefData.purpose}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, purpose: e.target.value }))}
-                    placeholder="What is the purpose of this brief?"
-                    className={styles.textarea}
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Main Message</label>
-                  <textarea
-                    value={briefData.main_message}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, main_message: e.target.value }))}
-                    placeholder="What is the main message you want to convey?"
-                    className={styles.textarea}
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Special Features (Optional)</label>
-                  <textarea
-                    value={briefData.special_features}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, special_features: e.target.value }))}
-                    placeholder="Any special features or unique aspects?"
-                    className={styles.textarea}
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Beneficiaries</label>
-                  <textarea
-                    value={briefData.beneficiaries}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, beneficiaries: e.target.value }))}
-                    placeholder="Who will benefit from this?"
-                    className={styles.textarea}
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Benefits</label>
-                  <textarea
-                    value={briefData.benefits}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, benefits: e.target.value }))}
-                    placeholder="What are the key benefits?"
-                    className={styles.textarea}
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Call to Action</label>
-                  <textarea
-                    value={briefData.call_to_action}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, call_to_action: e.target.value }))}
-                    placeholder="What action do you want people to take?"
-                    className={styles.textarea}
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Importance</label>
-                  <textarea
-                    value={briefData.importance}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, importance: e.target.value }))}
-                    placeholder="Why is this important?"
-                    className={styles.textarea}
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Additional Information (Optional)</label>
-                  <textarea
-                    value={briefData.additional_info}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, additional_info: e.target.value }))}
-                    placeholder="Any other relevant information?"
-                    className={styles.textarea}
-                  />
-                </div>
-                <div className={styles.buttonGroup}>
-                  <button 
-                    type="button" 
-                    onClick={() => {
-                      setIsBriefFormOpen(false);
-                      setBriefData({
-                        purpose: '',
-                        main_message: '',
-                        special_features: '',
-                        beneficiaries: '',
-                        benefits: '',
-                        call_to_action: '',
-                        importance: '',
-                        additional_info: ''
-                      });
-                    }}
-                    className={styles.cancelButton}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit"
-                    disabled={loading}
-                    className={styles.submitButton}
-                  >
-                    {loading ? 'Creating...' : 'Create Brief'}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <form onSubmit={handleAudienceSubmit}>
-                <div className={styles.formGroup}>
-                  <label>Target Segment</label>
-                  <textarea
-                    value={audienceData.segment}
-                    onChange={(e) => setAudienceData(prev => ({ ...prev, segment: e.target.value }))}
-                    placeholder="Describe your target audience segment"
-                    className={styles.textarea}
-                    required
-                  />
-                </div>
+            <form onSubmit={handleBriefSubmit}>
+              <div className={styles.formGroup}>
+                <label>Purpose</label>
+                <textarea
+                  value={briefData.purpose}
+                  onChange={(e) => setBriefData(prev => ({ ...prev, purpose: e.target.value }))}
+                  placeholder="What is the purpose of this brief?"
+                  className={styles.textarea}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Main Message</label>
+                <textarea
+                  value={briefData.main_message}
+                  onChange={(e) => setBriefData(prev => ({ ...prev, main_message: e.target.value }))}
+                  placeholder="What is the main message you want to convey?"
+                  className={styles.textarea}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Special Features (Optional)</label>
+                <textarea
+                  value={briefData.special_features}
+                  onChange={(e) => setBriefData(prev => ({ ...prev, special_features: e.target.value }))}
+                  placeholder="Any special features or unique aspects?"
+                  className={styles.textarea}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Beneficiaries</label>
+                <textarea
+                  value={briefData.beneficiaries}
+                  onChange={(e) => setBriefData(prev => ({ ...prev, beneficiaries: e.target.value }))}
+                  placeholder="Who will benefit from this?"
+                  className={styles.textarea}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Benefits</label>
+                <textarea
+                  value={briefData.benefits}
+                  onChange={(e) => setBriefData(prev => ({ ...prev, benefits: e.target.value }))}
+                  placeholder="What are the key benefits?"
+                  className={styles.textarea}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Call to Action</label>
+                <textarea
+                  value={briefData.call_to_action}
+                  onChange={(e) => setBriefData(prev => ({ ...prev, call_to_action: e.target.value }))}
+                  placeholder="What action do you want people to take?"
+                  className={styles.textarea}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Importance</label>
+                <textarea
+                  value={briefData.importance}
+                  onChange={(e) => setBriefData(prev => ({ ...prev, importance: e.target.value }))}
+                  placeholder="Why is this important?"
+                  className={styles.textarea}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Additional Information (Optional)</label>
+                <textarea
+                  value={briefData.additional_info}
+                  onChange={(e) => setBriefData(prev => ({ ...prev, additional_info: e.target.value }))}
+                  placeholder="Any other relevant information?"
+                  className={styles.textarea}
+                />
+              </div>
+              <div className={styles.buttonGroup}>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setIsBriefFormOpen(false);
+                    setBriefData({
+                      purpose: '',
+                      main_message: '',
+                      special_features: '',
+                      beneficiaries: '',
+                      benefits: '',
+                      call_to_action: '',
+                      importance: '',
+                      additional_info: ''
+                    });
+                  }}
+                  className={styles.cancelButton}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className={styles.submitButton}
+                >
+                  {loading ? 'Creating...' : 'Create Brief'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
-                <div className={styles.formGroup}>
-                  <label>Audience Insights</label>
-                  <textarea
-                    value={audienceData.insights}
-                    onChange={(e) => setAudienceData(prev => ({ ...prev, insights: e.target.value }))}
-                    placeholder="What are the key insights about this audience?"
-                    className={styles.textarea}
-                  />
-                </div>
+        {audiences.length === 0 && isLoading && (
+          <div className={styles.loadingOverlay}>
+            <div className={styles.loadingContainer}>
+              <div className={styles.loader}></div>
+              <p className={styles.loadingMessage}>{loadingMessage}</p>
+            </div>
+          </div>
+        )}
 
-                <div className={styles.formGroup}>
-                  <label>Messaging Angle</label>
-                  <textarea
-                    value={audienceData.messaging_angle}
-                    onChange={(e) => setAudienceData(prev => ({ ...prev, messaging_angle: e.target.value }))}
-                    placeholder="What is the best angle to approach this audience?"
-                    className={styles.textarea}
-                  />
+        {audiences.length > 0 && (
+          <div className={styles.audienceSegments}>
+            <div className={styles.audienceHeader}>
+              <h3>Target Audience Segments</h3>
+              <button 
+                onClick={() => {
+                  setAudiences([]);
+                  setIsBriefFormOpen(true);
+                }}
+                className={styles.newBriefButton}
+              >
+                Create New Brief
+              </button>
+            </div>
+            <div className={styles.segmentsList}>
+              {audiences.map(audience => (
+                <div key={audience.id} className={styles.segmentCard}>
+                  <h4>{audience.name}</h4>
+                  <p>{audience.description}</p>
                 </div>
-
-                <div className={styles.formGroup}>
-                  <label>Support Points</label>
-                  <textarea
-                    value={audienceData.support_points}
-                    onChange={(e) => setAudienceData(prev => ({ ...prev, support_points: e.target.value }))}
-                    placeholder="What points will support your message to this audience?"
-                    className={styles.textarea}
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>Tone of Voice</label>
-                  <select
-                    value={audienceData.tone}
-                    onChange={(e) => setAudienceData(prev => ({ ...prev, tone: e.target.value }))}
-                    className={styles.input}
-                    required
-                  >
-                    <option value="">Select tone</option>
-                    <option value="professional">Professional</option>
-                    <option value="friendly">Friendly</option>
-                    <option value="casual">Casual</option>
-                    <option value="formal">Formal</option>
-                    <option value="authoritative">Authoritative</option>
-                    <option value="empathetic">Empathetic</option>
-                    <option value="inspirational">Inspirational</option>
-                  </select>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>Persona Profile</label>
-                  <textarea
-                    value={audienceData.persona_profile}
-                    onChange={(e) => setAudienceData(prev => ({ ...prev, persona_profile: e.target.value }))}
-                    placeholder="Describe the typical persona for this audience"
-                    className={styles.textarea}
-                  />
-                </div>
-
-                <div className={styles.buttonGroup}>
-                  <button 
-                    type="button" 
-                    onClick={() => {
-                      setShowAudienceForm(false);
-                      setIsBriefFormOpen(false);
-                      setAudienceData({
-                        segment: '',
-                        insights: '',
-                        messaging_angle: '',
-                        support_points: '',
-                        tone: '',
-                        persona_profile: ''
-                      });
-                    }}
-                    className={styles.cancelButton}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit"
-                    disabled={loading}
-                    className={styles.submitButton}
-                  >
-                    {loading ? 'Creating...' : 'Create Audience'}
-                  </button>
-                </div>
-              </form>
-            )}
+              ))}
+            </div>
           </div>
         )}
       </div>
