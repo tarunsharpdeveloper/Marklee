@@ -129,11 +129,20 @@ export default function Dashboard() {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
-  const toggleFolder = (folderId) => {
-    setExpandedFolders(prev => ({
-      ...prev,
-      [folderId]: !prev[folderId]
-    }));
+  const toggleFolder = (folderKey) => {
+    setExpandedFolders(prev => {
+      // Create a new object with all folders closed
+      const allClosed = Object.keys(prev).reduce((acc, key) => {
+        acc[key] = false;
+        return acc;
+      }, {});
+      
+      // Toggle only the clicked folder
+      return {
+        ...allClosed,
+        [folderKey]: !prev[folderKey]
+      };
+    });
   };
 
   const handleLogout = () => {
@@ -415,10 +424,13 @@ export default function Dashboard() {
             setIsBriefFormOpen(true);
           }}
         >
+          
+          Create Brief
+          <div className={styles.createBriefButtonIcon}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 5v14M5 12h14"/>
           </svg>
-          Create Brief
+          </div>
         </button>
       </div>
     );
@@ -682,6 +694,17 @@ export default function Dashboard() {
   return (
     <div className={styles.container}>
       {renderProjectPopup()}
+      {/* <button 
+        className={styles.hamburgerIcon}
+        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        aria-label="Toggle sidebar"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button> */}
       <aside className={`${styles.sidebar} ${isSidebarCollapsed ? styles.collapsed : ''}`}>
         <div className={styles.sidebarContent}>
           <div className={styles.sidebarHeader}>
@@ -723,7 +746,7 @@ export default function Dashboard() {
           </button>
         </div>
       </aside>
-      <div className={`${styles.main} ${isSidebarCollapsed ? styles.collapsedMain : ''}`}>
+      <main className={`${styles.main} ${isSidebarCollapsed ? styles.collapsed : ''}`}>
         <header className={styles.header}>
         <div style={{display: 'flex', alignItems: 'center', justifyContent:"start"}}>
         <button onClick={toggleSidebar} className={styles.toggleButton}>
@@ -761,7 +784,7 @@ export default function Dashboard() {
           </section>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
