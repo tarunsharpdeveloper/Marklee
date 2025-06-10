@@ -37,34 +37,35 @@ class Brief {
                 ]
             );
             return result.insertId;
-        } finally {
-            await db.end();
+        } catch (error) {
+            console.error('Error creating brief:', error);
+            throw error;
         }
     }
 
     static async findById(id) {
-        const connection = await db.getConnection();
         try {
-            const [rows] = await connection.execute(
+            const [rows] = await db.execute(
                 'SELECT * FROM briefs WHERE id = ?',
                 [id]
             );
             return rows[0] ? new Brief(rows[0]) : null;
-        } finally {
-            await connection.end();
+        } catch (error) {
+            console.error('Error fetching brief:', error);
+            throw error;
         }
     }
 
     static async findByProject(projectName) {
-        const connection = await db.getConnection();
         try {
-            const [rows] = await connection.execute(
+            const [rows] = await db.execute(
                 'SELECT * FROM briefs WHERE project_name = ?',
                 [projectName]
             );
             return rows.map(row => new Brief(row));
-        } finally {
-            await connection.end();
+        } catch (error) {
+            console.error('Error fetching briefs:', error);
+            throw error;
         }
     }
 }

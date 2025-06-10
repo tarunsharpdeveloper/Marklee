@@ -287,6 +287,7 @@ const briefController = {
     // Generate Audience Segments
     async generateAudienceSegments(brief_id, user_id) {
         try {
+            console.log("Generating audience segments for brief:", brief_id);
             // Get the brief
             const brief = await Brief.findById(brief_id);
             if (!brief) {
@@ -295,10 +296,10 @@ const briefController = {
                     message: 'Brief not found'
                 };
             }
-
+            console.log("Brief found:", brief);
             // Get user metadata
             const userMetadata = await UserMetadata.findByUserId(user_id);
-
+            console.log("User metadata found:", userMetadata);
             // Audience generation prompt
             const audiencePrompt = PromptTemplate.fromTemplate(`
                 Based on the following brief and user context, generate 5 distinct audience segments:
@@ -323,7 +324,7 @@ const briefController = {
                 5. Appropriate Tone of Voice
                 6. Detailed Persona Profile
 
-                Format the response as a Jvalid JSON array format where each object has the fields. Use double quotes around all keys and values:
+                Format the response as a Jvalid JSON array format where each object has the fields:
                 - segment
                 - insights
                 - messagingAngle
