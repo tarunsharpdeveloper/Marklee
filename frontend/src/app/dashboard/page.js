@@ -16,10 +16,38 @@ export default function Dashboard() {
   const [activeSection, setActiveSection] = useState('greeting');
   const [isProjectPopupOpen, setIsProjectPopupOpen] = useState(false);
   const [projectName, setProjectName] = useState('');
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const [folderStructure, setFolderStructure] = useState({
   
   });
+
+  const [selectedFolder, setSelectedFolder] = useState(null);
+  const [isBriefFormOpen, setIsBriefFormOpen] = useState(false);
+  const [briefData, setBriefData] = useState({
+    purpose: '',
+    main_message: '',
+    special_features: '',
+    beneficiaries: '',
+    benefits: '',
+    call_to_action: '',
+    importance: '',
+    additional_info: ''
+  });
+
+  const [showAudienceForm, setShowAudienceForm] = useState(false);
+  const [audienceData, setAudienceData] = useState({
+    segment: '',
+    insights: '',
+    messaging_angle: '',
+    support_points: '',
+    tone: '',
+    persona_profile: ''
+  });
+
+  const [createdBriefId, setCreatedBriefId] = useState(null);
 
   const qaPairs = [
     {
@@ -47,8 +75,55 @@ export default function Dashboard() {
         .join('')
         .toUpperCase();
       setUser({ ...parsedUser, initials });
+      
+      // Fetch projects when user data is available
+      fetchProjects();
     }
   }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const userData = JSON.parse(localStorage.getItem('user'));
+      
+      if (!token || !userData) {
+        router.push('/');
+        return;
+      }
+
+      const response = await fetch('http://localhost:4000/api/projects', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const { data } = await response.json();
+        console.log('Fetched projects:', data);
+        
+        // Filter projects for current user and convert to folder structure
+        const newFolderStructure = data.reduce((acc, project) => {
+          // Only include projects that belong to current user
+          if (project.user_id === userData.id) {
+            const projectKey = project.project_name.toLowerCase().replace(/\s+/g, '_');
+            acc[projectKey] = {
+              id: project.id,
+              name: project.project_name,
+              status: project.status
+            };
+          }
+          return acc;
+        }, {});
+
+        setFolderStructure(newFolderStructure);
+        setProjects(data.filter(project => project.user_id === userData.id));
+      } else {
+        console.error('Failed to fetch projects:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    }
+  };
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -72,32 +147,208 @@ export default function Dashboard() {
     setIsProjectPopupOpen(true);
   };
 
-  const handleProjectSubmit = (e) => {
+  const handleProjectSubmit = async (e) => {
     e.preventDefault();
-    if (projectName.trim()) {
-      const projectKey = projectName.toLowerCase().replace(/\s+/g, '_');
-      
-      // Update folder structure with new project
-      setFolderStructure(prev => ({
-        ...prev,
-        [projectKey]: {
-          name: projectName,
-          subfolders: ['Content Strategy', 'Marketing Materials', 'Brand Assets', 'Social Media']
-        }
-      }));
+    if (!projectName.trim()) return;
 
-      // Reset and close popup
-      setProjectName('');
-      setIsProjectPopupOpen(false);
+    setLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const userData = JSON.parse(localStorage.getItem('user'));
+
+      const response = await fetch('http://localhost:4000/api/project', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          userId: userData.id,
+          projectName: projectName.trim()
+        })
+      });
+
+      if (response.ok) {
+        const { data } = await response.json();
+        console.log('Created project:', data);
+
+        // Add new project to folder structure
+        const projectKey = data.project_name.toLowerCase().replace(/\s+/g, '_');
+        setFolderStructure(prev => ({
+          ...prev,
+          [projectKey]: {
+            id: data.id,
+            name: data.project_name,
+            status: data.status,
+            user_id: userData.id // Store user_id with the folder
+          }
+        }));
+
+        setProjectName('');
+        setIsProjectPopupOpen(false);
+        
+        // Switch to library view
+        setActiveSection('library');
+        
+        // Expand the new folder
+        setExpandedFolders(prev => ({
+          ...prev,
+          [projectKey]: true
+        }));
+
+        // Refresh projects list
+        fetchProjects();
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to create project');
+      }
+    } catch (error) {
+      console.error('Error creating project:', error);
+      setError('Failed to create project. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBriefSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const userData = JSON.parse(localStorage.getItem('user'));
+
+      const briefPayload = {
+        projectId: selectedFolder.id,
+        projectName: selectedFolder.name,
+        purpose: briefData.purpose,
+        mainMessage: briefData.main_message,
+        specialFeatures: briefData.special_features,
+        beneficiaries: briefData.beneficiaries,
+        benefits: briefData.benefits,
+        callToAction: briefData.call_to_action,
+        importance: briefData.importance,
+        additionalInfo: briefData.additional_info
+      };
+
+      console.log('Creating brief with payload:', briefPayload);
+
+      const response = await fetch(`http://localhost:4000/api/create-brief`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(briefPayload)
+      });
+
+      const responseData = await response.json();
+      console.log('Full brief creation response:', JSON.stringify(responseData, null, 2));
+
+      if (response.ok) {
+        // Log the structure of the response
+        console.log('Response data type:', typeof responseData);
+        console.log('Response data keys:', Object.keys(responseData));
+        console.log('Response data.data:', responseData.data);
+        
+        // Try to get the ID from the response
+        const briefId = responseData.data?.id || responseData.id;
+        console.log('Extracted Brief ID:', briefId);
+        
+        if (!briefId) {
+          console.error('Failed to extract brief ID from response:', responseData);
+          throw new Error('Could not get brief ID from server response');
+        }
+
+        // Store the brief ID
+        setCreatedBriefId(briefId);
+        console.log('Successfully stored Brief ID in state:', briefId);
+
+        setBriefData({
+          purpose: '',
+          main_message: '',
+          special_features: '',
+          beneficiaries: '',
+          benefits: '',
+          call_to_action: '',
+          importance: '',
+          additional_info: ''
+        });
+        setShowAudienceForm(true);
+        setError('');
+      } else {
+        const errorMessage = responseData.message || 'Failed to create brief';
+        console.error('Server error:', errorMessage);
+        setError(errorMessage);
+      }
+    } catch (error) {
+      console.error('Error creating brief:', error);
+      setError(error.message || 'Failed to create brief. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAudienceSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('token');
       
-      // Switch to library view
-      setActiveSection('library');
+      console.log('Current brief ID when creating audience:', createdBriefId);
       
-      // Expand the new folder
-      setExpandedFolders(prev => ({
-        ...prev,
-        [projectKey]: true
-      }));
+      if (!createdBriefId) {
+        throw new Error('No brief ID available. Please create a brief first.');
+      }
+
+      // Make sure we're using a valid brief ID
+      const briefId = parseInt(createdBriefId);
+      if (isNaN(briefId)) {
+        throw new Error('Invalid brief ID format');
+      }
+
+      const response = await fetch(`http://localhost:4000/api/brief/${briefId}/audience`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ...audienceData,
+          brief_id: briefId // Include the brief_id in the payload as well
+        })
+      });
+
+      const responseData = await response.json();
+      console.log('Audience creation response:', responseData);
+
+      if (response.ok) {
+        setAudienceData({
+          segment: '',
+          insights: '',
+          messaging_angle: '',
+          support_points: '',
+          tone: '',
+          persona_profile: ''
+        });
+        setShowAudienceForm(false);
+        setIsBriefFormOpen(false);
+        setCreatedBriefId(null);
+      } else {
+        const errorMessage = responseData.message || 'Failed to create audience';
+        console.error('Server error:', errorMessage);
+        throw new Error(errorMessage);
+      }
+    } catch (error) {
+      console.error('Error in audience creation:', error);
+      setError(error.message || 'Failed to create audience. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -130,6 +381,7 @@ export default function Dashboard() {
                 className={styles.input}
                 autoFocus
               />
+              {error && <div className={styles.error}>{error}</div>}
             </div>
             <div className={styles.popupActions}>
               <button 
@@ -142,13 +394,32 @@ export default function Dashboard() {
               <button 
                 type="submit" 
                 className={styles.submitButton}
-                disabled={!projectName.trim()}
+                disabled={!projectName.trim() || loading}
               >
-                Create Project
+                {loading ? 'Creating...' : 'Create Project'}
               </button>
             </div>
           </form>
         </div>
+      </div>
+    );
+  };
+
+  const renderFolderContent = (folder) => {
+    return (
+      <div className={styles.folderContent}>
+        <button 
+          className={styles.createBriefButton}
+          onClick={() => {
+            setSelectedFolder(folder);
+            setIsBriefFormOpen(true);
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Create Brief
+        </button>
       </div>
     );
   };
@@ -176,20 +447,7 @@ export default function Dashboard() {
                   <path d="M6 9l6 6 6-6"/>
                 </svg>
               </div>
-              {/* {expandedFolders[key] && (
-                <div className={styles.subfolderList}>
-                  {folder.subfolders.map((subfolder, index) => (
-                    <div key={index} className={styles.subfolderItem}>
-                      <div className={styles.subfolderIcon}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
-                        </svg>
-                      </div>
-                      <span>{subfolder}</span>
-                    </div>
-                  ))}
-                </div>
-              )} */}
+              {expandedFolders[key] && renderFolderContent(folder)}
             </div>
           ))}
         </div>
@@ -200,29 +458,223 @@ export default function Dashboard() {
   const renderQASection = () => {
     return (
       <div className={styles.qaSection}>
-        <div className={styles.sectionHeader}>
-          <h2>Content Assistant</h2>
-        </div>
-        <div className={styles.qaList}>
-          {qaPairs.map((qa, index) => (
-            <div key={index} className={styles.qaCard}>
-              <h3>{qa.question}</h3>
-              <div className={styles.optionsList}>
-                {qa.options.map((option, optIndex) => (
-                  <button key={optIndex} className={styles.optionButton}>
-                    {option}
+        {isBriefFormOpen && selectedFolder && (
+          <div className={styles.briefForm}>
+            <h2>{showAudienceForm ? 'Define Your Audience' : `Create Brief for ${selectedFolder.name}`}</h2>
+            {error && <div className={styles.error}>{error}</div>}
+            
+            {!showAudienceForm ? (
+              <form onSubmit={handleBriefSubmit}>
+                <div className={styles.formGroup}>
+                  <label>Purpose</label>
+                  <textarea
+                    value={briefData.purpose}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, purpose: e.target.value }))}
+                    placeholder="What is the purpose of this brief?"
+                    className={styles.textarea}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Main Message</label>
+                  <textarea
+                    value={briefData.main_message}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, main_message: e.target.value }))}
+                    placeholder="What is the main message you want to convey?"
+                    className={styles.textarea}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Special Features (Optional)</label>
+                  <textarea
+                    value={briefData.special_features}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, special_features: e.target.value }))}
+                    placeholder="Any special features or unique aspects?"
+                    className={styles.textarea}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Beneficiaries</label>
+                  <textarea
+                    value={briefData.beneficiaries}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, beneficiaries: e.target.value }))}
+                    placeholder="Who will benefit from this?"
+                    className={styles.textarea}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Benefits</label>
+                  <textarea
+                    value={briefData.benefits}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, benefits: e.target.value }))}
+                    placeholder="What are the key benefits?"
+                    className={styles.textarea}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Call to Action</label>
+                  <textarea
+                    value={briefData.call_to_action}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, call_to_action: e.target.value }))}
+                    placeholder="What action do you want people to take?"
+                    className={styles.textarea}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Importance</label>
+                  <textarea
+                    value={briefData.importance}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, importance: e.target.value }))}
+                    placeholder="Why is this important?"
+                    className={styles.textarea}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Additional Information (Optional)</label>
+                  <textarea
+                    value={briefData.additional_info}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, additional_info: e.target.value }))}
+                    placeholder="Any other relevant information?"
+                    className={styles.textarea}
+                  />
+                </div>
+                <div className={styles.buttonGroup}>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setIsBriefFormOpen(false);
+                      setBriefData({
+                        purpose: '',
+                        main_message: '',
+                        special_features: '',
+                        beneficiaries: '',
+                        benefits: '',
+                        call_to_action: '',
+                        importance: '',
+                        additional_info: ''
+                      });
+                    }}
+                    className={styles.cancelButton}
+                  >
+                    Cancel
                   </button>
-                ))}
-              </div>
-            </div>
-          ))}
-          <button className={styles.generateButton}>
-            Generate Content Ideas
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M13 5l7 7-7 7M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        </div>
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className={styles.submitButton}
+                  >
+                    {loading ? 'Creating...' : 'Create Brief'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleAudienceSubmit}>
+                <div className={styles.formGroup}>
+                  <label>Target Segment</label>
+                  <textarea
+                    value={audienceData.segment}
+                    onChange={(e) => setAudienceData(prev => ({ ...prev, segment: e.target.value }))}
+                    placeholder="Describe your target audience segment"
+                    className={styles.textarea}
+                    required
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Audience Insights</label>
+                  <textarea
+                    value={audienceData.insights}
+                    onChange={(e) => setAudienceData(prev => ({ ...prev, insights: e.target.value }))}
+                    placeholder="What are the key insights about this audience?"
+                    className={styles.textarea}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Messaging Angle</label>
+                  <textarea
+                    value={audienceData.messaging_angle}
+                    onChange={(e) => setAudienceData(prev => ({ ...prev, messaging_angle: e.target.value }))}
+                    placeholder="What is the best angle to approach this audience?"
+                    className={styles.textarea}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Support Points</label>
+                  <textarea
+                    value={audienceData.support_points}
+                    onChange={(e) => setAudienceData(prev => ({ ...prev, support_points: e.target.value }))}
+                    placeholder="What points will support your message to this audience?"
+                    className={styles.textarea}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Tone of Voice</label>
+                  <select
+                    value={audienceData.tone}
+                    onChange={(e) => setAudienceData(prev => ({ ...prev, tone: e.target.value }))}
+                    className={styles.input}
+                    required
+                  >
+                    <option value="">Select tone</option>
+                    <option value="professional">Professional</option>
+                    <option value="friendly">Friendly</option>
+                    <option value="casual">Casual</option>
+                    <option value="formal">Formal</option>
+                    <option value="authoritative">Authoritative</option>
+                    <option value="empathetic">Empathetic</option>
+                    <option value="inspirational">Inspirational</option>
+                  </select>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Persona Profile</label>
+                  <textarea
+                    value={audienceData.persona_profile}
+                    onChange={(e) => setAudienceData(prev => ({ ...prev, persona_profile: e.target.value }))}
+                    placeholder="Describe the typical persona for this audience"
+                    className={styles.textarea}
+                  />
+                </div>
+
+                <div className={styles.buttonGroup}>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setShowAudienceForm(false);
+                      setIsBriefFormOpen(false);
+                      setAudienceData({
+                        segment: '',
+                        insights: '',
+                        messaging_angle: '',
+                        support_points: '',
+                        tone: '',
+                        persona_profile: ''
+                      });
+                    }}
+                    className={styles.cancelButton}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className={styles.submitButton}
+                  >
+                    {loading ? 'Creating...' : 'Create Audience'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
       </div>
     );
   };
@@ -248,8 +700,8 @@ export default function Dashboard() {
               </li>
               <li className={activeSection === 'library' ? styles.active : ''} onClick={() => setActiveSection('library')}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                </svg>
+  <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+</svg>
                 <span>Library</span>
               </li>
               <li>
@@ -305,8 +757,8 @@ export default function Dashboard() {
               <div className={styles.librarySections}>
                 {renderFolderSection()}
                 {renderQASection()}
-              </div>
-            </section>
+            </div>
+          </section>
           )}
         </div>
       </div>
