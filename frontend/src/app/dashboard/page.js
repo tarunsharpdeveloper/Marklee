@@ -47,6 +47,8 @@ export default function Dashboard() {
     persona_profile: ''
   });
 
+  const [createdBriefId, setCreatedBriefId] = useState(null);
+
   const qaPairs = [
     {
       question: "What type of content are you looking to create?",
@@ -232,7 +234,9 @@ export default function Dashboard() {
         additionalInfo: briefData.additional_info
       };
 
-      const response = await fetch(`http://localhost:4000/api/${selectedFolder.name}/brief`, {
+      console.log('Creating brief with payload:', briefPayload);
+
+      const response = await fetch(`http://localhost:4000/api/create-brief`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -241,7 +245,28 @@ export default function Dashboard() {
         body: JSON.stringify(briefPayload)
       });
 
+      const responseData = await response.json();
+      console.log('Full brief creation response:', JSON.stringify(responseData, null, 2));
+
       if (response.ok) {
+        // Log the structure of the response
+        console.log('Response data type:', typeof responseData);
+        console.log('Response data keys:', Object.keys(responseData));
+        console.log('Response data.data:', responseData.data);
+        
+        // Try to get the ID from the response
+        const briefId = responseData.data?.id || responseData.id;
+        console.log('Extracted Brief ID:', briefId);
+        
+        if (!briefId) {
+          console.error('Failed to extract brief ID from response:', responseData);
+          throw new Error('Could not get brief ID from server response');
+        }
+
+        // Store the brief ID
+        setCreatedBriefId(briefId);
+        console.log('Successfully stored Brief ID in state:', briefId);
+
         setBriefData({
           purpose: '',
           main_message: '',
@@ -252,17 +277,16 @@ export default function Dashboard() {
           importance: '',
           additional_info: ''
         });
-        // Instead of closing the form, show the audience form
         setShowAudienceForm(true);
         setError('');
       } else {
-        const errorData = await response.json();
-        console.error('Server error:', errorData);
-        setError(errorData.message || 'Failed to create brief');
+        const errorMessage = responseData.message || 'Failed to create brief';
+        console.error('Server error:', errorMessage);
+        setError(errorMessage);
       }
     } catch (error) {
       console.error('Error creating brief:', error);
-      setError('Failed to create brief. Please try again.');
+      setError(error.message || 'Failed to create brief. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -275,7 +299,20 @@ export default function Dashboard() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:4000/api/${selectedFolder.name}/audience`, {
+      
+      console.log('Current brief ID when creating audience:', createdBriefId);
+      
+      if (!createdBriefId) {
+        throw new Error('No brief ID available. Please create a brief first.');
+      }
+
+      // Make sure we're using a valid brief ID
+      const briefId = parseInt(createdBriefId);
+      if (isNaN(briefId)) {
+        throw new Error('Invalid brief ID format');
+      }
+
+      const response = await fetch(`http://localhost:4000/api/brief/${briefId}/audience`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -283,9 +320,12 @@ export default function Dashboard() {
         },
         body: JSON.stringify({
           ...audienceData,
-          brief_id: selectedFolder.id // Changed from projectId to brief_id to match DB schema
+          brief_id: briefId // Include the brief_id in the payload as well
         })
       });
+
+      const responseData = await response.json();
+      console.log('Audience creation response:', responseData);
 
       if (response.ok) {
         setAudienceData({
@@ -298,13 +338,15 @@ export default function Dashboard() {
         });
         setShowAudienceForm(false);
         setIsBriefFormOpen(false);
+        setCreatedBriefId(null);
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to create audience');
+        const errorMessage = responseData.message || 'Failed to create audience';
+        console.error('Server error:', errorMessage);
+        throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error('Error creating audience:', error);
-      setError('Failed to create audience. Please try again.');
+      console.error('Error in audience creation:', error);
+      setError(error.message || 'Failed to create audience. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -585,10 +627,10 @@ export default function Dashboard() {
                     <option value="professional">Professional</option>
                     <option value="friendly">Friendly</option>
                     <option value="casual">Casual</option>
+                    <option value="formal">Formal</option>
                     <option value="authoritative">Authoritative</option>
                     <option value="empathetic">Empathetic</option>
                     <option value="inspirational">Inspirational</option>
-                    <option value="educational">Educational</option>
                   </select>
                 </div>
 
@@ -658,8 +700,8 @@ export default function Dashboard() {
               </li>
               <li className={activeSection === 'library' ? styles.active : ''} onClick={() => setActiveSection('library')}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                </svg>
+  <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+</svg>
                 <span>Library</span>
               </li>
               <li>
@@ -715,8 +757,8 @@ export default function Dashboard() {
               <div className={styles.librarySections}>
                 {renderFolderSection()}
                 {renderQASection()}
-              </div>
-            </section>
+            </div>
+          </section>
           )}
         </div>
       </div>
