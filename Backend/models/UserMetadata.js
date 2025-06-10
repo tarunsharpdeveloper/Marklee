@@ -58,7 +58,7 @@ class UserMetadata {
         'SELECT * FROM user_metadata WHERE user_id = ?',
         [userId]
       );
-      return metadata || null;
+      return metadata[0] || null;
     } catch (error) {
       throw error;
     }

@@ -3,41 +3,56 @@ const { pool: db } = require('../config/database');
 class Audience {
     constructor(data) {
         this.id = data.id;
-        this.briefId = data.briefId;
+        this.briefId = data.brief_id;
         this.segment = data.segment;
         this.insights = data.insights;
-        this.messagingAngle = data.messagingAngle;
-        this.supportPoints = data.supportPoints;
+        this.messagingAngle = data.messaging_angle;
+        this.supportPoints = data.support_points ? 
+            (typeof data.support_points === 'string' ? 
+                JSON.parse(data.support_points) : 
+                data.support_points) : 
+            null;
         this.tone = data.tone;
-        this.personaProfile = data.personaProfile;
-        this.createdAt = data.createdAt;
-        this.updatedAt = data.updatedAt;
+        this.personaProfile = data.persona_profile;
+        this.createdAt = data.created_at;
+        this.updatedAt = data.updated_at;
     }
 
-    static async create(audienceData) {
+    static async create(audienceArray) {
         try {
+            if (!Array.isArray(audienceArray) || audienceArray.length === 0) {
+                throw new Error("audienceData must be a non-empty array");
+            }
+    
+            const placeholders = audienceArray.map(() => '(?, ?, ?, ?, ?, ?, ?)').join(', ');
+            const values = [];
+    
+            for (const item of audienceArray) {
+                values.push(
+                    item.briefId,
+                    item.segment,
+                    item.insights,
+                    item.messagingAngle,
+                    item.supportPoints,
+                    item.tone,
+                    item.personaProfile
+                );
+            }
+    
             const [result] = await db.execute(
                 `INSERT INTO audiences 
-                (brief_id, segment, insights, messaging_angle, support_points, 
-                tone, persona_profile) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                [
-                    audienceData.briefId,
-                    audienceData.segment,
-                    audienceData.insights,
-                    audienceData.messagingAngle,
-                    audienceData.supportPoints,
-                    audienceData.tone,
-                    audienceData.personaProfile
-                ]
+                (brief_id, segment, insights, messaging_angle, support_points, tone, persona_profile)
+                VALUES ${placeholders}`,
+                values
             );
-            return result.insertId;
-        }
-        catch (error) {
-            console.error('Error creating audience:', error);
+    
+            return result;
+        } catch (error) {
+            console.error('Bulk insert error:', error);
             throw error;
         }
     }
+    
 
     static async findByBriefId(briefId) {
         try {

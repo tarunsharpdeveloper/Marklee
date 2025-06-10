@@ -2,6 +2,7 @@ const Brief = require('../models/Brief');
 const Audience = require('../models/Audience');
 const Project = require('../models/Project');
 const GeneratedContent = require('../models/GeneratedContent');
+const UserMetadata = require('../models/UserMetadata');
 const { ChatOpenAI } = require('@langchain/openai');
 const { PromptTemplate } = require('@langchain/core/prompts');
 const { StringOutputParser } = require('@langchain/core/output_parsers');
@@ -52,12 +53,15 @@ const briefController = {
     async createBrief(req, res) {
         try {
             const briefId = await Brief.create(req.body);
-            const brief = await Brief.findById(briefId);
+            
+            // Generate audiences using the controller's function
+            const audiences = await briefController.generateAudienceSegments(briefId, req.user.id);
             
             res.status(201).json({
                 success: true,
                 message: 'Brief created successfully',
-                data: brief
+                data: audiences?.data,
+                error: audiences?.error
             });
         } catch (error) {
             console.error('Brief creation error:', error);
@@ -275,6 +279,164 @@ const briefController = {
             res.status(500).json({
                 success: false,
                 message: 'Failed to generate content',
+                error: error.message
+            });
+        }
+    },
+
+    // Generate Audience Segments
+    async generateAudienceSegments(brief_id, user_id) {
+        try {
+            // Get the brief
+            const brief = await Brief.findById(brief_id);
+            if (!brief) {
+                return {
+                    success: false,
+                    message: 'Brief not found'
+                };
+            }
+
+            // Get user metadata
+            const userMetadata = await UserMetadata.findByUserId(user_id);
+
+            // Audience generation prompt
+            const audiencePrompt = PromptTemplate.fromTemplate(`
+                Based on the following brief and user context, generate 5 distinct audience segments:
+
+                Brief Information:
+                Product/Service: {product}
+                Main Message: {message}
+                Special Features: {features}
+                Benefits: {benefits}
+                Call to Action: {callToAction}
+
+                Business Context:
+                Organization Type: {orgType}
+                Support Type: {supportType}
+                Business Model: {businessModel}
+
+                For each segment, provide:
+                1. Segment Name and Description
+                2. Detailed Audience Insights
+                3. Messaging Angle
+                4. Support Points (as bullet points)
+                5. Appropriate Tone of Voice
+                6. Detailed Persona Profile
+
+                Format the response as a Jvalid JSON array format where each object has the fields. Use double quotes around all keys and values:
+                - segment
+                - insights
+                - messagingAngle
+                - supportPoints
+                - tone
+                - personaProfile
+
+                Make each field detailed but concise.
+            `);
+
+            const audienceChain = RunnableSequence.from([
+                audiencePrompt,
+                chatModel,
+                new StringOutputParser()
+            ]);
+
+            const aiResponse = await audienceChain.invoke({
+                product: brief.purpose,
+                message: brief.main_message,
+                features: brief.special_features,
+                benefits: brief.benefits,
+                callToAction: brief.call_to_action,
+                orgType: userMetadata?.organization_type || '',
+                supportType: userMetadata?.support_type || '',
+                businessModel: userMetadata?.business_model || ''
+            });
+            const cleanJson = aiResponse
+                            .replace('```json', '')
+                            .replace('```', '')
+                            .trim();
+            const audiences = JSON.parse(cleanJson);
+            const audienceResults = [];
+
+            // Save each audience segment
+            for (const audience of audiences) {
+                const audienceData = {
+                    briefId: brief_id,
+                    segment: JSON.stringify(audience.segment) || null,
+                    insights: JSON.stringify(audience.insights) || null,
+                    messagingAngle: JSON.stringify(audience.messagingAngle) || null,
+                    supportPoints: Array.isArray(audience.supportPoints) ? 
+                    JSON.stringify(audience.supportPoints) : 
+                    audience.supportPoints || null,
+                    tone: JSON.stringify(audience.tone) || null,
+                    personaProfile: JSON.stringify(audience.personaProfile) || null
+                };
+                audienceResults.push(audienceData);
+            }
+            console.log('Creating audience with data:', audienceResults);
+            await Audience.create(audienceResults);
+            const savedAudience = await Audience.findByBriefId(brief_id);
+
+            return {
+                success: true,
+                message: 'Audience segments generated successfully',
+                data: {
+                    brief: brief,
+                    audiences: savedAudience
+                }
+            };
+
+        } catch (error) {
+            console.error('Error generating audience segments:', error);
+            return {
+                success: false,
+                message: 'Failed to generate audience segments',
+                error: error.message
+            };
+        }
+    },
+
+    // Update Audience Segment
+    async updateAudienceSegment(req, res) {
+        try {
+            const { audienceId } = req.params;
+            const {
+                segment,
+                insights,
+                messaging_angle,
+                support_points,
+                tone,
+                persona_profile
+            } = req.body;
+
+            const audience = await Audience.findById(audienceId);
+            if (!audience) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Audience segment not found'
+                });
+            }
+
+            // Update the audience
+            const updatedAudience = await Audience.update(audienceId, {
+                segment: segment || audience.segment,
+                insights: insights || audience.insights,
+                messaging_angle: messaging_angle || audience.messaging_angle,
+                support_points: support_points || audience.support_points,
+                tone: tone || audience.tone,
+                persona_profile: persona_profile || audience.persona_profile
+            });
+
+            res.status(200).json({
+                success: true,
+                message: 'Audience segment updated successfully',
+                data: updatedAudience
+            });
+
+        } catch (error) {
+            console.error('Error updating audience segment:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to update audience segment',
                 error: error.message
             });
         }
