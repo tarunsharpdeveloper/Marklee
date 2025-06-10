@@ -264,7 +264,7 @@ export default function Dashboard() {
         console.log('Response data.data:', responseData.data);
         
         // Try to get the ID from the response
-        const briefId = responseData.data?.id || responseData.id;
+        const briefId = responseData.data?.brief?.id || responseData.id;
         console.log('Extracted Brief ID:', briefId);
         
         if (!briefId) {
