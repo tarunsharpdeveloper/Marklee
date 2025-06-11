@@ -98,7 +98,7 @@ const authController = {
       }
 
       const metadata = await UserMetadata.findByUserId(user.id);
-      const isUserMetaData = (metadata.length > 0);
+      const isUserMetaData = metadata ? true : false;
 
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {

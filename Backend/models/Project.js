@@ -16,6 +16,16 @@ class Project {
         }
     }   
 
+    static async findByName(name) {
+        try {
+            const [rows] = await db.execute('SELECT * FROM projects WHERE project_name = ?', [name]);
+            return rows[0];
+        }
+        catch (error) {
+            console.error('Error fetching project by name:', error);
+            throw error;
+        }
+    }
     static async findById(id) {
         try {   
             const [rows] = await db.execute('SELECT * FROM projects WHERE id = ?', [id]);

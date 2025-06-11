@@ -18,6 +18,13 @@ const briefController = {
     // Create Project
     async createProject(req, res) {
         try {
+            const projectExists = await Project.findByName(req.body?.projectName?.trim());
+            if (projectExists) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Project already exists'
+                });
+            }
             const projectId = await Project.create(req.body);
             const project = await Project.findById(projectId);
             res.status(201).json({
@@ -287,7 +294,6 @@ const briefController = {
     // Generate Audience Segments
     async generateAudienceSegments(brief_id, user_id) {
         try {
-            console.log("Generating audience segments for brief:", brief_id);
             // Get the brief
             const brief = await Brief.findById(brief_id);
             if (!brief) {
@@ -296,10 +302,8 @@ const briefController = {
                     message: 'Brief not found'
                 };
             }
-            console.log("Brief found:", brief);
             // Get user metadata
             const userMetadata = await UserMetadata.findByUserId(user_id);
-            console.log("User metadata found:", userMetadata);
             // Audience generation prompt
             const audiencePrompt = PromptTemplate.fromTemplate(`
                 Based on the following brief and user context, generate 5 distinct audience segments:
