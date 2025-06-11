@@ -8,7 +8,7 @@ router.use(auth);
 
 // Project routes
 router.post('/project', briefController.createProject);
-router.get('/projects', briefController.getProjects);
+router.get('/projects', briefController.getProjectsWithBriefs);
 
 // Brief routes
 router.post('/create-brief', briefController.createBrief);

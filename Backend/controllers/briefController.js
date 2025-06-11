@@ -44,9 +44,9 @@ const briefController = {
     },
 
     // Get Projects
-    async getProjects(req, res) {
+    async getProjectsWithBriefs(req, res) {
         try {
-            const projects = await Project.findByUser(req.user.id);
+            const projects = await Project.findByUserWithBriefs(req.user.id);
             res.status(200).json({
                 success: true,
                 data: projects
@@ -306,7 +306,7 @@ const briefController = {
             const userMetadata = await UserMetadata.findByUserId(user_id);
             // Audience generation prompt
             const audiencePrompt = PromptTemplate.fromTemplate(`
-                Based on the following brief and user context, generate 5 distinct audience segments:
+                Based on the following brief and user context, generate 2 distinct audience segments:
 
                 Brief Information:
                 Product/Service: {product}

@@ -36,10 +36,43 @@ class Project {
         }
     }
 
-    static async findByUser(userId) {
+    static async findByUserWithBriefs(userId) {
         try {
-            const [rows] = await db.execute('SELECT * FROM projects WHERE user_id = ?', [userId]);
-            return rows;
+            const [rows] = await db.execute(`
+                    SELECT 
+                        projects.id AS project_id,
+                        projects.project_name,
+                        projects.user_id,
+                        briefs.id AS brief_id,
+                        briefs.purpose AS brief_title
+                    FROM projects 
+                    LEFT JOIN briefs ON projects.id = briefs.project_id 
+                    WHERE projects.user_id = ?`, 
+                    [userId]
+                );
+                const projectMap = {};
+
+                for (const row of rows) {
+                    const projectId = row.project_id;
+        
+                    if (!projectMap[projectId]) {
+                        projectMap[projectId] = {
+                            id: projectId,
+                            name: row.project_name,
+                            user_id: row.user_id,
+                            briefs: []
+                        };
+                    }
+        
+                    if (row.brief_id) {
+                        projectMap[projectId].briefs.push({
+                            id: row.brief_id,
+                            title: row.brief_title
+                        });
+                    }
+                }
+        
+             return Object.values(projectMap);
         } catch (error) {
             console.error('Error fetching projects:', error);
             throw error;
