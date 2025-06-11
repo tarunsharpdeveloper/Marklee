@@ -18,7 +18,7 @@ const briefController = {
     // Create Project
     async createProject(req, res) {
         try {
-            const projectExists = await Project.findByName(req.body?.projectName?.trim());
+            const projectExists = await Project.findByName(req.body?.projectName?.trim(), req.user.id);
             if (projectExists) {
                 return res.status(400).json({
                     success: false,
@@ -442,6 +442,24 @@ const briefController = {
             res.status(500).json({
                 success: false,
                 message: 'Failed to update audience segment',
+                error: error.message
+            });
+        }
+    },
+
+    // Get Audience by Brief
+    async getAudienceByBrief(req, res) {
+        try {
+            const audience = await Audience.findByBriefId(req.params.id);
+            res.status(200).json({
+                success: true,
+                data: audience
+            });
+        } catch (error) {
+            console.error('Error fetching audience by brief:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to fetch audience by brief',
                 error: error.message
             });
         }

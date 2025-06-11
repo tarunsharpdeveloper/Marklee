@@ -16,9 +16,9 @@ class Project {
         }
     }   
 
-    static async findByName(name) {
+    static async findByName(name , userId) {
         try {
-            const [rows] = await db.execute('SELECT * FROM projects WHERE project_name = ?', [name]);
+            const [rows] = await db.execute('SELECT * FROM projects WHERE project_name = ? AND user_id = ?', [name, userId]);
             return rows[0];
         }
         catch (error) {
@@ -43,6 +43,7 @@ class Project {
                         projects.id AS project_id,
                         projects.project_name,
                         projects.user_id,
+                        projects.status,
                         briefs.id AS brief_id,
                         briefs.purpose AS brief_title
                     FROM projects 
@@ -60,6 +61,7 @@ class Project {
                             id: projectId,
                             name: row.project_name,
                             user_id: row.user_id,
+                            status: row.status,
                             briefs: []
                         };
                     }

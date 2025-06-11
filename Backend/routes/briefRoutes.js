@@ -19,6 +19,7 @@ router.get('/get-briefs/:projectId', briefController.getBriefsByProject);
 
 // Audience routes
 router.post('/brief/:id/audience', briefController.createAudience);
+router.get('/brief/:id/audience', briefController.getAudienceByBrief);
 
 // Content generation routes
 router.post('/generate-content', briefController.generateContent);
