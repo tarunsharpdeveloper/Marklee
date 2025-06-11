@@ -146,9 +146,8 @@ export default function Dashboard() {
   const fetchProjects = async () => {
     try {
       const token = localStorage.getItem('token');
-      const userData = JSON.parse(localStorage.getItem('user'));
       
-      if (!token || !userData) {
+      if (!token) {
         router.push('/');
         return;
       }
@@ -163,22 +162,19 @@ export default function Dashboard() {
         const { data } = await response.json();
         console.log('Fetched projects:', data);
         
-        // Filter projects for current user and convert to folder structure
+        // Convert to folder structure without filtering
         const newFolderStructure = data.reduce((acc, project) => {
-          // Only include projects that belong to current user
-          if (project.user_id === userData.id) {
-            const projectKey = project.project_name.toLowerCase().replace(/\s+/g, '_');
-            acc[projectKey] = {
-              id: project.id,
-              name: project.project_name,
-              status: project.status
-            };
-          }
+          const projectKey = project.name.toLowerCase().replace(/\s+/g, '_');
+          acc[projectKey] = {
+            id: project.id,
+            name: project.name,
+            status: project.status
+          };
           return acc;
         }, {});
 
         setFolderStructure(newFolderStructure);
-        setProjects(data.filter(project => project.user_id === userData.id));
+        setProjects(data);
       } else {
         console.error('Failed to fetch projects:', response.status);
       }
