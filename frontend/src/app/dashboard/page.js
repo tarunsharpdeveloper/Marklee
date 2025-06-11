@@ -88,15 +88,12 @@ export default function Dashboard() {
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('token');
-      const userData = localStorage.getItem('user');
-
-      if (!token || !userData) {
+      if (!token) {
         router.push('/');
         return;
       }
 
       try {
-        // Check if user has completed onboarding
         const response = await fetch('http://localhost:4000/api/onboarding/get', {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -106,17 +103,18 @@ export default function Dashboard() {
         const data = await response.json();
         
         if (!response.ok || !data.data) {
-          // If no onboarding data found, redirect to pre-homepage
           router.push('/pre-homepage');
           return;
         }
 
         // Set user data if everything is ok
-        const user = JSON.parse(userData);
-        setUser({
-          name: user.name,
-          initials: user.name.split(' ').map(n => n[0]).join('').toUpperCase()
-        });
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (userData) {
+          setUser({
+            name: userData.name,
+            initials: userData.name.split(' ').map(n => n[0]).join('').toUpperCase()
+          });
+        }
       } catch (error) {
         console.error('Error checking auth:', error);
         router.push('/');
@@ -124,7 +122,7 @@ export default function Dashboard() {
     };
 
     checkAuth();
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     // Get user data from localStorage
@@ -204,20 +202,12 @@ export default function Dashboard() {
   };
 
   const handleLogout = () => {
-    // Clear all localStorage data
     localStorage.clear();
-    // Redirect to home page
     router.push('/');
   };
 
-  const handleCreateProject = () => {
-    setIsProjectPopupOpen(true);
-  };
-
-  const handleProjectSubmit = async (e) => {
+  const handleCreateProject = async (e) => {
     e.preventDefault();
-    if (!projectName.trim()) return;
-
     setLoading(true);
     setError('');
 
@@ -238,35 +228,10 @@ export default function Dashboard() {
       });
 
       if (response.ok) {
-        const { data } = await response.json();
-        console.log('Created project:', data);
-
-        // Add new project to folder structure
-        const projectKey = data.project_name.toLowerCase().replace(/\s+/g, '_');
-        setFolderStructure(prev => ({
-          ...prev,
-          [projectKey]: {
-            id: data.id,
-            name: data.project_name,
-            status: data.status,
-            user_id: userData.id // Store user_id with the folder
-          }
-        }));
-
         setProjectName('');
         setIsProjectPopupOpen(false);
-        
-        // Switch to library view
-        setActiveSection('library');
-        
-        // Expand the new folder
-        setExpandedFolders(prev => ({
-          ...prev,
-          [projectKey]: true
-        }));
-
-        // Refresh projects list
-        fetchProjects();
+        // Navigate to library after successful project creation
+        router.push('/library');
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Failed to create project');
@@ -363,39 +328,48 @@ export default function Dashboard() {
             <h2>Create New Project</h2>
             <button 
               className={styles.closeButton}
-              onClick={() => setIsProjectPopupOpen(false)}
+              onClick={() => {
+                setIsProjectPopupOpen(false);
+                setProjectName('');
+                setError('');
+              }}
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 6L6 18M6 6l12 12"/>
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
             </button>
           </div>
-          <form onSubmit={handleProjectSubmit}>
+          {error && <div className={styles.error}>{error}</div>}
+          <form onSubmit={handleCreateProject}>
             <div className={styles.formGroup}>
               <label htmlFor="projectName">Project Name</label>
               <input
                 id="projectName"
                 type="text"
+                className={styles.input}
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
                 placeholder="Enter project name"
-                className={styles.input}
-                autoFocus
+                required
               />
-              {error && <div className={styles.error}>{error}</div>}
             </div>
             <div className={styles.popupActions}>
               <button 
                 type="button" 
                 className={styles.cancelButton}
-                onClick={() => setIsProjectPopupOpen(false)}
+                onClick={() => {
+                  setIsProjectPopupOpen(false);
+                  setProjectName('');
+                  setError('');
+                }}
               >
                 Cancel
               </button>
               <button 
-                type="submit" 
+                type="submit"
                 className={styles.submitButton}
-                disabled={!projectName.trim() || loading}
+                disabled={loading || !projectName.trim()}
               >
                 {loading ? 'Creating...' : 'Create Project'}
               </button>
@@ -618,17 +592,6 @@ export default function Dashboard() {
   return (
     <div className={styles.container}>
       {renderProjectPopup()}
-      {/* <button 
-        className={styles.hamburgerIcon}
-        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        aria-label="Toggle sidebar"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-      </button> */}
       <aside className={`${styles.sidebar} ${isSidebarCollapsed ? styles.collapsed : ''}`}>
         <div className={styles.sidebarContent}>
           <div className={styles.sidebarHeader}>
@@ -640,15 +603,16 @@ export default function Dashboard() {
             <ul>
               <li className={activeSection === 'greeting' ? styles.active : ''} onClick={() => setActiveSection('greeting')}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
                 </svg>
-                <span>Dashboard</span>
+                <span>Home</span>
               </li>
-              <li className={activeSection === 'library' ? styles.active : ''} onClick={() => setActiveSection('library')}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-  <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-</svg>
+              <li onClick={() => router.push('/library')}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
                 <span>Library</span>
               </li>
               <li>
@@ -670,13 +634,14 @@ export default function Dashboard() {
           </button>
         </div>
       </aside>
-      <main className={`${styles.main} ${isSidebarCollapsed ? styles.collapsed : ''}`}>
-        <header className={styles.header}>
-        <div style={{display: 'flex', alignItems: 'center', justifyContent:"start"}}>
-        <button onClick={toggleSidebar} className={styles.toggleButton}>
-        <svg xmlns="http://www.w3.org/2000/svg" fill="#1A1A1A" viewBox="0 0 30 30" width="30px" height="30px"><path d="M 3 7 A 1.0001 1.0001 0 1 0 3 9 L 27 9 A 1.0001 1.0001 0 1 0 27 7 L 3 7 z M 3 14 A 1.0001 1.0001 0 1 0 3 16 L 27 16 A 1.0001 1.0001 0 1 0 27 14 L 3 14 z M 3 21 A 1.0001 1.0001 0 1 0 3 23 L 27 23 A 1.0001 1.0001 0 1 0 27 21 L 3 21 z"/></svg>
-          </button>
-          
+      <main className={`${styles.main} ${isSidebarCollapsed ? styles.collapsedMain : ''}`}>
+        <header className={`${styles.header} ${isSidebarCollapsed ? styles.collapsed : ''}`}>
+          <div style={{display: 'flex', alignItems: 'center', justifyContent:"start"}}>
+            <button onClick={toggleSidebar} className={styles.toggleButton}>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="#1A1A1A" viewBox="0 0 30 30" width="30px" height="30px">
+                <path d="M 3 7 A 1.0001 1.0001 0 1 0 3 9 L 27 9 A 1.0001 1.0001 0 1 0 27 7 L 3 7 z M 3 14 A 1.0001 1.0001 0 1 0 3 16 L 27 16 A 1.0001 1.0001 0 1 0 27 14 L 3 14 z M 3 21 A 1.0001 1.0001 0 1 0 3 23 L 27 23 A 1.0001 1.0001 0 1 0 27 21 L 3 21 z"/>
+              </svg>
+            </button>
           </div>
           <div className={styles.userProfile}>
             <span className={styles.userName}>{user.name || 'Guest'}</span>
@@ -684,29 +649,18 @@ export default function Dashboard() {
           </div>
         </header>
         <div className={styles.sections}>
-          {activeSection === 'greeting' ? (
-            <section className={`${styles.section} ${styles.greetingSection}`}>
-              <div className={styles.greetingContainer}>
-                <div className={styles.welcomeText}>
-                  <h1>Hello, <span className={styles.userName}>{user.name || 'Guest'}</span> 👋</h1>
-                  <p className={styles.copyQuestion}>What are you writing copy for today?</p>
-                </div>
-                <button className={styles.createButton} onClick={handleCreateProject}>
-                  <span>Create New Project</span>
-                  <svg className={styles.arrowIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-              </div>
-            </section>
-          ) : (
-            <section className={`${styles.section} ${styles.librarySection}`}>
-              <div className={styles.librarySections}>
-                {renderFolderSection()}
-                {renderQASection()}
+          <section className={`${styles.section} ${styles.greetingSection}`}>
+            <div className={styles.greetingContainer}>
+              <h1>Welcome back, {user.name?.split(' ')[0] || 'Guest'}!</h1>
+              <p>Ready to create something amazing?</p>
+              <button 
+                className={styles.createButton}
+                onClick={() => setIsProjectPopupOpen(true)}
+              >
+                Create New Project
+              </button>
             </div>
           </section>
-          )}
         </div>
       </main>
     </div>
