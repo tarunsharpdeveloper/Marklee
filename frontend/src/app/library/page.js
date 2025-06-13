@@ -35,6 +35,8 @@ export default function Library() {
   const [selectedAudienceId, setSelectedAudienceId] = useState(null);
   const [generatedContent, setGeneratedContent] = useState(null);
   const [showGeneratedContent, setShowGeneratedContent] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedAudience, setSelectedAudience] = useState(null);
 
   useEffect(() => {
     fetchProjects();
@@ -330,7 +332,7 @@ export default function Library() {
         const formattedAudiences = data.data.map(audience => {
           const segmentData = JSON.parse(audience.segment);
           return {
-            id: audience.id,
+            ...audience, // keep all fields for drawer
             name: segmentData.name,
             description: segmentData.description
           };
@@ -505,6 +507,7 @@ export default function Library() {
           </div>
         )}
         {audiences.length > 0 && !showGeneratedContent && (
+          console.log(audiences),
           <div className={styles.audienceSegments}>
            
               <button className={styles.backButton} onClick={handleBackFromAudience}>
@@ -519,11 +522,17 @@ export default function Library() {
             </div>
             <div className={styles.segmentsList}>
               {audiences.map((audience, index) => (
+                console.log(audience),
                 <div key={index} className={styles.segmentCard}>
                   <h4>{audience.name}</h4>
                   <p>{audience.description}</p>
                   <div className={styles.audienceActions}>
-                  <button className={styles.viewDetailsButton}>view</button>
+                  <button
+                    className={styles.viewDetailsButton}
+                    onClick={() => handleViewAudience(audience)}
+                  >
+                    view
+                  </button>
                   <button className={styles.generateDocumentButton} onClick={() => {
                     setSelectedAudienceId(audience.id);
                     setSelectedAssetType(audience.name);
@@ -597,7 +606,7 @@ export default function Library() {
         const newAudiences = responseData.data.audiences.map(audience => {
           const segmentData = JSON.parse(audience.segment);
           return {
-            id: audience.id,
+            ...audience, // keep all fields for drawer
             name: segmentData.name,
             description: segmentData.description
           };
@@ -739,6 +748,26 @@ export default function Library() {
     );
   };
 
+  const handleViewAudience = (audience) => {
+    setSelectedAudience(audience);
+    setDrawerOpen(true);
+  };
+
+  // Helper to recursively get all values from an object
+  function getAllValues(obj) {
+    let values = [];
+    if (typeof obj === 'object' && obj !== null) {
+      for (const key in obj) {
+        if (typeof obj[key] === 'object' && obj[key] !== null) {
+          values = values.concat(getAllValues(obj[key]));
+        } else {
+          values.push(obj[key]);
+        }
+      }
+    }
+    return values;
+  }
+
   return (
     <div className={styles.sections}>
       <section className={`${styles.section} ${styles.librarySection}`}>
@@ -751,6 +780,45 @@ export default function Library() {
       </section>
       {renderProjectPopup()}
       {renderAssetPopup()}
+      {drawerOpen && (
+        <>
+          <div className={styles.drawerOverlay} onClick={() => setDrawerOpen(false)} />
+          <div className={`${styles.drawer} ${drawerOpen ? styles.open : ''}`}>
+            <button className={styles.drawerClose} onClick={() => setDrawerOpen(false)}>×</button>
+            {selectedAudience && (
+              <div>
+                <h2>Audience Details</h2>
+                <h3>Insights</h3>
+                <pre style={{whiteSpace: 'pre-line'}}>
+                  {(() => {
+                    try {
+                      let insights = selectedAudience.insights;
+                      if (!insights) return '-';
+                      if (typeof insights === 'string') insights = JSON.parse(insights);
+                      const values = getAllValues(insights);
+                      return values.length ? values.join(' | ') : '-';
+                    } catch {
+                      return '-';
+                    }
+                  })()}
+                </pre>
+                <h3>Messaging Angle</h3>
+                <p>
+                  {selectedAudience.messagingAngle
+                    ? selectedAudience.messagingAngle.replace(/^"|"$/g, '')
+                    : '-'}
+                </p>
+                <h3>Tone</h3>
+                <p>
+                  {selectedAudience.tone
+                    ? selectedAudience.tone.replace(/^"|"$/g, '')
+                    : '-'}
+                </p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 } 
