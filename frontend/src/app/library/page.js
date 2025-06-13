@@ -18,6 +18,9 @@ export default function Library() {
   const [audiences, setAudiences] = useState([]);
   const [isMobileView, setIsMobileView] = useState(false);
   const [showFolderSection, setShowFolderSection] = useState(true);
+  const [showQASection, setShowQASection] = useState(true);
+  const [isAssetPopupOpen, setIsAssetPopupOpen] = useState(false);
+  const [selectedAssetType, setSelectedAssetType] = useState('');
   const [briefData, setBriefData] = useState({
     purpose: '',
     main_message: '',
@@ -28,6 +31,12 @@ export default function Library() {
     importance: '',
     additional_info: ''
   });
+  const [currentBriefId, setCurrentBriefId] = useState(null);
+  const [selectedAudienceId, setSelectedAudienceId] = useState(null);
+  const [generatedContent, setGeneratedContent] = useState(null);
+  const [showGeneratedContent, setShowGeneratedContent] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedAudience, setSelectedAudience] = useState(null);
 
   useEffect(() => {
     fetchProjects();
@@ -96,7 +105,7 @@ export default function Library() {
       console.error('Error fetching projects:', error);
     }
   };
-
+  
   const toggleFolder = (folderKey) => {
     setExpandedFolders(prev => {
       const allClosed = Object.keys(prev).reduce((acc, key) => {
@@ -231,13 +240,16 @@ export default function Library() {
   const handleCreateBrief = (folder) => {
     setSelectedFolder(folder);
     setIsBriefFormOpen(true);
+    setAudiences([]); // Clear any existing audiences
+    setShowQASection(true);
+    
     if (isMobileView) {
       setShowFolderSection(false);
     }
   };
 
   const handleBackToFolders = () => {
-    setIsBriefFormOpen(false);
+    setIsBriefFormOpen(true);
     setSelectedFolder(null);
     setShowFolderSection(true);
     setBriefData({
@@ -254,9 +266,19 @@ export default function Library() {
 
   const handleBackFromAudience = () => {
     setAudiences([]);
-    setIsBriefFormOpen(false);
-    setSelectedFolder(null);
-    setShowFolderSection(true);
+    setBriefData({
+      purpose: '',
+      main_message: '',
+      special_features: '',
+      beneficiaries: '',
+      benefits: '',
+      call_to_action: '',
+      importance: '',
+      additional_info: ''
+    });
+    setShowFolderSection(false);
+    setIsBriefFormOpen(true);
+    setShowQASection(true);
   };
 
   const renderFolderContent = (folder) => {
@@ -279,7 +301,7 @@ export default function Library() {
           <div className={styles.briefsList}>
             {folder.briefs.map((brief, index) => (
               <div key={brief.id || index} className={styles.briefCard}>
-                <div className={styles.briefHeader}>
+                <div className={styles.briefHeader} onClick={() => handleBriefClick(brief.id)}>
                   <h4>{brief.title || 'Brief'}</h4>
                 </div>
               </div>
@@ -288,6 +310,42 @@ export default function Library() {
         )}
       </div>
     );
+  };
+
+  const handleBriefClick = async (briefId) => {
+    try {
+      setCurrentBriefId(briefId); // Store the current brief ID
+      const response = await fetch(`http://localhost:4000/api/brief/${briefId}/audience`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch brief details');
+      }
+
+      const data = await response.json();
+      
+      // Update the audiences state with the fetched data
+      if (data.data && data.data.length > 0) {
+        const formattedAudiences = data.data.map(audience => {
+          const segmentData = JSON.parse(audience.segment);
+          return {
+            ...audience, // keep all fields for drawer
+            name: segmentData.name,
+            description: segmentData.description
+          };
+        });
+        setAudiences(formattedAudiences);
+      }
+
+      // Show the brief form section to display the audiences
+      setIsBriefFormOpen(true);
+    } catch (error) {
+      console.error('Error fetching brief details:', error);
+      setError('Failed to load brief details');
+    }
   };
 
   const renderFolderSection = () => {
@@ -324,16 +382,16 @@ export default function Library() {
   const renderQASection = () => {
     return (
       <div className={`${styles.qaSection} ${!isBriefFormOpen && isMobileView ? styles.hidden : ''}`}>
-        {isBriefFormOpen && selectedFolder && !audiences.length && (
+        {isBriefFormOpen && selectedFolder && !audiences.length && !showGeneratedContent && (
           <div className={styles.briefForm}>
-            {isMobileView && (
+           
               <button className={styles.backButton} onClick={handleBackToFolders}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M19 12H5M12 19l-7-7 7-7"/>
                 </svg>
-                Back to Folders
+               
               </button>
-            )}
+          
             <h2>Create Brief for {selectedFolder.name}</h2>
             {error && <div className={styles.error}>{error}</div>}
             
@@ -448,26 +506,60 @@ export default function Library() {
             </form>
           </div>
         )}
-        {audiences.length > 0 && (
+        {audiences.length > 0 && !showGeneratedContent && (
+          console.log(audiences),
           <div className={styles.audienceSegments}>
-            {isMobileView && (
+           
               <button className={styles.backButton} onClick={handleBackFromAudience}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M19 12H5M12 19l-7-7 7-7"/>
                 </svg>
-                Back to Folders
+                
               </button>
-            )}
+          
             <div className={styles.audienceHeader}>
               <h3>Target Audience Segments</h3>
             </div>
             <div className={styles.segmentsList}>
               {audiences.map((audience, index) => (
+                console.log(audience),
                 <div key={index} className={styles.segmentCard}>
                   <h4>{audience.name}</h4>
                   <p>{audience.description}</p>
+                  <div className={styles.audienceActions}>
+                  <button
+                    className={styles.viewDetailsButton}
+                    onClick={() => handleViewAudience(audience)}
+                  >
+                    view
+                  </button>
+                  <button className={styles.generateDocumentButton} onClick={() => {
+                    setSelectedAudienceId(audience.id);
+                    setSelectedAssetType(audience.name);
+                    setIsAssetPopupOpen(true);
+                  }}>Generate Document</button>
+                  </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+        {showGeneratedContent && generatedContent && (
+          <div className={styles.generatedContentSection}>
+            <div className={styles.generatedContentHeader}>
+              <h3>Generated Content</h3>
+              <span className={styles.generatedAssetType}>{selectedAssetType}</span>
+            </div>
+            <button 
+              className={styles.generatedContentBackButton}
+              onClick={() => setShowGeneratedContent(false)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" height={20} width={20} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            <div className={styles.generatedContentBody}>
+              <p className={styles.generatedContentText}>{generatedContent}</p>
             </div>
           </div>
         )}
@@ -514,7 +606,7 @@ export default function Library() {
         const newAudiences = responseData.data.audiences.map(audience => {
           const segmentData = JSON.parse(audience.segment);
           return {
-            id: audience.id,
+            ...audience, // keep all fields for drawer
             name: segmentData.name,
             description: segmentData.description
           };
@@ -567,6 +659,115 @@ export default function Library() {
     }
   };
 
+  const renderAssetPopup = () => {
+    if (!isAssetPopupOpen) return null;
+
+    const assetTypes = [
+      "Ad Copy",
+      "Landing Page",
+      "Email",
+      "Headline",
+      "Social Media Post",
+      "Product Description",
+      "Company Bio",
+      "Sales Funnel",
+      "Tagline"
+    ];
+
+    return (
+      <div className={styles.modalOverlay}>
+        <div className={styles.modalContent}>
+          <div className={styles.modalHeader}>
+            <h2>Generate Asset</h2>
+            <button 
+              className={styles.closeButton}
+              onClick={() => setIsAssetPopupOpen(false)}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <div className={styles.modalBody}>
+            <div className={styles.formGroup}>
+              <label htmlFor="assetType">Select Asset Type</label>
+              <select 
+                id="assetType" 
+                className={styles.assetSelect}
+                onChange={(e) => setSelectedAssetType(e.target.value)}
+              >
+                <option value="">Select an asset type</option>
+                {assetTypes.map((type, index) => (
+                  <option key={index} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.modalActions}>
+              <button 
+                className={styles.cancel}
+                onClick={() => setIsAssetPopupOpen(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className={styles.generateButton}
+                onClick={async () => {
+                  // Handle generate action
+                  try {
+                    const response = await fetch(`http://localhost:4000/api/generate-content`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                      },
+                      body: JSON.stringify({
+                        briefId: currentBriefId,
+                        audienceId: selectedAudienceId,
+                        assetType: selectedAssetType
+                      })
+                    });
+                    const responseData = await response.json();
+                    if (responseData.success) {
+                      setGeneratedContent(responseData.data.content);
+                      setShowGeneratedContent(true);
+                      setIsAssetPopupOpen(false);
+                    } else {
+                      throw new Error(responseData.message || 'Failed to generate content');
+                    }
+                  } catch (error) {
+                    console.error('Error generating asset:', error);
+                  }
+                }}
+              >
+                Generate
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const handleViewAudience = (audience) => {
+    setSelectedAudience(audience);
+    setDrawerOpen(true);
+  };
+
+  // Helper to recursively get all values from an object
+  function getAllValues(obj) {
+    let values = [];
+    if (typeof obj === 'object' && obj !== null) {
+      for (const key in obj) {
+        if (typeof obj[key] === 'object' && obj[key] !== null) {
+          values = values.concat(getAllValues(obj[key]));
+        } else {
+          values.push(obj[key]);
+        }
+      }
+    }
+    return values;
+  }
+
   return (
     <div className={styles.sections}>
       <section className={`${styles.section} ${styles.librarySection}`}>
@@ -578,6 +779,46 @@ export default function Library() {
         </div>
       </section>
       {renderProjectPopup()}
+      {renderAssetPopup()}
+      {drawerOpen && (
+        <>
+          <div className={styles.drawerOverlay} onClick={() => setDrawerOpen(false)} />
+          <div className={`${styles.drawer} ${drawerOpen ? styles.open : ''}`}>
+            <button className={styles.drawerClose} onClick={() => setDrawerOpen(false)}>×</button>
+            {selectedAudience && (
+              <div>
+                <h2>Audience Details</h2>
+                <h3>Insights</h3>
+                <pre style={{whiteSpace: 'pre-line'}}>
+                  {(() => {
+                    try {
+                      let insights = selectedAudience.insights;
+                      if (!insights) return '-';
+                      if (typeof insights === 'string') insights = JSON.parse(insights);
+                      const values = getAllValues(insights);
+                      return values.length ? values.join(' | ') : '-';
+                    } catch {
+                      return '-';
+                    }
+                  })()}
+                </pre>
+                <h3>Messaging Angle</h3>
+                <p>
+                  {selectedAudience.messagingAngle
+                    ? selectedAudience.messagingAngle.replace(/^"|"$/g, '')
+                    : '-'}
+                </p>
+                <h3>Tone</h3>
+                <p>
+                  {selectedAudience.tone
+                    ? selectedAudience.tone.replace(/^"|"$/g, '')
+                    : '-'}
+                </p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 } 
