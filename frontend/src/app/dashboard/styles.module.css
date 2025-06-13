@@ -1064,7 +1064,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem;
+    padding: 0;
     background: none;
     border: none;
     color: #1a1a1a;
@@ -1086,7 +1086,16 @@
 /* Desktop Styles */
 @media screen and (min-width: 769px) {
   .backButton {
-    display: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0;
+    background: none;
+    border: none;
+    color: #1a1a1a;
+    font-size: 0.875rem;
+    cursor: pointer;
+    margin-bottom: 1rem;
   }
 }
 

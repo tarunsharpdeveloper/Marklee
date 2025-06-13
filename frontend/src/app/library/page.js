@@ -326,14 +326,14 @@ export default function Library() {
       <div className={`${styles.qaSection} ${!isBriefFormOpen && isMobileView ? styles.hidden : ''}`}>
         {isBriefFormOpen && selectedFolder && !audiences.length && (
           <div className={styles.briefForm}>
-            {isMobileView && (
+           
               <button className={styles.backButton} onClick={handleBackToFolders}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M19 12H5M12 19l-7-7 7-7"/>
                 </svg>
-                Back to Folders
+               
               </button>
-            )}
+          
             <h2>Create Brief for {selectedFolder.name}</h2>
             {error && <div className={styles.error}>{error}</div>}
             
@@ -450,14 +450,14 @@ export default function Library() {
         )}
         {audiences.length > 0 && (
           <div className={styles.audienceSegments}>
-            {isMobileView && (
+           
               <button className={styles.backButton} onClick={handleBackFromAudience}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M19 12H5M12 19l-7-7 7-7"/>
                 </svg>
-                Back to Folders
+                
               </button>
-            )}
+          
             <div className={styles.audienceHeader}>
               <h3>Target Audience Segments</h3>
             </div>
