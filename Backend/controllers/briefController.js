@@ -63,13 +63,19 @@ const briefController = {
             
             // Generate audiences using the controller's function
             const audiences = await briefController.generateAudienceSegments(briefId, req.user.id);
-            
+            if (audiences.success) {
             res.status(201).json({
                 success: true,
                 message: 'Brief created successfully',
                 data: audiences?.data,
-                error: audiences?.error
-            });
+                })
+            } else {
+                res.status(500).json({
+                    success: false,
+                    message: 'Something went wrong',
+                    error: audiences?.error
+                });
+            }
         } catch (error) {
             console.error('Brief creation error:', error);
             res.status(500).json({
@@ -156,58 +162,58 @@ const briefController = {
     },
 
     // Create Audience
-    async createAudience(req, res) {
-        try {
-            const audiencePrompt = PromptTemplate.fromTemplate(`
-                Analyze the following brief and generate audience insights:
-                Brief Purpose: {purpose}
-                Main Message: {mainMessage}
-                Target Audience: {targetAudience}
+    // async createAudience(req, res) {
+    //     try {
+    //         const audiencePrompt = PromptTemplate.fromTemplate(`
+    //             Analyze the following brief and generate audience insights:
+    //             Brief Purpose: {purpose}
+    //             Main Message: {mainMessage}
+    //             Target Audience: {targetAudience}
                 
-                Generate:
-                1. Detailed audience segment description
-                2. Key audience insights
-                3. Recommended messaging angle
-                4. Support points
-                5. Appropriate tone of voice
-            `);
+    //             Generate:
+    //             1. Detailed audience segment description
+    //             2. Key audience insights
+    //             3. Recommended messaging angle
+    //             4. Support points
+    //             5. Appropriate tone of voice
+    //         `);
 
-            const chain = RunnableSequence.from([
-                audiencePrompt,
-                chatModel,
-                new StringOutputParser()
-            ]);
+    //         const chain = RunnableSequence.from([
+    //             audiencePrompt,
+    //             chatModel,
+    //             new StringOutputParser()
+    //         ]);
 
-            const brief = await Brief.findById(req.params.id);
-            const aiResponse = await chain.invoke({
-                purpose: brief.purpose,
-                mainMessage: brief.mainMessage,
-                targetAudience: req.body.segment
-            });
+    //         const brief = await Brief.findById(req.params.id);
+    //         const aiResponse = await chain.invoke({
+    //             purpose: brief.purpose,
+    //             mainMessage: brief.mainMessage,
+    //             targetAudience: req.body.segment
+    //         });
 
-            const audienceData = {
-                ...req.body,
-                briefId: req.params.id,
-                insights: aiResponse
-            };
+    //         const audienceData = {
+    //             ...req.body,
+    //             briefId: req.params.id,
+    //             insights: aiResponse
+    //         };
 
-            const audienceId = await Audience.create(audienceData);
-            const audience = await Audience.findById(audienceId);
+    //         const audienceId = await Audience.create(audienceData);
+    //         const audience = await Audience.findById(audienceId);
             
-            res.status(201).json({
-                success: true,
-                message: 'Audience created successfully',
-                data: audience
-            });
-        } catch (error) {
-            console.error('Error creating audience:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to create audience',
-                error: error.message
-            });
-        }
-    },
+    //         res.status(201).json({
+    //             success: true,
+    //             message: 'Audience created successfully',
+    //             data: audience
+    //         });
+    //     } catch (error) {
+    //         console.error('Error creating audience:', error);
+    //         res.status(500).json({
+    //             success: false,
+    //             message: 'Failed to create audience',
+    //             error: error.message
+    //         });
+    //     }
+    // },
 
     // Generate Content
     async generateContent(req, res) {
@@ -246,6 +252,7 @@ const briefController = {
                 4. End with the call to action
                 5. Format appropriately for the asset type
             `);
+
 
             const chain = RunnableSequence.from([
                 contentPrompt,
@@ -303,22 +310,20 @@ const briefController = {
                 };
             }
             // Get user metadata
-            const userMetadata = await UserMetadata.findByUserId(user_id);
+            // const userMetadata = await UserMetadata.findByUserId(user_id);
             // Audience generation prompt
             const audiencePrompt = PromptTemplate.fromTemplate(`
-                Based on the following brief and user context, generate 2 distinct audience segments:
+                Based on the following brief, generate 2 distinct audience segments:
 
                 Brief Information:
                 Product/Service: {product}
                 Main Message: {message}
                 Special Features: {features}
                 Benefits: {benefits}
+                Beneficiaries: {beneficiaries}
+                Importance: {importance}
+                Additional Info: {additionalInfo}
                 Call to Action: {callToAction}
-
-                Business Context:
-                Organization Type: {orgType}
-                Support Type: {supportType}
-                Business Model: {businessModel}
 
                 For each segment, provide:
                 1. Segment Name and Description
@@ -328,7 +333,7 @@ const briefController = {
                 5. Appropriate Tone of Voice
                 6. Detailed Persona Profile
 
-                Format the response as a Jvalid JSON array format where each object has the fields:
+                Format the response as a valid JSON array where each object has the fields:
                 - segment
                 - insights
                 - messagingAngle
@@ -337,6 +342,7 @@ const briefController = {
                 - personaProfile
 
                 Make each field detailed but concise.
+
             `);
 
             const audienceChain = RunnableSequence.from([
@@ -350,10 +356,13 @@ const briefController = {
                 message: brief.main_message,
                 features: brief.special_features,
                 benefits: brief.benefits,
+                beneficiaries: brief.beneficiaries,
+                importance: brief.importance,
+                additionalInfo: brief.additional_info,
                 callToAction: brief.call_to_action,
-                orgType: userMetadata?.organization_type || '',
-                supportType: userMetadata?.support_type || '',
-                businessModel: userMetadata?.business_model || ''
+                // orgType: userMetadata?.organization_type || '',
+                // supportType: userMetadata?.support_type || '',
+                // businessModel: userMetadata?.business_model || ''
             });
             const cleanJson = aiResponse
                             .replace('```json', '')
