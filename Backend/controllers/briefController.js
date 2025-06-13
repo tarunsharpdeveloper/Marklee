@@ -245,6 +245,8 @@ const briefController = {
                 3. Include the main message and support points
                 4. End with the call to action
                 5. Format appropriately for the asset type
+                6. Simple content, no more than 200 words and do not include any emojis
+ 
             `);
 
             const chain = RunnableSequence.from([
