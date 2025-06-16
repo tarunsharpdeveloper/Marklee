@@ -6,30 +6,11 @@ CREATE TABLE IF NOT EXISTS users (
   otp VARCHAR(6),
   otp_expiry DATETIME,
   is_verified BOOLEAN DEFAULT FALSE,
+  role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
+  status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
--- if not exists role column in user table, add it
--- Check if 'role' column exists, and add it only if it doesn't
-SET @column_exists := (
-  SELECT COUNT(*) 
-  FROM INFORMATION_SCHEMA.COLUMNS 
-  WHERE table_schema = DATABASE()
-    AND table_name = 'users'
-    AND column_name = 'role'
-);
-
--- Prepare and execute ALTER TABLE statement only if column doesn't exist
-SET @sql := IF(@column_exists = 0, 
-  'ALTER TABLE users ADD COLUMN role ENUM(\'admin\', \'user\') NOT NULL DEFAULT \'user\'', 
-  'SELECT "Column already exists, skipping ALTER TABLE";'
-);
-
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
 
 add admin user and password is 123456 if not exists
 INSERT INTO users (name, email, password, role ,is_verified) VALUES ('Admin', 'admin@gmail.com', '$2a$10$rysdja9AWpDGGW1aMW.9FecY9SKLXk8zeLpMWMgvCW8YqCvY4xd0y', 'admin', true);

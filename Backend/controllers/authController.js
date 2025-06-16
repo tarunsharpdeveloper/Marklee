@@ -90,10 +90,10 @@ const authController = {
       const { email, password } = req.body;
 
       const user = await User.findByEmail(email);
-      if (!user) {
+      if (!user || user.status === 'inactive') {
         return res.status(401).json({
           success: false,
-          message: 'Invalid credentials'
+          message: 'Invalid credentials or account is inactive'
         });
       }
 
