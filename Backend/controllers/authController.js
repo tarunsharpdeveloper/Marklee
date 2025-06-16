@@ -62,7 +62,7 @@ const authController = {
       const token = jwt.sign(
         { userId: user.id, email: user.email },
         process.env.JWT_SECRET,
-        { expiresIn: "24h" }
+        { expiresIn: "30d" }
       );
       
       // Remove sensitive data before sending
@@ -97,8 +97,12 @@ const authController = {
         });
       }
 
-      const metadata = await UserMetadata.findByUserId(user.id);
-      const isUserMetaData = metadata ? true : false;
+      let isUserMetaData = true;
+
+      if(user.role !== 'admin'){
+        const metadata = await UserMetadata.findByUserId(user.id);
+        isUserMetaData = metadata ? true : false;
+      }
 
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
@@ -126,7 +130,7 @@ const authController = {
       const token = jwt.sign(
         { userId: user.id, email: user.email },
         process.env.JWT_SECRET,
-        { expiresIn: "24h" }
+        { expiresIn: "30d" }
       );
 
       // Remove sensitive data before sending
