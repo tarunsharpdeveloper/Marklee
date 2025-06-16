@@ -66,7 +66,7 @@ export default function UserManagement() {
               <th>ID</th>
               <th>Name</th>
               <th>Email</th>
-              <th>Role</th>
+              {/* <th>Role</th> */}
               <th>Verified</th>
               <th>Created At</th>
               {/* <th>Updated At</th> */}
@@ -79,9 +79,9 @@ export default function UserManagement() {
                 <td>{user.id}</td>
                 <td className={styles.name}>{user.name}</td>
                 <td className={styles.email}>{user.email}</td>
-                <td>
+                {/* <td>
                   <span className={styles.role}>{user.role}</span>
-                </td>
+                </td> */}
                 <td>
                   <span className={user.is_verified ? styles.verified : styles.notVerified}>
                     {user.is_verified ? 'Yes' : 'No'}
