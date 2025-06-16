@@ -1,14 +1,14 @@
 import express from 'express';
 import auth from '../middlewares/auth.js';
-import { submitOnboarding, getOnboardingData } from '../controllers/onboardingController.js';
+import onboardingController from '../controllers/onboardingController.js';
 import validateRequest from '../middlewares/validateRequest.js';
-import { authSchema as onboardingSchema } from '../utils/validationSchema.js';
+import authSchema  from '../utils/validationSchema.js';
 
 const router = express.Router();
 // Submit onboarding data
-router.post('/create', validateRequest(onboardingSchema), auth, submitOnboarding);
+router.post('/create', validateRequest(authSchema.onboarding), auth, onboardingController.submitOnboarding);
 
 // Get onboarding data
-router.get('/get', auth, getOnboardingData);
+router.get('/get', auth, onboardingController.getOnboardingData);
 
 export default router; 

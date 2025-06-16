@@ -1,9 +1,10 @@
 import UserMetadata from '../models/UserMetadata.js';
-import { authSchema as onboardingSchema } from '../utils/validationSchema.js';
 
-const submitOnboarding = async (req, res) => {
-  try {
-    const metadata = await UserMetadata.create({
+
+const onboardingController = {
+  submitOnboarding: async (req, res) => {
+    try {
+      const metadata = await UserMetadata.create({
       userId: req.user.id,
       ...req.body
     });
@@ -20,12 +21,12 @@ const submitOnboarding = async (req, res) => {
       error: error.message
     });
   }
-};
+},
 
-const getOnboardingData = async (req, res) => {
-  try {
-    const metadata = await UserMetadata.findByUserId(req.user.id);
-    
+  getOnboardingData: async (req, res) => {
+    try {
+      const metadata = await UserMetadata.findByUserId(req.user.id);
+      
     if (!metadata) {
       return res.status(404).json({
         message: 'Onboarding data not found'
@@ -42,9 +43,7 @@ const getOnboardingData = async (req, res) => {
       error: error.message
     });
   }
+  }
 };
 
-export {
-  submitOnboarding,
-  getOnboardingData
-}; 
+export default onboardingController; 

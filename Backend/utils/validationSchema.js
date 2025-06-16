@@ -120,4 +120,4 @@ const authSchema = {
   })
 };
 
-export { authSchema }; 
+export default authSchema; 
