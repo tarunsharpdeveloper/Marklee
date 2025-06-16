@@ -1,6 +1,6 @@
-const { pool: db } = require('../config/database');
-const fs = require('fs').promises;
-const path = require('path');
+import { pool as db } from '../config/database.js';
+import fs from 'fs/promises';
+import path from 'path';
 
 class UserMetadata {
   static async create({
@@ -65,4 +65,4 @@ class UserMetadata {
   }
 }
 
-module.exports = UserMetadata; 
+export default UserMetadata; 

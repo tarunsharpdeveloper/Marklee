@@ -1,6 +1,5 @@
-
-const { pool: db } = require('../config/database');
-const fs = require('fs').promises;
+import { pool as db } from '../config/database.js';
+import fs from 'fs/promises';
 
 class Project {
     static async create(projectData) {
@@ -82,4 +81,4 @@ class Project {
     }   
 }
 
-module.exports = Project; 
+export default Project; 

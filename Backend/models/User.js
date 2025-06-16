@@ -1,6 +1,6 @@
-const { pool: db } = require('../config/database');
-const bcrypt = require('bcryptjs');
-const CryptoJS = require('crypto-js');
+import { pool as db } from '../config/database.js';
+import bcrypt from 'bcryptjs';
+import CryptoJS from 'crypto-js';
 
 class User {
   static async create({ email, password, name }) {
@@ -94,6 +94,16 @@ class User {
   static async verifyPassword(plainPassword, hashedPassword) {
     return await bcrypt.compare(plainPassword, hashedPassword);
   }
+
+  static async findAll() {
+    try {
+      const [users] = await db.execute('SELECT * FROM users WHERE role = "user"');
+      return users;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
 }
 
-module.exports = User; 
+export default User; 

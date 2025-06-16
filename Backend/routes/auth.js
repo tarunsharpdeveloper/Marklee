@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
+import authController from '../controllers/authController.js';
+import validateRequest from '../middlewares/validateRequest.js';
+import { authSchema } from '../utils/validationSchema.js';
+
 const router = express.Router();
-const authController = require('../controllers/authController');
-const auth = require('../middlewares/auth');
-const validateRequest = require('../middlewares/validateRequest');
-const authSchema = require('../utils/validationSchema');
 
 // Registration and verification routes
 router.post('/register', validateRequest(authSchema.signup), authController.register);
@@ -14,14 +14,14 @@ router.post('/resend-otp', validateRequest(authSchema.resendOTP), authController
 router.post('/login', validateRequest(authSchema.login), authController.login);
 
 // Protected route example
-router.get('/me', (req, res) => {
-  res.json({
-    user: {
-      id: req.user.id,
-      username: req.user.username,
-      email: req.user.email
-    }
-  });
-});
+// router.get('/me', auth, (req, res) => {
+//   res.json({
+//     user: {
+//       id: req.user.id,
+//       username: req.user.username,
+//       email: req.user.email
+//     }
+//   });
+// });
 
-module.exports = router; 
+export default router; 

@@ -1,17 +1,29 @@
-const Brief = require('../models/Brief');
-const Audience = require('../models/Audience');
-const Project = require('../models/Project');
-const GeneratedContent = require('../models/GeneratedContent');
-const UserMetadata = require('../models/UserMetadata');
-const { ChatOpenAI } = require('@langchain/openai');
-const { PromptTemplate } = require('@langchain/core/prompts');
-const { StringOutputParser } = require('@langchain/core/output_parsers');
-const { RunnableSequence } = require('@langchain/core/runnables');
+import Brief from '../models/Brief.js';
+import Audience from '../models/Audience.js';
+import Project from '../models/Project.js';
+import GeneratedContent from '../models/GeneratedContent.js';
+import UserMetadata from '../models/UserMetadata.js';
+import { ChatOpenAI } from '@langchain/openai';
+import { PromptTemplate } from '@langchain/core/prompts';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+import { RunnableSequence } from '@langchain/core/runnables';
+
+// Error handling utility
+const handleError = (res, error, message = 'Operation failed') => {
+    console.error(`${message}:`, error);
+    res.status(500).json({
+        success: false,
+        message,
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+};
 
 // Initialize ChatOpenAI
 const chatModel = new ChatOpenAI({
-    modelName: 'gpt-4o-mini',
-    temperature: 0.7
+    modelName: 'gpt-4',
+    temperature: 0.7,
+    maxRetries: 3,
+    timeout: 30000
 });
 
 const briefController = {
@@ -34,12 +46,7 @@ const briefController = {
             });
         }
         catch (error) {
-            console.error('Error creating project:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to create project',
-                error: error.message
-            });
+            handleError(res, error, 'Failed to create project');
         }
     },
 
@@ -52,7 +59,7 @@ const briefController = {
                 data: projects
             });
         } catch (error) {
-            console.error('Error fetching projects:', error);
+            handleError(res, error, 'Error fetching projects');
         }
     },
 
@@ -77,12 +84,7 @@ const briefController = {
                 });
             }
         } catch (error) {
-            console.error('Brief creation error:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to create brief',
-                error: error.message
-            });
+            handleError(res, error, 'Failed to create brief');
         }
     },
 
@@ -96,12 +98,7 @@ const briefController = {
                 data: briefs
             });
         } catch (error) {
-            console.error('Error fetching briefs:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to fetch briefs',
-                error: error.message
-            });
+            handleError(res, error, 'Failed to fetch briefs');
         }
     },
 
@@ -122,12 +119,7 @@ const briefController = {
                 data: brief
             });
         } catch (error) {
-            console.error('Error fetching brief:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to fetch brief',
-                error: error.message
-            });
+            handleError(res, error, 'Failed to fetch brief');
         }
     },
 
@@ -152,12 +144,7 @@ const briefController = {
                 data: updatedBrief
             });
         } catch (error) {
-            console.error('Error updating brief:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to update brief',
-                error: error.message
-            });
+            handleError(res, error, 'Failed to update brief');
         }
     },
 
@@ -291,12 +278,7 @@ const briefController = {
                 data: content
             });
         } catch (error) {
-            console.error('Error generating content:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to generate content',
-                error: error.message
-            });
+            handleError(res, error, 'Failed to generate content');
         }
     },
 
@@ -402,7 +384,7 @@ const briefController = {
             };
 
         } catch (error) {
-            console.error('Error generating audience segments:', error);
+            handleError(res, error, 'Failed to generate audience segments');
             return {
                 success: false,
                 message: 'Failed to generate audience segments',
@@ -449,12 +431,7 @@ const briefController = {
             });
 
         } catch (error) {
-            console.error('Error updating audience segment:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to update audience segment',
-                error: error.message
-            });
+            handleError(res, error, 'Failed to update audience segment');
         }
     },
 
@@ -467,14 +444,9 @@ const briefController = {
                 data: audience
             });
         } catch (error) {
-            console.error('Error fetching audience by brief:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to fetch audience by brief',
-                error: error.message
-            });
+            handleError(res, error, 'Failed to fetch audience by brief');
         }
     }
 };
 
-module.exports = briefController; 
+export default briefController; 

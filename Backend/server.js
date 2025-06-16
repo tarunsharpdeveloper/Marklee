@@ -1,11 +1,11 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const authRoutes = require('./routes/auth');
-const productAnalysisRoutes = require('./routes/productAnalysis');
-const onboardingRoutes = require('./routes/onboarding');
-const briefRoutes = require('./routes/briefRoutes');
-const db = require('./config/database');
+import dotenv from 'dotenv';
+import express from 'express';
+import cors from 'cors';
+import authRoutes from './routes/auth.js';
+import onboardingRoutes from './routes/onboarding.js';
+import briefRoutes from './routes/briefRoutes.js';
+import adminRoutes from './routes/admin.js';
+import { pool as db , testConnection } from './config/database.js';
 
 const app = express();
 
@@ -21,12 +21,12 @@ app.get('/api/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/product-analysis', productAnalysisRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api', briefRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Test database connection
-db.testConnection()
+testConnection()
   .then(success => {
     if (!success) {
       console.log('Please check your database configuration');

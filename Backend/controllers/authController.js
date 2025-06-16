@@ -1,8 +1,8 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const emailService = require('../utils/emailService');
-const bcrypt = require('bcrypt');
-const UserMetadata = require('../models/UserMetadata');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import emailService from '../utils/emailService.js';
+import bcrypt from 'bcrypt';
+import UserMetadata from '../models/UserMetadata.js';
 
 const authController = {
   async register(req, res) {
@@ -197,4 +197,4 @@ const authController = {
   },
 };
 
-module.exports = authController;
+export default authController;

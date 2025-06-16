@@ -1,8 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const briefController = require('../controllers/briefController');
-const auth = require('../middlewares/auth');
+import express from 'express';
+import briefController from '../controllers/briefController.js';
+import auth from '../middlewares/auth.js';
 
+const router = express.Router();
 // Apply authentication middleware to all routes
 router.use(auth);
 
@@ -24,4 +24,4 @@ router.get('/brief/:id/audience', briefController.getAudienceByBrief);
 // Content generation routes
 router.post('/generate-content', briefController.generateContent);
 
-module.exports = router; 
+export default router; 

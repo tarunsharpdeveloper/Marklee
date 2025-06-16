@@ -1,4 +1,4 @@
-const { pool: db } = require('../config/database');
+import { pool as db } from '../config/database.js';
 
 class GeneratedContent {
     constructor(data) {
@@ -77,4 +77,4 @@ class GeneratedContent {
     }
 }
 
-module.exports = GeneratedContent; 
+export default GeneratedContent; 

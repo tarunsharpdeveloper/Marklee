@@ -1,4 +1,4 @@
-const { pool: db } = require('../config/database');
+import { pool as db } from '../config/database.js';
 
 class Brief {
     constructor(data) {
@@ -70,4 +70,4 @@ class Brief {
     }
 }
 
-module.exports = Brief; 
+export default Brief; 

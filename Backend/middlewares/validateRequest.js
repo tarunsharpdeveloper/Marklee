@@ -19,4 +19,4 @@ const validateRequest = (schema) => {
   };
 };
 
-module.exports = validateRequest; 
+export default validateRequest; 

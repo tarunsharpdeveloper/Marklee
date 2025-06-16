@@ -1,5 +1,5 @@
-const UserMetadata = require('../models/UserMetadata');
-const { onboarding: onboardingSchema } = require('../utils/validationSchema');
+import UserMetadata from '../models/UserMetadata.js';
+import { authSchema as onboardingSchema } from '../utils/validationSchema.js';
 
 const submitOnboarding = async (req, res) => {
   try {
@@ -44,7 +44,7 @@ const getOnboardingData = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   submitOnboarding,
   getOnboardingData
 }; 
