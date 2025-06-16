@@ -612,7 +612,7 @@ export default function Dashboard() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                </svg>
+</svg>
                 <span>Library</span>
               </li>
               <li>
@@ -636,12 +636,12 @@ export default function Dashboard() {
       </aside>
       <main className={`${styles.main} ${isSidebarCollapsed ? styles.collapsedMain : ''}`}>
         <header className={`${styles.header} ${isSidebarCollapsed ? styles.collapsed : ''}`}>
-          <div style={{display: 'flex', alignItems: 'center', justifyContent:"start"}}>
-            <button onClick={toggleSidebar} className={styles.toggleButton}>
+        <div style={{display: 'flex', alignItems: 'center', justifyContent:"start"}}>
+        <button onClick={toggleSidebar} className={styles.toggleButton}>
               <svg xmlns="http://www.w3.org/2000/svg" fill="#1A1A1A" viewBox="0 0 30 30" width="30px" height="30px">
                 <path d="M 3 7 A 1.0001 1.0001 0 1 0 3 9 L 27 9 A 1.0001 1.0001 0 1 0 27 7 L 3 7 z M 3 14 A 1.0001 1.0001 0 1 0 3 16 L 27 16 A 1.0001 1.0001 0 1 0 27 14 L 3 14 z M 3 21 A 1.0001 1.0001 0 1 0 3 23 L 27 23 A 1.0001 1.0001 0 1 0 27 21 L 3 21 z"/>
               </svg>
-            </button>
+          </button>
           </div>
           <div className={styles.userProfile}>
             <span className={styles.userName}>{user.name || 'Guest'}</span>
