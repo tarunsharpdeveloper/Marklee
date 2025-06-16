@@ -20,10 +20,8 @@ const handleError = (res, error, message = 'Operation failed') => {
 
 // Initialize ChatOpenAI
 const chatModel = new ChatOpenAI({
-    modelName: 'gpt-4',
-    temperature: 0.7,
-    maxRetries: 3,
-    timeout: 30000
+    modelName: 'gpt-4o-mini',
+    temperature: 0.7
 });
 
 const briefController = {
