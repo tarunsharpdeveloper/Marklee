@@ -14,7 +14,7 @@
   color: white;
   border: none;
   border-radius: 6px;
-  padding: 0.6rem 0.7rem;
+  padding: 0.7rem;
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1064,7 +1064,7 @@
   }
 
   .folderSection.hidden {
-    display: none;
+    display: none;  
   }
 
   .qaSection.hidden {

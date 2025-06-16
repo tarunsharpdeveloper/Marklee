@@ -59,11 +59,38 @@ export default function Library() {
   // Handle mobile view transitions
   useEffect(() => {
     if (isMobileView) {
-      setShowFolderSection(!isBriefFormOpen);
+      if (isBriefFormOpen) {
+        setShowFolderSection(false);
+        setShowQASection(true);
+      } else if (audiences.length > 0) {
+        setShowFolderSection(false);
+        setShowQASection(true);
+      } else {
+        setShowFolderSection(true);
+        setShowQASection(false);
+      }
     } else {
       setShowFolderSection(true);
+      setShowQASection(true);
     }
-  }, [isMobileView, isBriefFormOpen]);
+  }, [isMobileView, isBriefFormOpen, audiences.length]);
+
+  // Add new effect to handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const newIsMobileView = window.innerWidth <= 768;
+      setIsMobileView(newIsMobileView);
+      
+      // Reset states when switching to mobile view
+      if (newIsMobileView && !isBriefFormOpen && audiences.length === 0) {
+        setShowFolderSection(true);
+        setShowQASection(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isBriefFormOpen, audiences.length]);
 
   const fetchProjects = async () => {
     try {
@@ -249,9 +276,10 @@ export default function Library() {
   };
 
   const handleBackToFolders = () => {
-    setIsBriefFormOpen(true);
+    setIsBriefFormOpen(false);
     setSelectedFolder(null);
     setShowFolderSection(true);
+    setShowQASection(false);
     setBriefData({
       purpose: '',
       main_message: '',
@@ -276,9 +304,10 @@ export default function Library() {
       importance: '',
       additional_info: ''
     });
-    setShowFolderSection(false);
-    setIsBriefFormOpen(true);
-    setShowQASection(true);
+    // Always show folder section when going back from audience
+    setShowFolderSection(true);
+    setIsBriefFormOpen(false);
+    setShowQASection(false);
   };
 
   const renderFolderContent = (folder) => {
