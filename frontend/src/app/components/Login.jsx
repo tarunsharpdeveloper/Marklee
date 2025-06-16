@@ -51,11 +51,15 @@ export const Login = ({ isOpen, onClose }) => {
       
       setSuccessMessage('Logged in successfully!');
       
-      // Close modal and navigate based on isUserMetaData
+      // Close modal and navigate based on role and isUserMetaData
       setTimeout(() => {
         onClose();
-        // If user has completed onboarding, go to dashboard, otherwise go to pre-homepage
-        router.push(data.isUserMetaData ? '/dashboard' : '/pre-homepage');
+        if (data.user.role === 'admin') {
+          router.push('/usermanagement');
+        } else {
+          // If user has completed onboarding, go to dashboard, otherwise go to pre-homepage
+          router.push(data.isUserMetaData ? '/dashboard' : '/pre-homepage');
+        }
       }, 2000);
 
     } catch (error) {
