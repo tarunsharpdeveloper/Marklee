@@ -31,7 +31,7 @@ EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 
--- add admin user and password is 123456
+add admin user and password is 123456 if not exists
 INSERT INTO users (name, email, password, role ,is_verified) VALUES ('Admin', 'admin@gmail.com', '$2a$10$rysdja9AWpDGGW1aMW.9FecY9SKLXk8zeLpMWMgvCW8YqCvY4xd0y', 'admin', true);
 
 CREATE TABLE IF NOT EXISTS user_metadata (
@@ -105,3 +105,14 @@ CREATE TABLE IF NOT EXISTS generated_content (
     FOREIGN KEY (brief_id) REFERENCES briefs(id) ON DELETE CASCADE,
     FOREIGN KEY (audience_id) REFERENCES audiences(id) ON DELETE SET NULL
 ); 
+
+-- create a table for brief questions
+CREATE TABLE IF NOT EXISTS brief_questions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    question TEXT NOT NULL,
+    ai_key VARCHAR(100) NOT NULL,
+    input_field_name VARCHAR(100) NOT NULL,
+    placeholder TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
