@@ -37,6 +37,21 @@ export default function Library() {
   const [showGeneratedContent, setShowGeneratedContent] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedAudience, setSelectedAudience] = useState(null);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [loadingQuestions] = useState([
+    "Analyzing your brief requirements...",
+    "Identifying key audience segments...",
+    "Generating detailed audience insights...",
+    "Creating personalized messaging strategies...",
+    "Finalizing audience profiles..."
+  ]);
+  const [assetLoadingQuestions] = useState([
+    "Analyzing your content requirements...",
+    "Crafting engaging content...",
+    "Optimizing for your target audience...",
+    "Adding final touches...",
+    "Preparing your content..."
+  ]);
 
   useEffect(() => {
     fetchProjects();
@@ -413,126 +428,132 @@ export default function Library() {
       <div className={`${styles.qaSection} ${!isBriefFormOpen && isMobileView ? styles.hidden : ''}`}>
         {isBriefFormOpen && selectedFolder && !audiences.length && !showGeneratedContent && (
           <div className={styles.briefForm}>
-           
-              <button className={styles.backButton} onClick={handleBackToFolders}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-               
-              </button>
-          
+            <button className={styles.backButton} onClick={handleBackToFolders}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+            </button>
             <h2>Create Brief for {selectedFolder.name}</h2>
             {error && <div className={styles.error}>{error}</div>}
             
-            <form onSubmit={handleBriefSubmit}>
-              <div className={styles.formGroup}>
-                <label>Purpose</label>
-                <textarea
-                  value={briefData.purpose}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, purpose: e.target.value }))}
-                  placeholder="What is the purpose of this brief?"
-                  className={styles.textarea}
-                  required
-                />
+            {loading ? (
+              <div className={styles.loadingOverlay}>
+                <div className={styles.loadingContainer}>
+                  <div className={styles.loader}></div>
+                  <p className={styles.loadingMessage}>{loadingMessage}</p>
+                </div>
               </div>
-              <div className={styles.formGroup}>
-                <label>Main Message</label>
-                <textarea
-                  value={briefData.main_message}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, main_message: e.target.value }))}
-                  placeholder="What is the main message you want to convey?"
-                  className={styles.textarea}
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Special Features (Optional)</label>
-                <textarea
-                  value={briefData.special_features}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, special_features: e.target.value }))}
-                  placeholder="Any special features or unique aspects?"
-                  className={styles.textarea}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Beneficiaries</label>
-                <textarea
-                  value={briefData.beneficiaries}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, beneficiaries: e.target.value }))}
-                  placeholder="Who will benefit from this?"
-                  className={styles.textarea}
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Benefits</label>
-                <textarea
-                  value={briefData.benefits}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, benefits: e.target.value }))}
-                  placeholder="What are the benefits?"
-                  className={styles.textarea}
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Call to Action</label>
-                <textarea
-                  value={briefData.call_to_action}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, call_to_action: e.target.value }))}
-                  placeholder="What action should the audience take?"
-                  className={styles.textarea}
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Importance</label>
-                <textarea
-                  value={briefData.importance}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, importance: e.target.value }))}
-                  placeholder="Why is this important?"
-                  className={styles.textarea}
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Additional Information (Optional)</label>
-                <textarea
-                  value={briefData.additional_info}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, additional_info: e.target.value }))}
-                  placeholder="Any other relevant information?"
-                  className={styles.textarea}
-                />
-              </div>
-              <div className={styles.formActions}>
-                <button 
-                  type="button" 
-                  className={styles.cancelButton}
-                  onClick={() => {
-                    setIsBriefFormOpen(false);
-                    setSelectedFolder(null);
-                    setBriefData({
-                      purpose: '',
-                      main_message: '',
-                      special_features: '',
-                      beneficiaries: '',
-                      benefits: '',
-                      call_to_action: '',
-                      importance: '',
-                      additional_info: ''
-                    });
-                  }}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className={styles.submitButton}
-                  disabled={loading}
-                >
-                  {loading ? 'Creating...' : 'Create Brief'}
-                </button>
-              </div>
-            </form>
+            ) : (
+              <form onSubmit={handleBriefSubmit}>
+                <div className={styles.formGroup}>
+                  <label>Purpose</label>
+                  <textarea
+                    value={briefData.purpose}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, purpose: e.target.value }))}
+                    placeholder="What is the purpose of this brief?"
+                    className={styles.textarea}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Main Message</label>
+                  <textarea
+                    value={briefData.main_message}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, main_message: e.target.value }))}
+                    placeholder="What is the main message you want to convey?"
+                    className={styles.textarea}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Special Features (Optional)</label>
+                  <textarea
+                    value={briefData.special_features}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, special_features: e.target.value }))}
+                    placeholder="Any special features or unique aspects?"
+                    className={styles.textarea}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Beneficiaries</label>
+                  <textarea
+                    value={briefData.beneficiaries}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, beneficiaries: e.target.value }))}
+                    placeholder="Who will benefit from this?"
+                    className={styles.textarea}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Benefits</label>
+                  <textarea
+                    value={briefData.benefits}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, benefits: e.target.value }))}
+                    placeholder="What are the benefits?"
+                    className={styles.textarea}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Call to Action</label>
+                  <textarea
+                    value={briefData.call_to_action}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, call_to_action: e.target.value }))}
+                    placeholder="What action should the audience take?"
+                    className={styles.textarea}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Importance</label>
+                  <textarea
+                    value={briefData.importance}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, importance: e.target.value }))}
+                    placeholder="Why is this important?"
+                    className={styles.textarea}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Additional Information (Optional)</label>
+                  <textarea
+                    value={briefData.additional_info}
+                    onChange={(e) => setBriefData(prev => ({ ...prev, additional_info: e.target.value }))}
+                    placeholder="Any other relevant information?"
+                    className={styles.textarea}
+                  />
+                </div>
+                <div className={styles.formActions}>
+                  <button 
+                    type="button" 
+                    className={styles.cancelButton}
+                    onClick={() => {
+                      setIsBriefFormOpen(false);
+                      setSelectedFolder(null);
+                      setBriefData({
+                        purpose: '',
+                        main_message: '',
+                        special_features: '',
+                        beneficiaries: '',
+                        benefits: '',
+                        call_to_action: '',
+                        importance: '',
+                        additional_info: ''
+                      });
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className={styles.submitButton}
+                    disabled={loading}
+                  >
+                    {loading ? 'Creating...' : 'Create Brief'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         )}
         {audiences.length > 0 && !showGeneratedContent && (
@@ -596,12 +617,25 @@ export default function Library() {
     );
   };
 
+  const startLoadingSequence = (questions, setMessage) => {
+    let currentIndex = 0;
+    setMessage(questions[currentIndex]);
+    
+    const interval = setInterval(() => {
+      currentIndex = (currentIndex + 1) % questions.length;
+      setMessage(questions[currentIndex]);
+    }, 3000);
+
+    return interval;
+  };
+
   const handleBriefSubmit = async (e) => {
     e.preventDefault();
     if (!selectedFolder) return;
 
     setLoading(true);
     setError('');
+    const loadingInterval = startLoadingSequence(loadingQuestions, setLoadingMessage);
 
     try {
       const token = localStorage.getItem('token');
@@ -631,18 +665,16 @@ export default function Library() {
       const responseData = await response.json();
 
       if (response.ok) {
-        // Parse and store audiences
         const newAudiences = responseData.data.audiences.map(audience => {
           const segmentData = JSON.parse(audience.segment);
           return {
-            ...audience, // keep all fields for drawer
+            ...audience,
             name: segmentData.name,
             description: segmentData.description
           };
         });
         setAudiences(newAudiences);
 
-        // Update folder structure with the new brief
         const newBrief = {
           id: responseData.data.id,
           title: briefData.main_message,
@@ -660,7 +692,6 @@ export default function Library() {
           };
         });
 
-        // Reset form data but keep the form section open to show audiences
         setBriefData({
           purpose: '',
           main_message: '',
@@ -672,19 +703,24 @@ export default function Library() {
           additional_info: ''
         });
         setError('');
-
-        // Refresh projects to get updated data
         fetchProjects();
+        clearInterval(loadingInterval);
+        setLoading(false);
+        setLoadingMessage('');
       } else {
         const errorMessage = responseData.message || 'Failed to create brief';
         console.error('Server error:', errorMessage);
         setError(errorMessage);
+        clearInterval(loadingInterval);
+        setLoading(false);
+        setLoadingMessage('');
       }
     } catch (error) {
       console.error('Error creating brief:', error);
       setError('Failed to create brief. Please try again.');
-    } finally {
+      clearInterval(loadingInterval);
       setLoading(false);
+      setLoadingMessage('');
     }
   };
 
@@ -718,6 +754,14 @@ export default function Library() {
             </button>
           </div>
           <div className={styles.modalBody}>
+            {loading && (
+              <div className={styles.loadingOverlay} style={{ zIndex: 1000 }}>
+                <div className={styles.loadingContainer}>
+                  <div className={styles.loader}></div>
+                  <p className={styles.loadingMessage}>{loadingMessage}</p>
+                </div>
+              </div>
+            )}
             <div className={styles.formGroup}>
               <label htmlFor="assetType">Select Asset Type</label>
               <select 
@@ -741,8 +785,10 @@ export default function Library() {
               <button 
                 className={styles.generateButton}
                 onClick={async () => {
-                  // Handle generate action
                   try {
+                    setLoading(true);
+                    const loadingInterval = startLoadingSequence(assetLoadingQuestions, setLoadingMessage);
+                    
                     const response = await fetch(`http://localhost:4000/api/generate-content`, {
                       method: 'POST',
                       headers: {
@@ -760,11 +806,17 @@ export default function Library() {
                       setGeneratedContent(responseData.data.content);
                       setShowGeneratedContent(true);
                       setIsAssetPopupOpen(false);
+                      clearInterval(loadingInterval);
+                      setLoading(false);
+                      setLoadingMessage('');
                     } else {
                       throw new Error(responseData.message || 'Failed to generate content');
                     }
                   } catch (error) {
                     console.error('Error generating asset:', error);
+                    clearInterval(loadingInterval);
+                    setLoading(false);
+                    setLoadingMessage('');
                   }
                 }}
               >
