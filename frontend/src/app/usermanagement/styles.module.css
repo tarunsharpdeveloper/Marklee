@@ -368,6 +368,7 @@ min-width: auto;
   margin-top: 1.5rem;
   padding: 0.5rem 0;
   animation: fadeIn 0.3s ease-in-out;
+  flex-wrap: wrap;
 }
 
 .limitSelector {
@@ -484,3 +485,12 @@ min-width: auto;
 .table tbody tr:nth-child(8) { animation-delay: 0.45s; }
 .table tbody tr:nth-child(9) { animation-delay: 0.5s; }
 .table tbody tr:nth-child(10) { animation-delay: 0.55s; }
+@media (max-width: 768px) {
+  .tableFooter{
+    flex-direction: column;
+    align-items: start;
+    justify-content: start;
+    gap: 1rem;
+  }
+ 
+}
