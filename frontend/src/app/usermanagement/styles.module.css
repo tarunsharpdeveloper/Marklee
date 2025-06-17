@@ -15,11 +15,34 @@
 
 .tableContainer {
   margin-top: 2rem;
-  overflow-x: auto;
+  /* overflow-x: auto; */
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   width: 100%;
+  animation: fadeIn 0.3s ease-in-out;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.fadeOut {
+  opacity: 0;
+  transform: translateX(-30px);
+  filter: blur(4px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0);
+  }
 }
 
 .table {
@@ -43,7 +66,14 @@ min-width: auto;
   white-space: nowrap;
 }
 
+.table tbody tr {
+  transition: all 0.2s ease-in-out;
+  animation: slideIn 0.3s ease-out;
+  animation-fill-mode: both;
+}
+
 .table tbody tr:hover {
+  transform: scale(1.01);
   background-color: #f8f9fa;
 }
 
@@ -140,7 +170,7 @@ min-width: auto;
 }
 
 .switch input:checked + .slider {
-  background-color: green;
+  background-color: #8075ff;
 }
 
 .switch input:checked + .slider:before {
@@ -309,3 +339,148 @@ min-width: auto;
     }
   
   }
+
+/* Animation Effects */
+.loading {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.error {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.tableFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding: 0.5rem 0;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.limitSelector {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.limitSelector:hover {
+  /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); */
+  /* transform: translateY(-2px); */
+}
+
+.limitSelector label {
+  color: #374151;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.select {
+  position: relative;
+  padding: 0.6rem 2.5rem 0.6rem 1.2rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: white;
+  color: #1f2937;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  background-size: 1.2em;
+  min-width: 80px;
+}
+
+.select:hover {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.1);
+}
+
+.select:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.15);
+}
+
+.select option {
+  padding: 0.8rem;
+  font-size: 0.95rem;
+  background-color: white;
+  color: #1f2937;
+}
+
+/* Add a subtle gradient background to the selector */
+.limitSelector::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+  pointer-events: none;
+}
+
+/* Add a subtle animation when the dropdown opens */
+.select:focus {
+  animation: dropdownFocus 0.3s ease;
+}
+
+@keyframes dropdownFocus {
+  0% {
+    transform: scale(0.98);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Add a subtle slide effect for table rows */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Stagger the row animations */
+.table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+.table tbody tr:nth-child(2) { animation-delay: 0.15s; }
+.table tbody tr:nth-child(3) { animation-delay: 0.2s; }
+.table tbody tr:nth-child(4) { animation-delay: 0.25s; }
+.table tbody tr:nth-child(5) { animation-delay: 0.3s; }
+.table tbody tr:nth-child(6) { animation-delay: 0.35s; }
+.table tbody tr:nth-child(7) { animation-delay: 0.4s; }
+.table tbody tr:nth-child(8) { animation-delay: 0.45s; }
+.table tbody tr:nth-child(9) { animation-delay: 0.5s; }
+.table tbody tr:nth-child(10) { animation-delay: 0.55s; }

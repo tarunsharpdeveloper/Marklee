@@ -4,8 +4,13 @@ import BriefQuestion from '../models/BriefQuestion.js';
 const adminController = {
     getUsers: async (req, res) => {
         try {
-            const { page=1, limit=10 } = req.query;
+            // Ensure we have valid numbers for page and limit
+            const page = Math.max(1, parseInt(req.query.page) || 1);
+            const limit = Math.max(1, parseInt(req.query.limit) || 10);
             const offset = (page - 1) * limit;
+            
+            console.log('Fetching users with:', { page, limit, offset }); // Debug log
+            
             const users = await User.findAll(offset, limit);
             res.status(200).json({
                 success: true,
@@ -13,6 +18,7 @@ const adminController = {
                 data: users
             });
         } catch (error) {
+            console.error('Error in getUsers:', error); // Debug log
             res.status(500).json({
                 success: false,
                 message: 'Error fetching users',

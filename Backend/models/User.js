@@ -97,13 +97,35 @@ class User {
 
   static async findAll(offset, limit) {
     try {
-      const [users] = await db.execute('SELECT id, name, email, role, is_verified, status , created_at FROM users WHERE role = "user" ORDER BY status ASC LIMIT ? OFFSET ?', [limit, offset]);
-      const [totalUsers] = await db.execute('SELECT COUNT(*) FROM users WHERE role = "user"');
-      const totalUsersCount = totalUsers[0]['COUNT(*)'];
-      const totalPages = Math.ceil(totalUsersCount / limit);
-      return { users, totalUsers: totalUsersCount, totalPages };
+      // Convert to numbers and ensure they're valid
+      const offsetNum = Math.max(0, parseInt(offset) || 0);
+      const limitNum = Math.max(1, parseInt(limit) || 10);
+
+      // First get total count
+      const [totalUsers] = await db.query('SELECT COUNT(*) as count FROM users WHERE role = "user"');
+      const totalUsersCount = totalUsers[0].count;
+      
+      // Then get paginated users
+      const query = `
+        SELECT id, name, email, role, is_verified, status, created_at 
+        FROM users 
+        WHERE role = "user" 
+        ORDER BY created_at ASC 
+        LIMIT ${limitNum} 
+        OFFSET ${offsetNum}
+      `;
+      const [users] = await db.query(query);
+      
+      const totalPages = Math.ceil(totalUsersCount / limitNum);
+      
+      return { 
+        users, 
+        totalUsers: totalUsersCount, 
+        totalPages,
+        currentPage: Math.floor(offsetNum / limitNum) + 1
+      };
     } catch (error) {
-      console.log(error);
+      console.error('Error in findAll:', error);
       throw error;
     }
   }
