@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-add admin user and password is 123456 if not exists
+--add admin user and password is 123456 if not exists
 INSERT INTO users (name, email, password, role ,is_verified) VALUES ('Admin', 'admin@gmail.com', '$2a$10$rysdja9AWpDGGW1aMW.9FecY9SKLXk8zeLpMWMgvCW8YqCvY4xd0y', 'admin', true);
 
 CREATE TABLE IF NOT EXISTS user_metadata (
@@ -90,10 +90,31 @@ CREATE TABLE IF NOT EXISTS generated_content (
 -- create a table for brief questions
 CREATE TABLE IF NOT EXISTS brief_questions (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
     question TEXT NOT NULL,
-    ai_key VARCHAR(100) NOT NULL,
     input_field_name VARCHAR(100) NOT NULL,
     placeholder TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+--create a table for ai prompts type
+CREATE TABLE IF NOT EXISTS ai_prompts_type (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    type VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+--insert data into ai prompts type table
+INSERT INTO ai_prompts_type (type) VALUES ('audience'), ('content');
+
+--create a table for ai prompts
+CREATE TABLE IF NOT EXISTS ai_prompts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    prompt_for_id INT NOT NULL, 
+    prompt TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (prompt_for_id) REFERENCES ai_prompts_type(id) ON DELETE CASCADE
+);  
