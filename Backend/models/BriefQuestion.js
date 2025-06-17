@@ -9,6 +9,10 @@ const BriefQuestion = {
     findAll: async () => {
         const [results] = await db.query('SELECT * FROM brief_questions');
         return results;
+    },
+    delete: async (id) => {
+        const [result] = await db.query('DELETE FROM brief_questions WHERE id = ?', [id]);
+        return result.affectedRows > 0;
     }
 }
 

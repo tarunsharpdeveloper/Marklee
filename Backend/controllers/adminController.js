@@ -4,7 +4,9 @@ import BriefQuestion from '../models/BriefQuestion.js';
 const adminController = {
     getUsers: async (req, res) => {
         try {
-            const users = await User.findAll();
+            const { page=1, limit=10 } = req.query;
+            const offset = (page - 1) * limit;
+            const users = await User.findAll(offset, limit);
             res.status(200).json({
                 success: true,
                 message: 'Users fetched successfully',
@@ -14,6 +16,25 @@ const adminController = {
             res.status(500).json({
                 success: false,
                 message: 'Error fetching users',
+                error: error.message
+            });
+        }
+    },
+
+    updateUserStatus: async (req, res) => {
+        try {
+            const { userId, status } = req.body;
+            await User.updateStatus(userId, status);
+            
+            res.status(200).json({
+                success: true,
+                message: 'User status updated successfully',
+                data: { "id": userId, "status": status }
+            });
+        } catch (error) {
+            res.status(500).json({  
+                success: false,
+                message: 'Error updating user status',
                 error: error.message
             });
         }
@@ -51,6 +72,32 @@ const adminController = {
             res.status(500).json({
                 success: false,
                 message: 'Error fetching brief questions',
+                error: error.message
+            });
+        }
+    },
+
+    deleteBriefQuestion: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const breifQuestion = await BriefQuestion.delete(id);
+            console.log(breifQuestion);
+            if(breifQuestion){
+                res.status(200).json({
+                    success: true,
+                    message: 'Brief question deleted successfully',
+                    data: { "id": id }
+                });
+            }else{
+                res.status(404).json({
+                    success: false,
+                    message: 'Brief question not found',
+                });
+            }
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error deleting brief question',
                 error: error.message
             });
         }

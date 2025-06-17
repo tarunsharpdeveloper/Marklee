@@ -95,12 +95,27 @@ class User {
     return await bcrypt.compare(plainPassword, hashedPassword);
   }
 
-  static async findAll() {
+  static async findAll(offset, limit) {
     try {
-      const [users] = await db.execute('SELECT * FROM users WHERE role = "user"');
-      return users;
+      const [users] = await db.execute('SELECT id, name, email, role, is_verified, status , created_at FROM users WHERE role = "user" ORDER BY status ASC LIMIT ? OFFSET ?', [limit, offset]);
+      const [totalUsers] = await db.execute('SELECT COUNT(*) FROM users WHERE role = "user"');
+      const totalUsersCount = totalUsers[0]['COUNT(*)'];
+      const totalPages = Math.ceil(totalUsersCount / limit);
+      return { users, totalUsers: totalUsersCount, totalPages };
     } catch (error) {
       console.log(error);
+      throw error;
+    }
+  }
+
+  static async updateStatus(id, status) {
+    try {
+      const [result] = await db.execute('UPDATE users SET status = ? WHERE id = ?', [status, id]);
+      if(result.affectedRows > 0){
+        return true;
+      }
+      throw new Error('User not found');
+    } catch (error) {
       throw error;
     }
   }
