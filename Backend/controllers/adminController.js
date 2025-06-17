@@ -49,13 +49,13 @@ const adminController = {
     createBriefQuestion: async (req, res) => {
         try {
             const data = req.body;
-            const input_field_name = data.ai_key.toLowerCase().replace(/ /g, '_').split('_').slice(0, 2).join('_');
+            const input_field_name = data.title.toLowerCase().replace(/ /g, '_').split('_').slice(0, 3).join('_');
             data.input_field_name = input_field_name;
             const briefQuestion = await BriefQuestion.create(data)
             res.status(201).json({
                 success: true,
                 message: 'Brief question created successfully',
-                data: { "id": briefQuestion , ...req.body}
+                data: { "id": briefQuestion , ...req.body}  
             });
         } catch (error) {
             res.status(500).json({
