@@ -83,11 +83,11 @@ export default function UserManagementLayout({ children }) {
                 className={pathname === '/usermanagement/brief-questions' ? styles.active : ''} 
                 onClick={() => router.push('/usermanagement/brief-questions')}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-2-2-1.5 0-2 .62-2 2 0 1.5.5 2 2 2zM12 17h-2c-1.5 0-2-.62-2-2"></path>
                   <circle cx="12" cy="12" r="10"></circle>
                 </svg>
-                <span>Brief Questions</span>
+                <span>BriefQ's</span>
               </li>
             </ul>
           </nav>

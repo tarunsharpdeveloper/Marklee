@@ -3,6 +3,7 @@ import adminController from '../controllers/adminController.js';
 import isAdmin from '../middlewares/admin.js';
 
 const router = express.Router();
+router.get('/brief-questions', adminController.getBriefQuestions);
 router.use(isAdmin);
 //user routes
 router.get('/users', adminController.getUsers);

@@ -7,7 +7,7 @@ export default function BriefQuestions() {
   const [loading, setLoading] = useState(true);
   const [newQuestion, setNewQuestion] = useState({
     question: '',
-    ai_key: '',
+    title: '',
     placeholder: ''
   });
   const [showAddForm, setShowAddForm] = useState(false);
@@ -20,7 +20,7 @@ export default function BriefQuestions() {
   const fetchBriefQuestions = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/admin/brief-questions', {
+      const response = await fetch('http://localhost:4000/api/admin/brief-questions', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -31,8 +31,9 @@ export default function BriefQuestions() {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
+      console.log(data);
       if (data.success) {
         setBriefQuestions(data.data);
         setError('');
@@ -51,7 +52,7 @@ export default function BriefQuestions() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/admin/brief-question', {
+      const response = await fetch('http://localhost:4000/api/admin/brief-question', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -67,7 +68,7 @@ export default function BriefQuestions() {
       const data = await response.json();
       if (data.success) {
         fetchBriefQuestions();
-        setNewQuestion({ question: '', ai_key: '', placeholder: '' });
+        setNewQuestion({ question: '', title: '', placeholder: '' });
         setShowAddForm(false);
         setError('');
       } else {
@@ -84,7 +85,7 @@ export default function BriefQuestions() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/admin/brief-question/${id}`, {
+      const response = await fetch(`http://localhost:4000/api/admin/brief-question/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -143,11 +144,11 @@ export default function BriefQuestions() {
             />
           </div>
           <div className={styles.formGroup}>
-            <label>AI Key:</label>
+            <label>Title:</label>
             <input
               type="text"
-              value={newQuestion.ai_key}
-              onChange={(e) => setNewQuestion({...newQuestion, ai_key: e.target.value})}
+              value={newQuestion.title}
+              onChange={(e) => setNewQuestion({...newQuestion, title: e.target.value})}
               required
             />
           </div>
@@ -169,8 +170,8 @@ export default function BriefQuestions() {
           <thead>
             <tr>
               <th>Question</th>
-              <th>AI Key</th>
-              <th>Input Field Name</th>
+              <th>Title</th>
+              {/* <th>Input Field Name</th> */}
               <th>Placeholder</th>
               <th>Actions</th>
             </tr>
@@ -179,8 +180,8 @@ export default function BriefQuestions() {
             {briefQuestions.map((question) => (
               <tr key={question.id}>
                 <td>{question.question}</td>
-                <td>{question.ai_key}</td>
-                <td>{question.input_field_name}</td>
+                <td>{question.title}</td>
+                {/* <td>{question.input_field_name}</td> */}
                 <td>{question.placeholder}</td>
                 <td>
                   <button

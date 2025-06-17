@@ -52,9 +52,10 @@ export default function Library() {
     "Adding final touches...",
     "Preparing your content..."
   ]);
-
+  const [briefQuestions, setBriefQuestions] = useState([]);
   useEffect(() => {
     fetchProjects();
+    fetchBriefQuestions();
   }, []);
 
   // Add resize listener for responsive behavior
@@ -278,8 +279,38 @@ export default function Library() {
       </div>
     );
   };
-
-  const handleCreateBrief = (folder) => {
+  const fetchBriefQuestions = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:4000/api/admin/brief-questions', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (data.success) {
+        setBriefQuestions(data.data);
+        setError('');
+      } else {
+        setError(data.message || 'Failed to fetch questions');
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching brief questions:', error);
+      setError('Failed to fetch questions. Please try again.');
+      setLoading(false);
+    }
+  };
+  const handleCreateBrief = async (folder) => {
+   
+   
     setSelectedFolder(folder);
     setIsBriefFormOpen(true);
     setAudiences([]); // Clear any existing audiences
@@ -344,6 +375,7 @@ export default function Library() {
         {folder.briefs && folder.briefs.length > 0 && (
           <div className={styles.briefsList}>
             {folder.briefs.map((brief, index) => (
+              console.log(brief),
               <div key={brief.id || index} className={styles.briefCard}>
                 <div className={styles.briefHeader} onClick={() => handleBriefClick(brief.id)}>
                   <h4>{brief.title || 'Brief'}</h4>
@@ -364,7 +396,7 @@ export default function Library() {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-
+      
       if (!response.ok) {
         throw new Error('Failed to fetch brief details');
       }
@@ -391,6 +423,7 @@ export default function Library() {
       setError('Failed to load brief details');
     }
   };
+
 
   const renderFolderSection = () => {
     return (
@@ -446,83 +479,19 @@ export default function Library() {
             ) : (
               <form onSubmit={handleBriefSubmit}>
                 <div className={styles.formGroup}>
-                  <label>Purpose</label>
-                  <textarea
-                    value={briefData.purpose}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, purpose: e.target.value }))}
-                    placeholder="What is the purpose of this brief?"
-                    className={styles.textarea}
-                    required
-                  />
+                  {briefQuestions.map((question, index) => (
+                    <div key={index}>
+                      <label>{question.question}</label>
+                      <textarea
+                        value={briefData[question.title]}
+                        onChange={(e) => setBriefData(prev => ({ ...prev, [question.title]: e.target.value }))}
+                        placeholder={question.placeholder}
+                        className={styles.textarea}
+                      />
+                    </div>
+                  ))}
                 </div>
-                <div className={styles.formGroup}>
-                  <label>Main Message</label>
-                  <textarea
-                    value={briefData.main_message}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, main_message: e.target.value }))}
-                    placeholder="What is the main message you want to convey?"
-                    className={styles.textarea}
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Special Features (Optional)</label>
-                  <textarea
-                    value={briefData.special_features}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, special_features: e.target.value }))}
-                    placeholder="Any special features or unique aspects?"
-                    className={styles.textarea}
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Beneficiaries</label>
-                  <textarea
-                    value={briefData.beneficiaries}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, beneficiaries: e.target.value }))}
-                    placeholder="Who will benefit from this?"
-                    className={styles.textarea}
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Benefits</label>
-                  <textarea
-                    value={briefData.benefits}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, benefits: e.target.value }))}
-                    placeholder="What are the benefits?"
-                    className={styles.textarea}
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Call to Action</label>
-                  <textarea
-                    value={briefData.call_to_action}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, call_to_action: e.target.value }))}
-                    placeholder="What action should the audience take?"
-                    className={styles.textarea}
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Importance</label>
-                  <textarea
-                    value={briefData.importance}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, importance: e.target.value }))}
-                    placeholder="Why is this important?"
-                    className={styles.textarea}
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Additional Information (Optional)</label>
-                  <textarea
-                    value={briefData.additional_info}
-                    onChange={(e) => setBriefData(prev => ({ ...prev, additional_info: e.target.value }))}
-                    placeholder="Any other relevant information?"
-                    className={styles.textarea}
-                  />
-                </div>
+               
                 <div className={styles.formActions}>
                   <button 
                     type="button" 

@@ -145,7 +145,7 @@
 
 @media (max-width: 768px) {
   .container {
-    padding: 1rem;
+    padding: 3rem;
   }
 
   .header {
@@ -157,7 +157,7 @@
   .table {
     display: block;
     overflow-x: auto;
-    white-space: nowrap;
+    /* white-space: nowrap; */
   }
 
   .table th,
@@ -165,3 +165,129 @@
     padding: 0.75rem;
   }
 } 
+
+@media (max-width: 565px) {
+    .container {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   /* padding-top: 4rem; */
+   margin-right: 3rem;
+    }
+  
+    .header {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+    }
+  
+    .table {
+      display: block;
+      overflow-x: auto;
+      /* white-space: nowrap; */
+    }
+  
+    .table th,
+    .table td {
+      padding: 0.35rem;
+    }
+  } 
+
+  
+@media (max-width: 503px) {
+    .container {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   /* padding-top: 4rem; */
+   padding:1.3rem;
+   padding-top: 2rem;
+    }
+  
+    .header {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+    }
+  
+    .table {
+      display: block;
+      overflow-x: auto;
+      /* white-space: nowrap; */
+    }
+  
+    .table th,
+    .table td {
+      padding: 0.35rem;
+    }
+  } 
+
+   
+@media (max-width: 479px) {
+    .container {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   /* padding-top: 4rem; */
+   padding:0.1rem;
+   padding-top: 2.9rem;
+    }
+  
+    .header {
+        text-align: left;
+        flex-direction: column;
+        justify-content: start;
+        gap: 1rem;
+        align-items: start;
+    }
+  
+    .table {
+      display: block;
+      overflow-x: auto;
+      /* white-space: nowrap; */
+    }
+  
+    .table th,
+    .table td {
+      padding: 0.35rem;
+    }
+  } 
+
+  
+@media (max-width: 463px) {
+    .container {
+  padding:2rem;
+  padding-top: 2.9rem;
+  /* padding-right: 0.9rem; */
+  /* margin-right: 0.9rem; */
+    }
+    .table{
+     width: 90%;
+    }
+    .addForm{
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    margin-right: 7rem;
+    /* padding: 2rem; */
+    box-shadow: 0 2px 4px #0000001a;
+    align-items: start;
+}
+.table{
+        width: 80%;
+}
+  } 
+
+  @media (max-width: 413px) {
+    .container{
+        padding:2rem;
+        padding-top: 2.9rem;
+    }
+    .table{
+        width: 80%;
+    }
+    
+  }
