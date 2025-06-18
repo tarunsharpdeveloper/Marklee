@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import BriefQuestion from '../models/BriefQuestion.js';
+import AiPrompt from '../models/AiPrompt.js';
 
 const adminController = {
     getUsers: async (req, res) => {
@@ -104,6 +105,94 @@ const adminController = {
             res.status(500).json({
                 success: false,
                 message: 'Error deleting brief question',
+                error: error.message
+            });
+        }
+    },
+    
+    createAiPrompt: async (req, res) => {
+        try {
+            const data = req.body;
+            const aiPrompt = await AiPrompt.create(data);
+            res.status(201).json({
+                success: true,
+                message: 'AI prompt created successfully',
+                data: aiPrompt
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error creating AI prompt',
+                error: error.message
+            });
+        }
+    },
+
+    getAiPrompts: async (req, res) => {
+        try {
+            const aiPrompts = await AiPrompt.findAll();
+            res.status(200).json({
+                success: true,
+                message: 'AI prompts fetched successfully',
+                data: aiPrompts
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching AI prompts',
+                error: error.message
+            });
+        }
+    },
+
+    deleteAiPrompt: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const aiPrompt = await AiPrompt.delete(id);
+            res.status(200).json({
+                success: true,
+                message: 'AI prompt deleted successfully',
+                data: { "id": id }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error deleting AI prompt',
+                error: error.message
+            });
+        }
+    },
+
+    getAiPromptFor: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const aiPrompt = await AiPrompt.getPromptFor(id);
+            res.status(200).json({
+                success: true,
+                message: 'AI prompt fetched successfully',
+                data: aiPrompt
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching AI prompt',
+                error: error.message
+            });
+        }
+    },
+
+    getAiPromptsType: async (req, res) => {
+        try {
+            const aiPromptsType = await AiPrompt.getAllPromptsType();
+            res.status(200).json({
+                success: true,
+                message: 'AI prompts type fetched successfully',
+                data: aiPromptsType
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching AI prompts type',
                 error: error.message
             });
         }
