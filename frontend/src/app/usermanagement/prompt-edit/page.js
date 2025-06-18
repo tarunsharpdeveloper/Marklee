@@ -3,6 +3,7 @@ import { useState } from 'react';
 import styles from './styles.module.css';
 
 export default function PromptEdit() {
+    const [categories, setCategories] = useState([]);
   const [prompts, setPrompts] = useState([
     { 
       id: 1, 
@@ -50,12 +51,19 @@ export default function PromptEdit() {
     }
   };
 
-  const categories = [
-    { value: 'Product', color: '#8075FF' },
-    { value: 'Feedback', color: '#FF6B6B' },
-    { value: 'Marketing', color: '#4CAF50' },
-    { value: 'Support', color: '#FF9800' }
-  ];
+  const getAiPromptsType = async () => {
+    const response = await fetch('http://localhost:4000/api/admin/ai-prompts-type',{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+    });
+    const data = await response.json();
+    console.log(data);
+    setCategories(data);
+  }
+  getAiPromptsType();
 
   return (
     <div className={styles.container}>
