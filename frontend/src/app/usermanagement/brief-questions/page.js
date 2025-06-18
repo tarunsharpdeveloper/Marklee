@@ -188,7 +188,16 @@ export default function BriefQuestions() {
                     className={styles.deleteButton}
                     onClick={() => handleDeleteQuestion(question.id)}
                   >
-                    Delete
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+     fill="none" 
+     viewBox="0 0 24 24" 
+     strokeWidth={1.5} 
+     stroke="currentColor" 
+     className="w-6 h-6" width="24" height="24">
+  <path strokeLinecap="round" 
+        strokeLinejoin="round" 
+        d="M6 7h12M9 7V4h6v3M10 11v6M14 11v6M5 7h14l-1.5 12.5a1.5 1.5 0 01-1.5 1.5H8a1.5 1.5 0 01-1.5-1.5L5 7z" />
+</svg>
                   </button>
                 </td>
               </tr>

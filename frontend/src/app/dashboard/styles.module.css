@@ -1944,9 +1944,9 @@
   .logoutButton span {
     display: none;
   }
-  /* .logoutButton {
-    padding: 0.2rem;
-  } */
+  .logoutButton {
+    padding: 0.5rem;
+  }
 }
 @media (min-width: 481px) and (max-width: 600px){
   .librarySections {
