@@ -28,7 +28,7 @@ export default function UserManagement() {
             'Authorization': `Bearer ${token}`
           }
         });
- 
+        
         if (!response.ok) {
           throw new Error('Failed to fetch users');
         }

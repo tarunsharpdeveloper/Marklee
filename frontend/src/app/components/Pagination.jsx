@@ -193,7 +193,7 @@ function Pagination({
           onMouseLeave={() => setHoveredBtn(null)}
         >
           <span style={styles.paginationArrow}>‹</span>
-          <span style={{ display: window.innerWidth <= 480 ? 'none' : 'inline' }}>Previous</span>
+          <span style={{ display: window.innerWidth >= 480 || window.innerWidth <= 606? 'none' : 'inline' }}>Previous</span>
         </button>
        
         <div style={styles.paginationPages}>
@@ -218,7 +218,7 @@ function Pagination({
           onMouseEnter={() => setHoveredBtn('next')}
           onMouseLeave={() => setHoveredBtn(null)}
         >
-          <span style={{ display: window.innerWidth <= 480 ? 'none' : 'inline' }}>Next</span>
+          <span style={{ display: window.innerWidth >= 480 || window.innerWidth <= 606? 'none' : 'inline' }}>Next</span>
           <span style={styles.paginationArrow}>›</span>
         </button>
       </nav>
