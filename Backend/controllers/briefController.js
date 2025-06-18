@@ -14,7 +14,7 @@ const handleError = (res, error, message = 'Operation failed') => {
     res.status(500).json({
         success: false,
         message,
-        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        error: error.message
     });
 };
 
@@ -25,7 +25,7 @@ const chatModel = new ChatOpenAI({
 });
 
 class BriefController {
-    // Create Project
+
     async createProject(req, res) {
         try {
             const projectExists = await Project.findByName(req.body?.projectName?.trim(), req.user.id);
@@ -67,7 +67,7 @@ class BriefController {
             const briefId = await Brief.create(req.body);
             
             // Generate audiences using the controller's function
-            const audiences = await briefController.generateAudienceSegments(briefId, req.user.id);
+            const audiences = await BriefController.prototype.generateAudienceSegments(briefId, req.user.id);
             if (audiences.success) {
             res.status(201).json({
                 success: true,
