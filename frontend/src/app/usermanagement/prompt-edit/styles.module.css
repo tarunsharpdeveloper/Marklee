@@ -15,7 +15,7 @@
 }
 
 .titleSection h1 {
-  color: #1e293b;
+  color: #8075ff;
   margin: 0;
   font-size: 2rem;
   font-weight: 600;
@@ -88,7 +88,7 @@
   background-color: #8075ff;
   color: white;
   padding: 0.25rem 0.75rem;
-  border-radius: 999px;
+  border-radius: 5px;
   font-size: 0.875rem;
 }
 
@@ -303,10 +303,26 @@
   border-color: #8075ff;
   box-shadow: 0 0 0 2px rgba(128, 117, 255, 0.1);
 }
-
+@media (max-width: 950px) {
+  .container {
+    padding-top: 3rem;
+  }
+}
+@media (max-width: 938px) {
+    .container {
+      padding-top: 3rem;
+      padding-left: 2rem;
+    }
+  }
+  @media (max-width: 858px) {
+    .container {
+      padding-top: 3rem;
+      padding-left: 2.8rem;
+    }
+  }
 @media (max-width: 768px) {
   .container {
-    padding: 1rem;
+    padding-left: 1rem;
   }
 
   .header {
@@ -322,7 +338,7 @@
   .promptPreview {
     position: fixed;
     right: 1rem;
-    left: 1rem;
+    left: 4rem;
     width: auto;
   }
 }
