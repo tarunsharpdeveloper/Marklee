@@ -1,8 +1,8 @@
 import UserMetadata from '../models/UserMetadata.js';
 
 
-const onboardingController = {
-  submitOnboarding: async (req, res) => {
+class OnboardingController {
+  submitOnboarding = async (req, res) => {
     try {
       const metadata = await UserMetadata.create({
       userId: req.user.id,
@@ -20,10 +20,10 @@ const onboardingController = {
       message: 'Failed to complete onboarding',
       error: error.message
     });
+    }
   }
-},
 
-  getOnboardingData: async (req, res) => {
+  getOnboardingData = async (req, res) => {
     try {
       const metadata = await UserMetadata.findByUserId(req.user.id);
       
@@ -42,8 +42,8 @@ const onboardingController = {
       message: 'Failed to fetch onboarding data',
       error: error.message
     });
+    }
   }
-  }
-};
+}
 
-export default onboardingController; 
+export default new OnboardingController(); 

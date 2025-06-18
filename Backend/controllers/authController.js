@@ -4,7 +4,7 @@ import emailService from '../utils/emailService.js';
 import bcrypt from 'bcrypt';
 import UserMetadata from '../models/UserMetadata.js';
 
-const authController = {
+class AuthController {
   async register(req, res) {
     try {
       const { email, password, name } = req.body;
@@ -43,7 +43,7 @@ const authController = {
         message: "Registration failed",
       });
     }
-  },
+  }
 
   async verifyEmail(req, res) {
     try {
@@ -83,7 +83,7 @@ const authController = {
         message: "Verification failed",
       });
     }
-  },
+  }
 
   async login(req, res) {
     try {
@@ -152,7 +152,7 @@ const authController = {
         message: "Login failed " + error,
       });
     }
-  },
+  }
 
   async resendOTP(req, res) {
     try {
@@ -194,7 +194,7 @@ const authController = {
         message: "Failed to resend OTP",
       });
     }
-  },
-};
+  }
+}
 
-export default authController;
+export default new AuthController();

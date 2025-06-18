@@ -24,7 +24,7 @@ const chatModel = new ChatOpenAI({
     temperature: 0.7
 });
 
-const briefController = {
+class BriefController {
     // Create Project
     async createProject(req, res) {
         try {
@@ -46,7 +46,7 @@ const briefController = {
         catch (error) {
             handleError(res, error, 'Failed to create project');
         }
-    },
+    }
 
     // Get Projects
     async getProjectsWithBriefs(req, res) {
@@ -59,7 +59,7 @@ const briefController = {
         } catch (error) {
             handleError(res, error, 'Error fetching projects');
         }
-    },
+    }
 
     // Create Brief
     async createBrief(req, res) {
@@ -84,7 +84,7 @@ const briefController = {
         } catch (error) {
             handleError(res, error, 'Failed to create brief');
         }
-    },
+    }
 
     // Get Briefs by Project
     async getBriefsByProject(req, res) {
@@ -98,7 +98,7 @@ const briefController = {
         } catch (error) {
             handleError(res, error, 'Failed to fetch briefs');
         }
-    },
+    }
 
     // Get Brief by ID
     async getBriefById(req, res) {
@@ -119,7 +119,7 @@ const briefController = {
         } catch (error) {
             handleError(res, error, 'Failed to fetch brief');
         }
-    },
+    }
 
     // Update Brief
     async updateBrief(req, res) {
@@ -144,7 +144,7 @@ const briefController = {
         } catch (error) {
             handleError(res, error, 'Failed to update brief');
         }
-    },
+    }
 
     // Create Audience
     // async createAudience(req, res) {
@@ -198,7 +198,7 @@ const briefController = {
     //             error: error.message
     //         });
     //     }
-    // },
+    // }
 
     // Generate Content
     async generateContent(req, res) {
@@ -278,7 +278,7 @@ const briefController = {
         } catch (error) {
             handleError(res, error, 'Failed to generate content');
         }
-    },
+    }
 
     // Generate Audience Segments
     async generateAudienceSegments(brief_id, user_id) {
@@ -389,7 +389,7 @@ const briefController = {
                 error: error.message
             };
         }
-    },
+    }
 
     // Update Audience Segment
     async updateAudienceSegment(req, res) {
@@ -431,7 +431,7 @@ const briefController = {
         } catch (error) {
             handleError(res, error, 'Failed to update audience segment');
         }
-    },
+    }
 
     // Get Audience by Brief
     async getAudienceByBrief(req, res) {
@@ -447,4 +447,4 @@ const briefController = {
     }
 };
 
-export default briefController; 
+export default new BriefController(); 

@@ -1,32 +1,32 @@
 import {pool as db} from '../config/database.js';
 
-const AiPrompt = {
-    create: async (data) => {
+class AiPrompt {
+    static async create(data) {
         const { prompt_for_id, prompt } = data;
         const query = `INSERT INTO ai_prompts (prompt_for_id, prompt) VALUES ($1, $2)`;
         const [result] = await db.execute(query, [prompt_for_id, prompt]);
         return result;
-    },
-    findAll: async () => {
+    }
+    static async findAll() {
         const query = `SELECT * FROM ai_prompts`;
         const [result] = await db.execute(query);
         return result;
-    },
-    delete: async (id) => {
+    }
+    static async delete(id) {
         const query = `DELETE FROM ai_prompts WHERE id = $1`;
         const [result] = await db.execute(query, [id]);
         return result;
-    },
-    getPromptFor: async (prompt_for_id) => {
+    }
+    static async getPromptFor(prompt_for_id) {
         const query = `SELECT * FROM ai_prompts WHERE prompt_for_id = $1`;
         const [result] = await db.execute(query, [prompt_for_id]);
         return result;
-    },
-    getAllPromptsType: async () => {
+    }
+    static async getAllPromptsType() {
         const query = `SELECT * FROM ai_prompts_type`;
         const [result] = await db.execute(query);
         return result;
     }
 }
 
-export default AiPrompt;
+export default AiPrompt;  
