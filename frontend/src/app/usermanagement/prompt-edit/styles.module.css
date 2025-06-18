@@ -1,5 +1,6 @@
 .container {
-  padding: 2rem;
+  padding-top: 3rem;
+  padding-left: 1rem;
   max-width: 1400px;
   margin: 0 auto;
   min-height: 100vh;
@@ -14,9 +15,9 @@
 }
 
 .titleSection h1 {
-  font-size: 2rem;
   color: #1e293b;
   margin: 0;
+  font-size: 2rem;
   font-weight: 600;
 }
 
@@ -40,7 +41,13 @@
   align-items: center;
   gap: 0.5rem;
 }
-
+.deleteButton{
+  background-color: #FF4D4D;
+  color: white;
+  border: none;
+  padding: 0.2rem 0.2rem;
+  border-radius: 5px;
+}
 .addButton:hover {
   background-color: #6a61d6;
   transform: translateY(-1px);
@@ -50,26 +57,24 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
-  margin-bottom: 2rem;
 }
 
 .promptCard {
-  background: white;
+  background-color: white;
   border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 2px solid transparent;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .promptCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 .activeCard {
-  border-color: #8075ff;
+  border: 2px solid #8075ff;
 }
 
 .promptCardHeader {
@@ -80,11 +85,11 @@
 }
 
 .categoryTag {
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
+  background-color: #8075ff;
   color: white;
-  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
 }
 
 .cardActions {
@@ -97,27 +102,26 @@
   border: none;
   cursor: pointer;
   padding: 0.25rem;
-  border-radius: 6px;
-  transition: background-color 0.2s;
+  font-size: 1rem;
+  opacity: 0.6;
+  transition: opacity 0.2s;
 }
 
 .iconButton:hover {
-  background-color: #f1f5f9;
+  opacity: 1;
 }
 
 .promptContent {
-  color: #334155;
-  font-size: 0.95rem;
+  color: #1e293b;
+  font-size: 0.875rem;
   line-height: 1.5;
   margin-bottom: 1rem;
-  max-height: 150px;
-  overflow-y: auto;
 }
 
 .promptFooter {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: flex-end;
 }
 
 .variables {
@@ -130,9 +134,8 @@
   background-color: #f1f5f9;
   color: #64748b;
   padding: 0.25rem 0.5rem;
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: 0.75rem;
-  font-family: monospace;
 }
 
 .updatedAt {
@@ -141,11 +144,11 @@
 }
 
 .addFormContainer {
-  background: white;
+  background-color: white;
   border-radius: 16px;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .addForm {
@@ -161,17 +164,24 @@
 }
 
 .formGroup label {
-  color: #334155;
   font-weight: 500;
+  color: #1e293b;
 }
 
-.formGroup select {
+.formGroup select,
+.formGroup textarea {
   padding: 0.75rem;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   font-size: 1rem;
-  color: #334155;
   background-color: white;
+}
+
+.formGroup select:focus,
+.formGroup textarea:focus {
+  outline: none;
+  border-color: #8075ff;
+  box-shadow: 0 0 0 2px rgba(128, 117, 255, 0.1);
 }
 
 .promptInputContainer {
@@ -181,14 +191,8 @@
 
 .promptInput {
   flex: 2;
-  min-height: 200px;
-  padding: 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 1rem;
-  line-height: 1.5;
+  min-height: 150px;
   resize: vertical;
-  font-family: inherit;
 }
 
 .promptTips {
@@ -199,8 +203,8 @@
 }
 
 .promptTips h4 {
-  color: #334155;
   margin: 0 0 0.5rem 0;
+  color: #1e293b;
 }
 
 .promptTips ul {
@@ -217,35 +221,36 @@
   background-color: #8075ff;
   color: white;
   border: none;
-  padding: 0.75rem;
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
-  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  align-self: flex-end;
+  transition: all 0.2s ease;
 }
 
 .submitButton:hover {
   background-color: #6a61d6;
+  transform: translateY(-1px);
 }
 
 .promptPreview {
   position: fixed;
-  right: 2rem;
-  top: 4.2rem;
+  top: 4rem;
+  right: 0;
   width: 400px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  overflow: hidden;
+  height: 100vh;
+  background-color: white;
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  overflow-y: auto;
 }
 
 .previewHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 2rem;
 }
 
 .previewHeader h3 {
@@ -256,26 +261,22 @@
 .closeButton {
   background: none;
   border: none;
-  color: #64748b;
   cursor: pointer;
-  font-size: 1.25rem;
-  padding: 0.25rem;
+  font-size: 1.5rem;
+  color: #64748b;
 }
 
 .previewContent {
-    padding: 1.5rem;
-  /* margin-top: 1.5rem; */
+  color: #1e293b;
 }
 
 .variableInputs {
-  margin-top: 1.5rem;
-  border-top: 1px solid #e2e8f0;
-  padding-top: 1.5rem;
+  margin-top: 2rem;
 }
 
 .variableInputs h4 {
   margin: 0 0 1rem 0;
-  color: #334155;
+  color: #1e293b;
 }
 
 .variableInput {
@@ -295,6 +296,12 @@
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   font-size: 0.875rem;
+}
+
+.variableInput input:focus {
+  outline: none;
+  border-color: #8075ff;
+  box-shadow: 0 0 0 2px rgba(128, 117, 255, 0.1);
 }
 
 @media (max-width: 768px) {
