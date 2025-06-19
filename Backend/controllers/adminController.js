@@ -2,8 +2,9 @@ import User from '../models/User.js';
 import BriefQuestion from '../models/BriefQuestion.js';
 import AiPrompt from '../models/AiPrompt.js';
 
-const adminController = {
-    getUsers: async (req, res) => {
+class AdminController {
+
+    async getUsers(req, res) {
         try {
             // Ensure we have valid numbers for page and limit
             const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -26,9 +27,9 @@ const adminController = {
                 error: error.message
             });
         }
-    },
+    }
 
-    updateUserStatus: async (req, res) => {
+    async updateUserStatus(req, res) {
         try {
             const { userId, status } = req.body;
             await User.updateStatus(userId, status);
@@ -45,9 +46,9 @@ const adminController = {
                 error: error.message
             });
         }
-    },
+    }
 
-    createBriefQuestion: async (req, res) => {
+    async createBriefQuestion(req, res) {
         try {
             const data = req.body;
             const input_field_name = data.title.toLowerCase().replace(/ /g, '_').split('_').slice(0, 3).join('_');
@@ -65,9 +66,9 @@ const adminController = {
                 error: error.message
             });
         }
-    },
+    }
 
-    getBriefQuestions: async (req, res) => {
+    async getBriefQuestions(req, res) {
         try {
             const briefQuestions = await BriefQuestion.findAll();
             res.status(200).json({
@@ -82,9 +83,9 @@ const adminController = {
                 error: error.message
             });
         }
-    },
+    }
 
-    deleteBriefQuestion: async (req, res) => {
+    async deleteBriefQuestion(req, res) {
         try {
             const { id } = req.params;
             const breifQuestion = await BriefQuestion.delete(id);
@@ -108,9 +109,9 @@ const adminController = {
                 error: error.message
             });
         }
-    },
+    }
     
-    createAiPrompt: async (req, res) => {
+    async createAiPrompt(req, res) {
         try {
             const data = req.body;
             const aiPrompt = await AiPrompt.create(data);
@@ -126,9 +127,9 @@ const adminController = {
                 error: error.message
             });
         }
-    },
+    }
 
-    getAiPrompts: async (req, res) => {
+    async getAiPrompts(req, res) {
         try {
             const aiPrompts = await AiPrompt.findAll();
             res.status(200).json({
@@ -143,9 +144,9 @@ const adminController = {
                 error: error.message
             });
         }
-    },
+    }
 
-    deleteAiPrompt: async (req, res) => {
+    async deleteAiPrompt(req, res) {
         try {
             const { id } = req.params;
             const aiPrompt = await AiPrompt.delete(id);
@@ -161,9 +162,9 @@ const adminController = {
                 error: error.message
             });
         }
-    },
+    }
 
-    getAiPromptFor: async (req, res) => {
+    async getAiPromptFor(req, res) {
         try {
             const { id } = req.params;
             const aiPrompt = await AiPrompt.getPromptFor(id);
@@ -179,9 +180,9 @@ const adminController = {
                 error: error.message
             });
         }
-    },
+    }
 
-    getAiPromptsType: async (req, res) => {
+    async getAiPromptsType(req, res) {
         try {
             const aiPromptsType = await AiPrompt.getAllPromptsType();
             res.status(200).json({
@@ -199,4 +200,4 @@ const adminController = {
     }
 }
 
-export default adminController;
+export default new AdminController();
