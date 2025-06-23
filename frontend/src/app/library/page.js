@@ -665,6 +665,7 @@ export default function Library() {
       const responseData = await response.json();
 
       if (response.ok) {
+        setCurrentBriefId(responseData.data.brief.id); // Save the new brief's ID
         const newAudiences = responseData.data.audiences.map(audience => {
           let name = 'Audience Segment';
           let description = '';
@@ -698,7 +699,7 @@ export default function Library() {
         setAudiences(newAudiences);
 
         const newBrief = {
-          id: responseData.data.id,
+          id: responseData.data.brief.id,
           title: cleanBriefData[briefQuestions.find(q => q.input_field_name === 'main_message')?.input_field_name] || 'Brief',
           created_at: new Date().toISOString()
         };
@@ -803,9 +804,10 @@ export default function Library() {
               <button 
                 className={styles.generateButton}
                 onClick={async () => {
+                  let loadingInterval;
                   try {
                     setLoading(true);
-                    const loadingInterval = startLoadingSequence(assetLoadingQuestions, setLoadingMessage);
+                    loadingInterval = startLoadingSequence(assetLoadingQuestions, setLoadingMessage);
                     
                     const response = await fetch(`http://localhost:4000/api/generate-content`, {
                       method: 'POST',
@@ -832,7 +834,9 @@ export default function Library() {
                     }
                   } catch (error) {
                     console.error('Error generating asset:', error);
-                    clearInterval(loadingInterval);
+                    if (loadingInterval) {
+                      clearInterval(loadingInterval);
+                    }
                     setLoading(false);
                     setLoadingMessage('');
                   }

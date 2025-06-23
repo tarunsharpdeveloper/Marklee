@@ -273,6 +273,33 @@ Requirements:
             });
         }
     }
+
+    async updateAiPrompt(req, res) {
+        try {
+            const { id } = req.params;
+            const data = req.body;
+            const result = await AiPrompt.update(id, data);
+            
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'AI prompt not found or no new changes to apply',
+                });
+            }
+            
+            res.status(200).json({
+                success: true,
+                message: 'AI prompt updated successfully',
+                data: { id, ...data }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error updating AI prompt',
+                error: error.message
+            });
+        }
+    }
 }
 
 export default new AdminController();
