@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
---add admin user and password is 123456 if not exists
+
 INSERT INTO users (name, email, password, role ,is_verified) VALUES ('Admin', 'admin@gmail.com', '$2a$10$rysdja9AWpDGGW1aMW.9FecY9SKLXk8zeLpMWMgvCW8YqCvY4xd0y', 'admin', true);
 
 CREATE TABLE IF NOT EXISTS user_metadata (
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS user_metadata (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ); 
 
--- Create projects table
+
 CREATE TABLE IF NOT EXISTS projects (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -42,7 +42,6 @@ CREATE TABLE IF NOT EXISTS projects (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Create briefs table
 CREATE TABLE IF NOT EXISTS briefs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     project_id INT NOT NULL,
@@ -59,7 +58,7 @@ CREATE TABLE IF NOT EXISTS briefs (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create audiences table
+
 CREATE TABLE IF NOT EXISTS audiences (
     id INT AUTO_INCREMENT PRIMARY KEY,
     brief_id INT NOT NULL,
@@ -74,7 +73,7 @@ CREATE TABLE IF NOT EXISTS audiences (
     FOREIGN KEY (brief_id) REFERENCES briefs(id) ON DELETE CASCADE
 );
 
--- Create generated_content table
+
 CREATE TABLE IF NOT EXISTS generated_content (
     id INT AUTO_INCREMENT PRIMARY KEY,
     brief_id INT NOT NULL,
@@ -87,7 +86,7 @@ CREATE TABLE IF NOT EXISTS generated_content (
     FOREIGN KEY (audience_id) REFERENCES audiences(id) ON DELETE SET NULL
 ); 
 
--- create a table for brief questions
+
 CREATE TABLE IF NOT EXISTS brief_questions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(100) NOT NULL,
@@ -98,7 +97,7 @@ CREATE TABLE IF NOT EXISTS brief_questions (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
---create a table for ai prompts type
+
 CREATE TABLE IF NOT EXISTS ai_prompts_type (
     id INT AUTO_INCREMENT PRIMARY KEY,
     type VARCHAR(100) NOT NULL,
@@ -106,10 +105,10 @@ CREATE TABLE IF NOT EXISTS ai_prompts_type (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
---insert data into ai prompts type table
+
 INSERT INTO ai_prompts_type (type) VALUES ('audience'), ('content');
 
---create a table for ai prompts
+
 CREATE TABLE IF NOT EXISTS ai_prompts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     prompt_for_id INT NOT NULL, 
