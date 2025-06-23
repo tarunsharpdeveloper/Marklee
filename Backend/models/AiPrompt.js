@@ -27,6 +27,11 @@ class AiPrompt {
         const [result] = await db.execute(query);
         return result;
     }
+    static async deleteAll() {
+        const query = `DELETE FROM ai_prompts`;
+        const [result] = await db.execute(query);
+        return result;
+    }
 }
 
 export default AiPrompt;  

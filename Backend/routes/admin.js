@@ -19,6 +19,6 @@ router.get('/ai-prompt-for/:id', adminController.getAiPromptFor);
 router.post('/ai-prompt', adminController.createAiPrompt);
 router.delete('/ai-prompt/:id', adminController.deleteAiPrompt);
 router.get('/ai-prompts-type', adminController.getAiPromptsType);
-
+router.post('/reset-default-prompts', adminController.resetDefaultPrompts);
 
 export default router;

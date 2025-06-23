@@ -7,6 +7,7 @@ import { ChatOpenAI } from '@langchain/openai';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { RunnableSequence } from '@langchain/core/runnables';
+import AiPrompt from '../models/AiPrompt.js';
 
 // Error handling utility
 const handleError = (res, error, message = 'Operation failed') => {
@@ -64,7 +65,46 @@ class BriefController {
     // Create Brief
     async createBrief(req, res) {
         try {
-            const briefId = await Brief.create(req.body);
+            // Map dynamic field names to expected brief field names
+            const mapDynamicFieldsToBriefFields = (dynamicData) => {
+                const fieldMapping = {
+                    'purpose': 'purpose',
+                    'main_message': 'mainMessage',
+                    'special_features': 'specialFeatures',
+                    'beneficiaries': 'beneficiaries',
+                    'benefits': 'benefits',
+                    'call_to_action': 'callToAction',
+                    'importance': 'importance',
+                    'additional_info': 'additionalInfo'
+                };
+
+                const mappedData = {
+                    projectId: dynamicData.projectId,
+                    projectName: dynamicData.projectName
+                };
+
+                // Map each dynamic field to the expected field name
+                Object.keys(dynamicData).forEach(key => {
+                    if (fieldMapping[key]) {
+                        mappedData[fieldMapping[key]] = dynamicData[key] || '';
+                    }
+                });
+
+                // Ensure all required fields are present with default values
+                const requiredFields = ['purpose', 'mainMessage', 'specialFeatures', 'beneficiaries', 'benefits', 'callToAction', 'importance', 'additionalInfo'];
+                requiredFields.forEach(field => {
+                    if (!mappedData[field]) {
+                        mappedData[field] = '';
+                    }
+                });
+
+                return mappedData;
+            };
+
+            const mappedBriefData = mapDynamicFieldsToBriefFields(req.body);
+            console.log('Mapped brief data:', mappedBriefData); // Debug log
+
+            const briefId = await Brief.create(mappedBriefData);
             
             // Generate audiences using the controller's function
             const audiences = await BriefController.prototype.generateAudienceSegments(briefId, req.user.id);
@@ -204,6 +244,7 @@ class BriefController {
     async generateContent(req, res) {
         try {
             const { briefId, audienceId, assetType } = req.body;
+
             const brief = await Brief.findById(briefId);
             const audience = await Audience.findById(audienceId);
 
@@ -214,32 +255,16 @@ class BriefController {
                 });
             }
 
-            const contentPrompt = PromptTemplate.fromTemplate(`
-                Generate {assetType} based on the following brief and audience:
-                
-                Brief:
-                Purpose: {purpose}
-                Main Message: {mainMessage}
-                Special Features: {specialFeatures}
-                Benefits: {benefits}
-                Call to Action: {callToAction}
-                
-                Audience:
-                Segment: {segment}
-                Insights: {insights}
-                Messaging Angle: {messagingAngle}
-                Tone: {tone}
-                
-                Requirements:
-                1. Content must be engaging and persuasive
-                2. Follow the specified tone of voice
-                3. Include the main message and support points
-                4. End with the call to action
-                5. Format appropriately for the asset type
-                6. Simple content, no more than 200 words and do not include any emojis
- 
-            `);
+            // Fetch content prompt from database (prompt_for_id = 2 for content)
+            const aiPrompt = await AiPrompt.getPromptFor(2);
+            if (!aiPrompt || aiPrompt.length === 0) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Content prompt not found in database'
+                });
+            }
 
+            const contentPrompt = PromptTemplate.fromTemplate(aiPrompt[0].prompt);
 
             const chain = RunnableSequence.from([
                 contentPrompt,
@@ -291,41 +316,23 @@ class BriefController {
                     message: 'Brief not found'
                 };
             }
-            // Get user metadata
-            // const userMetadata = await UserMetadata.findByUserId(user_id);
-            // Audience generation prompt
-            const audiencePrompt = PromptTemplate.fromTemplate(`
-                Based on the following brief, generate 2 distinct audience segments:
 
-                Brief Information:
-                Product/Service: {product}
-                Main Message: {message}
-                Special Features: {features}
-                Benefits: {benefits}
-                Beneficiaries: {beneficiaries}
-                Importance: {importance}
-                Additional Info: {additionalInfo}
-                Call to Action: {callToAction}
+            // Fetch audience prompt from database (prompt_for_id = 1 for audience)
+            const aiPrompt = await AiPrompt.getPromptFor(1);
+            console.log('Fetched audience prompt:', aiPrompt);
+            
+            if (!aiPrompt || aiPrompt.length === 0) {
+                return {
+                    success: false,
+                    message: 'Audience prompt not found in database'
+                };
+            }
 
-                For each segment, provide:
-                1. Segment Name and Description
-                2. Detailed Audience Insights
-                3. Messaging Angle
-                4. Support Points (as bullet points)
-                5. Appropriate Tone of Voice
-                6. Detailed Persona Profile
+            // Use the first prompt if multiple exist
+            const selectedPrompt = aiPrompt[0];
+            console.log('Using prompt:', selectedPrompt.prompt);
 
-                Format the response as a valid JSON array where each object has the fields:
-                - segment
-                - insights
-                - messagingAngle
-                - supportPoints
-                - tone
-                - personaProfile
-
-                Make each field detailed but concise.
-
-            `);
+            const audiencePrompt = PromptTemplate.fromTemplate(selectedPrompt.prompt);
 
             const audienceChain = RunnableSequence.from([
                 audiencePrompt,
@@ -333,7 +340,7 @@ class BriefController {
                 new StringOutputParser()
             ]);
 
-            const aiResponse = await audienceChain.invoke({
+            const promptVariables = {
                 product: brief.purpose,
                 message: brief.main_message,
                 features: brief.special_features,
@@ -345,7 +352,11 @@ class BriefController {
                 // orgType: userMetadata?.organization_type || '',
                 // supportType: userMetadata?.support_type || '',
                 // businessModel: userMetadata?.business_model || ''
-            });
+            };
+
+            console.log('Prompt variables:', promptVariables);
+
+            const aiResponse = await audienceChain.invoke(promptVariables);
             const cleanJson = aiResponse
                             .replace('```json', '')
                             .replace('```', '')
@@ -382,7 +393,7 @@ class BriefController {
             };
 
         } catch (error) {
-            handleError(res, error, 'Failed to generate audience segments');
+            console.error('Error generating audience segments:', error);
             return {
                 success: false,
                 message: 'Failed to generate audience segments',
