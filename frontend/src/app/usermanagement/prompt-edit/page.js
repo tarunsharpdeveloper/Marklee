@@ -8,6 +8,8 @@ export default function PromptEdit() {
     const [activePrompt, setActivePrompt] = useState(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingPrompt, setEditingPrompt] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [promptToDelete, setPromptToDelete] = useState(null);
     const [newPrompt, setNewPrompt] = useState({
         prompt: '',
         category: '',
@@ -335,7 +337,8 @@ export default function PromptEdit() {
                                             className={styles.deleteButton}
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleDeletePrompt(prompt.id);
+                                                setPromptToDelete(prompt);
+                                                setShowDeleteConfirm(true);
                                             }}
                                             title="Delete Prompt"
                                         >
@@ -397,6 +400,36 @@ export default function PromptEdit() {
                                 ))}
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {showDeleteConfirm && (
+                <div className={styles.deleteConfirmation}>
+                    <div className={styles.confirmationContent}>
+                        <h3>Confirm Deletion</h3>
+                        <p>Are you sure you want to delete this prompt?</p>
+                        <div className={styles.buttonGroup}>
+                            <button
+                                className={styles.cancelButton}
+                                onClick={() => {
+                                    setShowDeleteConfirm(false);
+                                    setPromptToDelete(null);
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className={styles.deleteButton}
+                                onClick={() => {
+                                    handleDeletePrompt(promptToDelete.id);
+                                    setShowDeleteConfirm(false);
+                                    setPromptToDelete(null);
+                                }}
+                            >
+                                Delete
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
