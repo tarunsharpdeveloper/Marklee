@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../dashboard/styles.module.css';
+import Image from 'next/image';
 
 export default function Library() {
   const router = useRouter();
@@ -579,7 +580,13 @@ export default function Library() {
                     setSelectedAudienceId(audience.id);
                     setSelectedAssetType(audience.name);
                     setIsAssetPopupOpen(true);
-                  }}>Generate Document</button>
+                  }}>Generate <Image
+                  src="/GenerateDoc.png"
+                  alt="Marklee Logo"
+                  width={20}
+                  height={20}
+                  priority
+                /></button>
                   </div>
                 </div>
               ))}
