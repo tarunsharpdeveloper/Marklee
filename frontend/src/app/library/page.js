@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../dashboard/styles.module.css';
+import Image from 'next/image';
 
 export default function Library() {
   const router = useRouter();
@@ -21,16 +22,7 @@ export default function Library() {
   const [showQASection, setShowQASection] = useState(true);
   const [isAssetPopupOpen, setIsAssetPopupOpen] = useState(false);
   const [selectedAssetType, setSelectedAssetType] = useState('');
-  const [briefData, setBriefData] = useState({
-    purpose: '',
-    main_message: '',
-    special_features: '',
-    beneficiaries: '',
-    benefits: '',
-    call_to_action: '',
-    importance: '',
-    additional_info: ''
-  });
+  const [briefData, setBriefData] = useState({});
   const [currentBriefId, setCurrentBriefId] = useState(null);
   const [selectedAudienceId, setSelectedAudienceId] = useState(null);
   const [generatedContent, setGeneratedContent] = useState(null);
@@ -53,6 +45,7 @@ export default function Library() {
     "Preparing your content..."
   ]);
   const [briefQuestions, setBriefQuestions] = useState([]);
+  const [questionsLoading, setQuestionsLoading] = useState(true);
   useEffect(() => {
     fetchProjects();
     fetchBriefQuestions();
@@ -281,6 +274,7 @@ export default function Library() {
   };
   const fetchBriefQuestions = async () => {
     try {
+      setQuestionsLoading(true);
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:4000/api/admin/brief-questions', {
         method: 'GET',
@@ -297,15 +291,24 @@ export default function Library() {
       const data = await response.json();
       if (data.success) {
         setBriefQuestions(data.data);
+        
+        // Dynamically initialize briefData based on fetched questions
+        const initialBriefData = {};
+        data.data.forEach(question => {
+          initialBriefData[question.input_field_name] = '';
+        });
+        setBriefData(initialBriefData);
+        
+        console.log('Initialized briefData with fields:', Object.keys(initialBriefData)); // Debug log
         setError('');
       } else {
         setError(data.message || 'Failed to fetch questions');
       }
-      setLoading(false);
+      setQuestionsLoading(false);
     } catch (error) {
       console.error('Error fetching brief questions:', error);
       setError('Failed to fetch questions. Please try again.');
-      setLoading(false);
+      setQuestionsLoading(false);
     }
   };
   const handleCreateBrief = async (folder) => {
@@ -326,30 +329,22 @@ export default function Library() {
     setSelectedFolder(null);
     setShowFolderSection(true);
     setShowQASection(false);
-    setBriefData({
-      purpose: '',
-      main_message: '',
-      special_features: '',
-      beneficiaries: '',
-      benefits: '',
-      call_to_action: '',
-      importance: '',
-      additional_info: ''
+    // Reset briefData to empty values for all fields
+    const resetBriefData = {};
+    briefQuestions.forEach(question => {
+      resetBriefData[question.input_field_name] = '';
     });
+    setBriefData(resetBriefData);
   };
 
   const handleBackFromAudience = () => {
     setAudiences([]);
-    setBriefData({
-      purpose: '',
-      main_message: '',
-      special_features: '',
-      beneficiaries: '',
-      benefits: '',
-      call_to_action: '',
-      importance: '',
-      additional_info: ''
+    // Reset briefData to empty values for all fields
+    const resetBriefData = {};
+    briefQuestions.forEach(question => {
+      resetBriefData[question.input_field_name] = '';
     });
+    setBriefData(resetBriefData);
     // Always show folder section when going back from audience
     setShowFolderSection(true);
     setIsBriefFormOpen(false);
@@ -406,12 +401,34 @@ export default function Library() {
       // Update the audiences state with the fetched data
       if (data.data && data.data.length > 0) {
         const formattedAudiences = data.data.map(audience => {
-          const segmentData = JSON.parse(audience.segment);
-          return {
-            ...audience, // keep all fields for drawer
-            name: segmentData.name,
-            description: segmentData.description
-          };
+          let name = 'Audience Segment';
+          let description = '';
+          try {
+            const segmentData = JSON.parse(audience.segment);
+            if (typeof segmentData === 'object' && segmentData !== null) {
+              name = segmentData.name || 'Untitled Segment';
+              description = segmentData.description || '';
+            } else if (typeof segmentData === 'string') {
+              name = segmentData;
+              try {
+                const insightsData = JSON.parse(audience.insights);
+                if (Array.isArray(insightsData)) {
+                    description = insightsData.join(' ');
+                } else if (typeof insightsData === 'object' && insightsData !== null) {
+                    description = getAllValues(insightsData).join(' ').replace(/<br\s*\/?>/gi, ' ');
+                } else {
+                    description = String(insightsData);
+                }
+                description = description.substring(0, 150) + (description.length > 150 ? '...' : '');
+              } catch (e) {
+                  description = 'No description available.';
+              }
+            }
+          } catch (e) {
+            name = 'Error Parsing Segment';
+            description = '';
+          }
+          return { ...audience, name, description };
         });
         setAudiences(formattedAudiences);
       }
@@ -478,49 +495,56 @@ export default function Library() {
               </div>
             ) : (
               <form onSubmit={handleBriefSubmit}>
-                <div className={styles.formGroup}>
-                  {briefQuestions.map((question, index) => (
-                    <div key={index}>
-                      <label>{question.question}</label>
-                      <textarea
-                        value={briefData[question.title]}
-                        onChange={(e) => setBriefData(prev => ({ ...prev, [question.title]: e.target.value }))}
-                        placeholder={question.placeholder}
-                        className={styles.textarea}
-                      />
+                {questionsLoading ? (
+                  <div className={styles.loadingOverlay}>
+                    <div className={styles.loadingContainer}>
+                      <div className={styles.loader}></div>
+                      <p className={styles.loadingMessage}>Loading questions...</p>
                     </div>
-                  ))}
-                </div>
-               
-                <div className={styles.formActions}>
-                  <button 
-                    type="button" 
-                    className={styles.cancelButton}
-                    onClick={() => {
-                      setIsBriefFormOpen(false);
-                      setSelectedFolder(null);
-                      setBriefData({
-                        purpose: '',
-                        main_message: '',
-                        special_features: '',
-                        beneficiaries: '',
-                        benefits: '',
-                        call_to_action: '',
-                        importance: '',
-                        additional_info: ''
-                      });
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    className={styles.submitButton}
-                    disabled={loading}
-                  >
-                    {loading ? 'Creating...' : 'Create Brief'}
-                  </button>
-                </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className={styles.formGroup}>
+                      {briefQuestions.map((question, index) => (
+                        <div key={index}>
+                          <label>{question.question}</label>
+                          <textarea
+                            value={briefData[question.input_field_name] || ''}
+                            onChange={(e) => setBriefData(prev => ({ ...prev, [question.input_field_name]: e.target.value }))}
+                            placeholder={question.placeholder}
+                            className={styles.textarea}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                   
+                    <div className={styles.formActions}>
+                      <button 
+                        type="button" 
+                        className={styles.cancelButton}
+                        onClick={() => {
+                          setIsBriefFormOpen(false);
+                          setSelectedFolder(null);
+                          // Reset briefData to empty values for all fields
+                          const resetBriefData = {};
+                          briefQuestions.forEach(question => {
+                            resetBriefData[question.input_field_name] = '';
+                          });
+                          setBriefData(resetBriefData);
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        type="submit" 
+                        className={styles.submitButton}
+                        disabled={loading || questionsLoading}
+                      >
+                        {loading ? 'Creating...' : 'Create Brief'}
+                      </button>
+                    </div>
+                  </>
+                )}
               </form>
             )}
           </div>
@@ -556,7 +580,13 @@ export default function Library() {
                     setSelectedAudienceId(audience.id);
                     setSelectedAssetType(audience.name);
                     setIsAssetPopupOpen(true);
-                  }}>Generate Document</button>
+                  }}>Generate <Image
+                  src="/GenerateDoc.png"
+                  alt="Marklee Logo"
+                  width={20}
+                  height={20}
+                  priority
+                /></button>
                   </div>
                 </div>
               ))}
@@ -602,6 +632,12 @@ export default function Library() {
     e.preventDefault();
     if (!selectedFolder) return;
 
+    // Check if questions are loaded
+    if (briefQuestions.length === 0) {
+      setError('Please wait for questions to load before submitting');
+      return;
+    }
+
     setLoading(true);
     setError('');
     const loadingInterval = startLoadingSequence(loadingQuestions, setLoadingMessage);
@@ -609,18 +645,20 @@ export default function Library() {
     try {
       const token = localStorage.getItem('token');
       
+      // Filter out undefined values and ensure all fields have values
+      const cleanBriefData = {};
+      briefQuestions.forEach(question => {
+        const value = briefData[question.input_field_name];
+        cleanBriefData[question.input_field_name] = value || ''; // Use empty string if undefined
+      });
+      
       const briefPayload = {
         projectId: selectedFolder.id,
         projectName: selectedFolder.name,
-        purpose: briefData.purpose,
-        mainMessage: briefData.main_message,
-        specialFeatures: briefData.special_features,
-        beneficiaries: briefData.beneficiaries,
-        benefits: briefData.benefits,
-        callToAction: briefData.call_to_action,
-        importance: briefData.importance,
-        additionalInfo: briefData.additional_info
+        ...cleanBriefData // Use cleaned data
       };
+
+      console.log('Sending brief payload:', briefPayload); // Debug log
 
       const response = await fetch(`http://localhost:4000/api/create-brief`, {
         method: 'POST',
@@ -634,19 +672,42 @@ export default function Library() {
       const responseData = await response.json();
 
       if (response.ok) {
+        setCurrentBriefId(responseData.data.brief.id); // Save the new brief's ID
         const newAudiences = responseData.data.audiences.map(audience => {
-          const segmentData = JSON.parse(audience.segment);
-          return {
-            ...audience,
-            name: segmentData.name,
-            description: segmentData.description
-          };
+          let name = 'Audience Segment';
+          let description = '';
+          try {
+            const segmentData = JSON.parse(audience.segment);
+            if (typeof segmentData === 'object' && segmentData !== null) {
+              name = segmentData.name || 'Untitled Segment';
+              description = segmentData.description || '';
+            } else if (typeof segmentData === 'string') {
+              name = segmentData;
+              try {
+                const insightsData = JSON.parse(audience.insights);
+                if (Array.isArray(insightsData)) {
+                    description = insightsData.join(' ');
+                } else if (typeof insightsData === 'object' && insightsData !== null) {
+                    description = getAllValues(insightsData).join(' ').replace(/<br\s*\/?>/gi, ' ');
+                } else {
+                    description = String(insightsData);
+                }
+                description = description.substring(0, 150) + (description.length > 150 ? '...' : '');
+              } catch (e) {
+                  description = 'No description available.';
+              }
+            }
+          } catch (e) {
+            name = 'Error Parsing Segment';
+            description = '';
+          }
+          return { ...audience, name, description };
         });
         setAudiences(newAudiences);
 
         const newBrief = {
-          id: responseData.data.id,
-          title: briefData.main_message,
+          id: responseData.data.brief.id,
+          title: cleanBriefData[briefQuestions.find(q => q.input_field_name === 'main_message')?.input_field_name] || 'Brief',
           created_at: new Date().toISOString()
         };
 
@@ -661,16 +722,12 @@ export default function Library() {
           };
         });
 
-        setBriefData({
-          purpose: '',
-          main_message: '',
-          special_features: '',
-          beneficiaries: '',
-          benefits: '',
-          call_to_action: '',
-          importance: '',
-          additional_info: ''
+        // Reset briefData to empty values for all fields
+        const resetBriefData = {};
+        briefQuestions.forEach(question => {
+          resetBriefData[question.input_field_name] = '';
         });
+        setBriefData(resetBriefData);
         setError('');
         fetchProjects();
         clearInterval(loadingInterval);
@@ -754,9 +811,10 @@ export default function Library() {
               <button 
                 className={styles.generateButton}
                 onClick={async () => {
+                  let loadingInterval;
                   try {
                     setLoading(true);
-                    const loadingInterval = startLoadingSequence(assetLoadingQuestions, setLoadingMessage);
+                    loadingInterval = startLoadingSequence(assetLoadingQuestions, setLoadingMessage);
                     
                     const response = await fetch(`http://localhost:4000/api/generate-content`, {
                       method: 'POST',
@@ -783,7 +841,9 @@ export default function Library() {
                     }
                   } catch (error) {
                     console.error('Error generating asset:', error);
-                    clearInterval(loadingInterval);
+                    if (loadingInterval) {
+                      clearInterval(loadingInterval);
+                    }
                     setLoading(false);
                     setLoadingMessage('');
                   }

@@ -117,3 +117,58 @@ CREATE TABLE IF NOT EXISTS ai_prompts (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (prompt_for_id) REFERENCES ai_prompts_type(id) ON DELETE CASCADE
 );  
+
+-- Insert default AI prompts
+INSERT INTO ai_prompts (prompt_for_id, prompt) VALUES 
+(1, 'Based on the following brief, generate 2 distinct audience segments:
+
+Brief Information:
+Product/Service: {product}
+Main Message: {message}
+Special Features: {features}
+Benefits: {benefits}
+Beneficiaries: {beneficiaries}
+Importance: {importance}
+Additional Info: {additionalInfo}
+Call to Action: {callToAction}
+
+For each segment, provide:
+1. Segment Name and Description
+2. Detailed Audience Insights
+3. Messaging Angle
+4. Support Points (as bullet points)
+5. Appropriate Tone of Voice
+6. Detailed Persona Profile
+
+Format the response as a valid JSON array where each object has the fields:
+- segment
+- insights
+- messagingAngle
+- supportPoints
+- tone
+- personaProfile
+
+Make each field detailed but concise.'),
+
+(2, 'Generate {assetType} based on the following brief and audience:
+
+Brief:
+Purpose: {purpose}
+Main Message: {mainMessage}
+Special Features: {specialFeatures}
+Benefits: {benefits}
+Call to Action: {callToAction}
+
+Audience:
+Segment: {segment}
+Insights: {insights}
+Messaging Angle: {messagingAngle}
+Tone: {tone}
+
+Requirements:
+1. Content must be engaging and persuasive
+2. Follow the specified tone of voice
+3. Include the main message and support points
+4. End with the call to action
+5. Format appropriately for the asset type
+6. Simple content, no more than 200 words and do not include any emojis');  

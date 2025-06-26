@@ -198,6 +198,108 @@ class AdminController {
             });
         }
     }
+
+    async resetDefaultPrompts(req, res) {
+        try {
+            // Delete existing prompts
+            await AiPrompt.deleteAll();
+            
+            // Insert default prompts
+            const defaultAudiencePrompt = `Based on the following brief, generate 2 distinct audience segments:
+
+Brief Information:
+Product/Service: {product}
+Main Message: {message}
+Special Features: {features}
+Benefits: {benefits}
+Beneficiaries: {beneficiaries}
+Importance: {importance}
+Additional Info: {additionalInfo}
+Call to Action: {callToAction}
+
+For each segment, provide:
+1. Segment Name and Description
+2. Detailed Audience Insights
+3. Messaging Angle
+4. Support Points (as bullet points)
+5. Appropriate Tone of Voice
+6. Detailed Persona Profile
+
+Format the response as a valid JSON array where each object has the fields:
+- segment
+- insights
+- messagingAngle
+- supportPoints
+- tone
+- personaProfile
+
+Make each field detailed but concise.`;
+
+            const defaultContentPrompt = `Generate {assetType} based on the following brief and audience:
+
+Brief:
+Purpose: {purpose}
+Main Message: {mainMessage}
+Special Features: {specialFeatures}
+Benefits: {benefits}
+Call to Action: {callToAction}
+
+Audience:
+Segment: {segment}
+Insights: {insights}
+Messaging Angle: {messagingAngle}
+Tone: {tone}
+
+Requirements:
+1. Content must be engaging and persuasive
+2. Follow the specified tone of voice
+3. Include the main message and support points
+4. End with the call to action
+5. Format appropriately for the asset type
+6. Simple content, no more than 200 words and do not include any emojis`;
+
+            await AiPrompt.create({ prompt_for_id: 1, prompt: defaultAudiencePrompt });
+            await AiPrompt.create({ prompt_for_id: 2, prompt: defaultContentPrompt });
+
+            res.status(200).json({
+                success: true,
+                message: 'Default prompts reset successfully'
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error resetting default prompts',
+                error: error.message
+            });
+        }
+    }
+
+    async updateAiPrompt(req, res) {
+        try {
+            const { id } = req.params;
+            const data = req.body;
+            const result = await AiPrompt.update(id, data);
+            
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'AI prompt not found or no new changes to apply',
+                });
+            }
+            
+            res.status(200).json({
+                success: true,
+                message: 'AI prompt updated successfully',
+                data: { id, ...data }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error updating AI prompt',
+                error: error.message
+            });
+        }
+    }
 }
 
 export default new AdminController();

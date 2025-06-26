@@ -17,8 +17,9 @@ router.delete('/brief-question/:id', adminController.deleteBriefQuestion);
 router.get('/ai-prompts', adminController.getAiPrompts);
 router.get('/ai-prompt-for/:id', adminController.getAiPromptFor);
 router.post('/ai-prompt', adminController.createAiPrompt);
+router.put('/ai-prompt/:id', adminController.updateAiPrompt);
 router.delete('/ai-prompt/:id', adminController.deleteAiPrompt);
 router.get('/ai-prompts-type', adminController.getAiPromptsType);
-
+router.post('/reset-default-prompts', adminController.resetDefaultPrompts);
 
 export default router;

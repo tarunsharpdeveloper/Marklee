@@ -27,6 +27,17 @@ class AiPrompt {
         const [result] = await db.execute(query);
         return result;
     }
+    static async deleteAll() {
+        const query = `DELETE FROM ai_prompts`;
+        const [result] = await db.execute(query);
+        return result;
+    }
+    static async update(id, data) {
+        const { prompt_for_id, prompt } = data;
+        const query = `UPDATE ai_prompts SET prompt_for_id = ?, prompt = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`;
+        const [result] = await db.execute(query, [prompt_for_id, prompt, id]);
+        return result;
+    }
 }
 
 export default AiPrompt;  
