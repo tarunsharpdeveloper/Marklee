@@ -2417,3 +2417,139 @@
 .spinning {
   animation: spin 1s linear infinite;
 }
+
+.chatInterface {
+  margin-top: 1rem;
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+}
+
+.chatMessages {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.messageContainer {
+  display: flex;
+  margin-bottom: 1rem;
+  
+}
+
+.messageContent {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  max-width: 80%;
+  
+}
+
+.userMessage {
+  justify-content: flex-end;
+}
+
+.aiMessage {
+  justify-content: flex-start;
+}
+
+.userMessage .messageContent {
+  /* background-color: #8075ff; */
+  color: white;
+  margin-left: auto;
+}
+
+.aiMessage .messageContent {
+  background-color: #f8fafc;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.questionButton {
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  color: #1a1a1a;
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.questionButton::before {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  flex-shrink: 0;
+}
+
+.questionButton:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateX(4px);
+}
+
+.inputContainer {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.messageInput {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.messageInput:focus {
+  border-color: #004aad;
+}
+
+.messageInput:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.sendButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #004aad;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.sendButton:hover {
+  background-color: #003c8f;
+}
+
+.sendButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+.chatMessages p{
+background-color: #8075ff;
+color: white;
+padding: 0.5rem 1rem;
+border-radius: 12px;
+border-left: 4px solid #8075ff;
+}

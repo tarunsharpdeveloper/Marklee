@@ -218,6 +218,78 @@ Return only a JSON object with this structure:
             });
         }
     }
+
+    async generateMarketingContentWithPrompt(req, res) {
+        try {
+            const { formData, currentMessage, userPrompt } = req.body;
+
+            // Validate required fields
+            if (!formData || !currentMessage || !userPrompt) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Missing required fields'
+                });
+            }
+
+            // Create a prompt that includes the user's request
+            const messages = [
+                {
+                    role: "system",
+                    content: `You are a helpful marketing assistant. The user has a marketing message and wants to improve it. Generate ONE engaging follow-up question in a conversational ChatGPT style.
+
+Current message: "${currentMessage}"
+User's request: "${userPrompt}"
+Business context: ${JSON.stringify(formData, null, 2)}
+
+Generate ONE question that:
+1. Starts with phrases like "Would you like to...", "Should we...", "How about...", or "What if we..."
+2. Is specifically related to the content and context
+3. Focuses on one aspect that could be improved
+4. Sounds natural and conversational, like a ChatGPT suggestion
+
+Example formats:
+- "Would you like to make it more specific to [target audience]?"
+- "How about emphasizing the [specific benefit] more clearly?"
+- "Should we add some concrete examples of [feature/benefit]?"
+
+Return ONLY the question, without any other text or explanations.`
+                }
+            ];
+
+            const response = await chatModel.invoke(messages);
+            
+            // Update the core message silently
+            const updateMessages = [
+                {
+                    role: "system",
+                    content: `Update this marketing message based on the user's request:
+                    
+Current message: "${currentMessage}"
+User's request: "${userPrompt}"
+Business context: ${JSON.stringify(formData, null, 2)}
+
+Return only the updated message, no explanations or additional text.`
+                }
+            ];
+            
+            const updateResponse = await chatModel.invoke(updateMessages);
+
+            return res.status(200).json({
+                success: true,
+                data: {
+                    coreMessage: updateResponse.content.trim(),
+                    chatResponse: response.content.trim()
+                }
+            });
+
+        } catch (error) {
+            console.error('Error generating marketing content with prompt:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Error generating marketing content'
+            });
+        }
+    }
 }
 
 export default new MarketingController();

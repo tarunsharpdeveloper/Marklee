@@ -12,5 +12,6 @@ router.get('/form', marketingController.getFormFields);
 
 // Generate marketing content
 router.post('/generate', marketingController.generateMarketingContent);
+router.post('/generate-with-prompt', marketingController.generateMarketingContentWithPrompt);
 
 export default router; 

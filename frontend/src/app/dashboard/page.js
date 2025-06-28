@@ -21,6 +21,9 @@ export default function Dashboard() {
   const [error, setError] = useState('');
   const [coreMessage, setCoreMessage] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   const [folderStructure, setFolderStructure] = useState({
   
@@ -368,6 +371,86 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
       setIsLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim()) return;
+
+    // Add user message to chat
+    setMessages(prev => [...prev, {
+        content: inputMessage,
+        type: 'user'
+    }]);
+    setInputMessage('');
+    setIsSending(true);
+
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            router.push('/');
+            return;
+        }
+
+        // First get the onboarding data
+        const onboardingResponse = await fetch('http://localhost:4000/api/onboarding/get', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!onboardingResponse.ok) {
+            throw new Error('Failed to fetch onboarding data');
+        }
+
+        const { data } = await onboardingResponse.json();
+        const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+
+        // Now make the generate request with the form data
+        const response = await fetch('http://localhost:4000/api/marketing/generate-with-prompt', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                formData,
+                currentMessage: coreMessage,
+                userPrompt: inputMessage
+            })
+        });
+
+        const marketingData = await response.json();
+        
+        if (marketingData.success) {
+            // Update core message silently
+            setCoreMessage(marketingData.data.coreMessage);
+            
+            // Save the new core message to the database
+            await fetch('http://localhost:4000/api/onboarding/core-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ coreMessage: marketingData.data.coreMessage })
+            });
+
+            // Add AI response with questions to chat
+            setMessages(prev => [...prev, {
+                content: marketingData.data.chatResponse,
+                type: 'ai'
+            }]);
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        // Show error message in chat
+        setMessages(prev => [...prev, {
+            content: 'Sorry, I encountered an error. Please try again.',
+            type: 'ai'
+        }]);
+    } finally {
+        setIsSending(false);
     }
   };
 
@@ -728,6 +811,47 @@ export default function Dashboard() {
                   </button>
                 </div>
                 <p>{coreMessage}</p>
+
+                <div className={styles.chatInterface}>
+                  {messages.length > 0 && (
+                    <div className={styles.chatMessages}>
+                      {messages.map((message, index) => (
+                        <div key={index} className={`${styles.messageContainer} ${styles[message.type + 'Message']}`}>
+                          <div className={styles.messageContent}>
+                            {message.type === 'user' ? (
+                                <p>{message.content}</p>
+                            ) : (
+                                <button
+                                    className={styles.questionButton}
+                                    onClick={() => setInputMessage(message.content)}
+                                >
+                                    {message.content}
+                                </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className={styles.inputContainer}>
+                    <input
+                      type="text"
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      placeholder="Type your suggestions (e.g., 'make it more formal')"
+                      className={styles.messageInput}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                      disabled={isSending}
+                    />
+                    <button
+                      onClick={handleSendMessage}
+                      className={styles.sendButton}
+                      disabled={isSending || !inputMessage.trim()}
+                    >
+                      {isSending ? 'Sending...' : 'Send'}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
