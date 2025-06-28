@@ -18,21 +18,17 @@ export default function MarketingPage() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(true);
 
-  // Load saved answers from localStorage on component mount
   useEffect(() => {
     try {
       const savedAnswers = localStorage.getItem(STORAGE_KEY);
       if (savedAnswers) {
-        const parsedAnswers = JSON.parse(savedAnswers);
-        setFormAnswers(parsedAnswers);
-        console.log('Loaded saved answers:', parsedAnswers); // Debug log
+        setFormAnswers(JSON.parse(savedAnswers));
       }
     } catch (error) {
       console.error('Error loading saved answers:', error);
     }
   }, []);
 
-  // Fetch form fields on component mount
   useEffect(() => {
     const fetchFormFields = async () => {
       try {
@@ -44,9 +40,7 @@ export default function MarketingPage() {
         }
 
         const response = await fetch('http://localhost:4000/api/marketing/form', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (!response.ok) {
@@ -56,19 +50,16 @@ export default function MarketingPage() {
         const data = await response.json();
         setFormFields(data.data);
 
-        // Initialize form answers with empty values or saved values
         const savedAnswers = localStorage.getItem(STORAGE_KEY);
         const parsedAnswers = savedAnswers ? JSON.parse(savedAnswers) : {};
-        
+
         const initialAnswers = {};
         data.data.fields.forEach(field => {
           initialAnswers[field.nameKey] = parsedAnswers[field.nameKey] || '';
         });
-        
+
         setFormAnswers(initialAnswers);
-        // Save initial answers to localStorage
         localStorage.setItem(STORAGE_KEY, JSON.stringify(initialAnswers));
-        console.log('Initialized answers:', initialAnswers); // Debug log
       } catch (error) {
         console.error('Error fetching form fields:', error);
         setError(error.message);
@@ -86,16 +77,10 @@ export default function MarketingPage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    const newAnswers = {
-      ...formAnswers,
-      [name]: value
-    };
-    setFormAnswers(newAnswers);
-    
-    // Save answers to localStorage
+    const updated = { ...formAnswers, [name]: value };
+    setFormAnswers(updated);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newAnswers));
-      console.log('Saved answers:', newAnswers); // Debug log
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     } catch (error) {
       console.error('Error saving answers:', error);
     }
@@ -108,10 +93,9 @@ export default function MarketingPage() {
 
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
+      if (!token) throw new Error('No authentication token found');
 
+      // Generate marketing content first to get the core message
       const response = await fetch('http://localhost:4000/api/marketing/generate', {
         method: 'POST',
         headers: {
@@ -121,23 +105,29 @@ export default function MarketingPage() {
         body: JSON.stringify(formAnswers)
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate marketing content');
-      }
+      if (!response.ok) throw new Error('Failed to generate marketing content');
 
       const data = await response.json();
       setGeneratedContent(data.data);
-      
-      // Store the core message in localStorage
-      if (data.data && data.data.coreMessage) {
-        console.log('Storing core message:', data.data.coreMessage); // Debug log
+
+      // Save both form data and core message to onboarding
+      await fetch('http://localhost:4000/api/onboarding/user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          data: formAnswers,
+          coreMessage: data.data?.coreMessage 
+        })
+      });
+
+      if (data.data?.coreMessage) {
         localStorage.setItem('marketingCoreMessage', data.data.coreMessage);
-      } else {
-        console.log('No core message found in response:', data.data); // Debug log
       }
-      
-      // Navigate to pre-homepage
-      router.push('/pre-homepage');
+
+      router.push('/dashboard');
     } catch (error) {
       console.error('Error generating content:', error);
       setError(error.message);
@@ -173,27 +163,23 @@ export default function MarketingPage() {
             <form onSubmit={handleSubmit} className={styles.form}>
               {formFields?.fields.map((field, index) => (
                 <div key={index} className={styles.inputGroup}>
-                  <label 
-                    htmlFor={field.nameKey}
-                    data-required={!field.placeholder.includes('optional')}
-                  >
-                    {field.title}
-                  </label>
-                  {field.nameKey === 'description' || 
-                   field.nameKey === 'targetMarket' || 
-                   field.nameKey === 'coreAudience' || 
-                   field.nameKey === 'problemSolved' || 
-                   field.nameKey === 'competitors' || 
-                   field.nameKey === 'differentiators' || 
-                   field.nameKey === 'keyFeatures' || 
-                   field.nameKey === 'additionalInfo' ? (
+                  <label htmlFor={field.nameKey}>{field.title}</label>
+                  {(field.nameKey === 'description' ||
+                    field.nameKey === 'targetMarket' ||
+                    field.nameKey === 'coreAudience' ||
+                    field.nameKey === 'problemSolved' ||
+                    field.nameKey === 'competitors' ||
+                    field.nameKey === 'differentiators' ||
+                    field.nameKey === 'keyFeatures' ||
+                    field.nameKey === 'uniqueOffering' ||
+                    field.nameKey === 'additionalInfo') ? (
                     <textarea
                       id={field.nameKey}
                       name={field.nameKey}
                       value={formAnswers[field.nameKey]}
                       onChange={handleInputChange}
                       placeholder={field.placeholder}
-                      required={!field.placeholder.includes('optional')}
+                      required
                       disabled={loading}
                     />
                   ) : (
@@ -204,7 +190,7 @@ export default function MarketingPage() {
                       value={formAnswers[field.nameKey]}
                       onChange={handleInputChange}
                       placeholder={field.placeholder}
-                      required={!field.placeholder.includes('optional')}
+                      required
                       disabled={loading}
                     />
                   )}
@@ -242,4 +228,4 @@ export default function MarketingPage() {
       )}
     </div>
   );
-} 
+}

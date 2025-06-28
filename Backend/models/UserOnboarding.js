@@ -4,25 +4,46 @@ import { pool as db } from '../config/database.js';
 class UserOnboarding {
   static async create({
     userId,
-    data
+    data,
+    coreMessage = null
   }) {
     try {
       const query = `
         INSERT INTO user_onboarding (
-          user_id, data
-        ) VALUES (?, ?)
+          user_id, data, core_message
+        ) VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          data = VALUES(data),
+          core_message = VALUES(core_message)
       `;
 
       const [result] = await db.execute(query, [
         userId,
-        data
+        data,
+        coreMessage
       ]);
 
       return {
         id: result.insertId,
         userId,
-        data
+        data,
+        coreMessage
       };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async updateCoreMessage(userId, coreMessage) {
+    try {
+      const query = `
+        UPDATE user_onboarding 
+        SET core_message = ?
+        WHERE user_id = ?
+      `;
+
+      await db.execute(query, [coreMessage, userId]);
+      return true;
     } catch (error) {
       throw error;
     }

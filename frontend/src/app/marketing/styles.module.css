@@ -336,4 +336,61 @@
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.validationMessage {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    border: 1px solid #ffeeba;
+}
+
+.errorMessage {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    border: 1px solid #f5c6cb;
+}
+
+.missingField label {
+    color: #dc3545;
+}
+
+.missingInput {
+    border-color: #dc3545 !important;
+    background-color: #fff8f8;
+}
+
+.requiredIndicator {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-left: 0.25rem;
+}
+
+.missingField textarea,
+.missingField input {
+    border-color: #dc3545;
+}
+
+.missingField textarea:focus,
+.missingField input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    border-color: #dc3545;
+}
+
+.inputWithGuidance {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.fieldGuidance {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
 } 

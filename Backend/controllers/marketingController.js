@@ -12,11 +12,10 @@ const cleanJsonResponse = (response) => {
         .replace(/```json/g, '')
         .replace(/```/g, '')
         .trim();
-    
+
     try {
         return JSON.parse(cleanJson);
     } catch (error) {
-        // If first attempt fails, try to find JSON object within the text
         const jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
             return JSON.parse(jsonMatch[0]);
@@ -32,30 +31,34 @@ class MarketingController {
             const messages = [
                 {
                     role: "system",
-                    content: "You are a helpful AI that generates form fields for marketing information gathering. Your response must be a valid JSON object without any markdown formatting or additional text."
+                    content: "You are a helpful AI that generates structured form field data for marketing information gathering. Your response must be a valid JSON object, without any markdown formatting, explanations, or extra text. Follow the exact structure provided."
                 },
                 {
                     role: "user",
-                    content: `Create a form structure for gathering marketing information. The form must include these exact field names:
-- description (What is it?)
-- targetMarket (Who benefits most?)
-- outcomeBenefit (Outcome/Benefit)
-- differentiators (What makes it different?)
-- uniqueSellingPoint (Unique Selling Point)
+                    content: `Generate a clear, friendly welcome message that invites users to fill out a form. The form helps us gather the essential information needed to generate their messaging and marketing copy. The tone should be helpful and confident.
+                    
+For each of the following form fields, provide:
+- "title": The question to be displayed to the user.
+- "nameKey": A machine-friendly key matching the exact field name below.
+- "placeholder": A brief, relevant example.
+- "guidance": A short, static tip (max 25 words) to help the user give a clear, specific answer. Use simple, non-technical language.
 
-You can add additional optional fields, but these are required.
+All fields are required:
+1. Description: "What's the name of the company, brand, service, or product you're marketing?" (nameKey: description)
+2. Industry: "What industry is it in?" (nameKey: industry)
+3. Niche Category: "What niche or category does it fall under?" (nameKey: nicheCategory)
+4. Target Market: "Who are you trying to reach?" (nameKey: targetMarket)
+5. Core Audience: "Who benefits most from this offering?" (nameKey: coreAudience)
+6. Outcome: "What outcome do they get from using it?" (nameKey: outcome)
+7. Problem Solved: "What problem does it solve for them?" (nameKey: problemSolved)
+8. Website URL: "What's the website URL?" (nameKey: websiteUrl)
+9. Competitors: "Who are your main competitors?" (nameKey: competitors)
+10. Differentiators: "How is your offering different from competitors?" (nameKey: differentiators)
+11. Key Features: "What are its most important features or benefits?" (nameKey: keyFeatures)
+12. Unique Offering: "What do you offer that no one else does?" (nameKey: uniqueOffering)
+13. Additional Info: "Anything else we should know?" (nameKey: additionalInfo)
 
-Include:
-1. A welcoming message that is friendly and encouraging
-2. Clear guidance for each field to help avoid vague answers
-3. A footer message
-
-Additional fields should cover:
-- Industry and niche
-- Target audience details
-- Problems solved
-- Key features
-- Competitors
+Finally, add a short, encouraging footer message to motivate users to complete the form.
 
 Return only a JSON object with this structure:
 {
@@ -76,6 +79,12 @@ Return only a JSON object with this structure:
             const response = await chatModel.invoke(messages);
             const formFields = cleanJsonResponse(response);
 
+            // Mark all fields as required
+            formFields.fields = formFields.fields.map(field => ({
+                ...field,
+                required: true
+            }));
+
             res.status(200).json({
                 success: true,
                 data: formFields
@@ -94,19 +103,28 @@ Return only a JSON object with this structure:
     async generateMarketingContent(req, res) {
         try {
             const formData = req.body;
+            const isRefresh = req.query.refresh === 'true';
 
-            // Check for missing required fields
+            // List of required fields
             const requiredFields = [
-                { key: 'description', label: 'Description (What is it?)' },
-                { key: 'targetMarket', label: 'Target Market (Who benefits most?)' },
-                { key: 'outcomeBenefit', label: 'Outcome/Benefit' },
-                { key: 'differentiators', label: 'Differentiators' },
-                { key: 'uniqueSellingPoint', label: 'Unique Selling Point' }
+                'description',
+                'industry',
+                'nicheCategory',
+                'targetMarket',
+                'coreAudience',
+                'outcome',
+                'problemSolved',
+                'websiteUrl',
+                'competitors',
+                'differentiators',
+                'keyFeatures',
+                'uniqueOffering',
+                'additionalInfo'
             ];
 
-            const missingFields = requiredFields.filter(field => 
-                !formData[field.key] || formData[field.key].trim() === ''
-            ).map(field => field.label);
+            const missingFields = requiredFields.filter(
+                (key) => !formData[key] || formData[key].trim() === ''
+            );
 
             if (missingFields.length > 0) {
                 return res.status(400).json({
@@ -114,10 +132,18 @@ Return only a JSON object with this structure:
                     message: 'Missing required fields',
                     data: {
                         coreMessage: `We need a few more details to generate your core message. Please provide: ${missingFields.join(', ')}`,
-                        missingFields: missingFields
+                        missingFields
                     }
                 });
             }
+
+            const basePrompt = `Based on the form inputs, write a clear and compelling core message for the user's company, brand, product, or service. This message should summarise what it is, who it's for, the key benefit or outcome, and what makes it different.
+
+The tone should be clear, confident, and adaptable to different content formats (like websites, ads, or email intros). Limit it to 3 sentences (max 80 words).`;
+
+            const refreshPrompt = `Generate a fresh and alternative core message that captures the same key information but presents it in a different way. Focus on a new angle or benefit while maintaining the essence of the offering. The message should feel distinct from previous versions while being equally compelling.
+
+The tone should be clear, confident, and adaptable to different content formats (like websites, ads, or email intros). Limit it to 3 sentences (max 80 words).`;
 
             const messages = [
                 {
@@ -126,21 +152,22 @@ Return only a JSON object with this structure:
                 },
                 {
                     role: "user",
-                    content: `Based on the answers provided in the form, write a clear and compelling core message for the user's company, brand, product, or service. This message should summarise what it is, who it's for, the key benefit or outcome, and what makes it different.
+                    content: `${isRefresh ? refreshPrompt : basePrompt}
 
-The tone should be clear, confident, and adaptable to different content formats (like websites, ads, or email intros). Aim for one paragraph—no longer than 3 sentences.
-
-Prioritise the following inputs:
-- What is it? (Description): ${formData.description}
-- Who benefits most? (Primary target market): ${formData.targetMarket}
-- What's the outcome or benefit?: ${formData.outcomeBenefit}
-- What makes it different from competitors?: ${formData.differentiators}
-- What is its unique selling point?: ${formData.uniqueSellingPoint}
-
-Additional context:
-- Industry and niche: ${formData.industry || ''} ${formData.nicheCategory || ''}
-- Key selling points: ${formData.keyFeatures || 'Not provided'}
-- Problem it solves: ${formData.problemSolved || 'Not provided'}
+Input Data:
+- Description: ${formData.description}
+- Industry: ${formData.industry}
+- Niche Category: ${formData.nicheCategory}
+- Target Market: ${formData.targetMarket}
+- Core Audience: ${formData.coreAudience}
+- Outcome: ${formData.outcome}
+- Problem Solved: ${formData.problemSolved}
+- Website URL: ${formData.websiteUrl}
+- Competitors: ${formData.competitors}
+- Differentiators: ${formData.differentiators}
+- Key Features: ${formData.keyFeatures}
+- Unique Offering: ${formData.uniqueOffering}
+- Additional Info: ${formData.additionalInfo}
 
 Return only a JSON object with this structure:
 {
@@ -193,4 +220,4 @@ Return only a JSON object with this structure:
     }
 }
 
-export default new MarketingController(); 
+export default new MarketingController();

@@ -20,6 +20,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [coreMessage, setCoreMessage] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [folderStructure, setFolderStructure] = useState({
   
@@ -86,19 +87,67 @@ export default function Dashboard() {
     };
   }, [isLoading]);
 
-  useEffect(() => {
-    const fetchCoreMessage = () => {
-      try {
-        const storedMessage = localStorage.getItem('marketingCoreMessage');
-        console.log('Stored core message:', storedMessage); // Debug log
-        if (storedMessage) {
-          setCoreMessage(storedMessage);
-        }
-      } catch (error) {
-        console.error('Error fetching core message:', error);
-      }
-    };
+  const fetchCoreMessage = async (shouldRefresh = false) => {
+    try {
+      setIsRefreshing(true);
+      const token = localStorage.getItem('token');
+      if (!token) return;
 
+      // First get the onboarding data to get the form data
+      const onboardingResponse = await fetch('http://localhost:4000/api/onboarding/get', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!onboardingResponse.ok) {
+        throw new Error('Failed to fetch onboarding data');
+      }
+
+      const { data } = await onboardingResponse.json();
+      
+      if (shouldRefresh && data) {
+        // Parse the stored form data if it's a string
+        const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+
+        // Generate new marketing content
+        const marketingResponse = await fetch(`http://localhost:4000/api/marketing/generate?refresh=true`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (!marketingResponse.ok) {
+          throw new Error('Failed to generate new marketing content');
+        }
+
+        const marketingData = await marketingResponse.json();
+        
+        // Update the core message in the database
+        await fetch('http://localhost:4000/api/onboarding/core-message', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ coreMessage: marketingData.data.coreMessage })
+        });
+
+        setCoreMessage(marketingData.data.coreMessage);
+      } else if (data && data.core_message) {
+        setCoreMessage(data.core_message);
+      }
+    } catch (error) {
+      console.error('Error fetching core message:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
     fetchCoreMessage();
   }, []); // Empty dependency array means this runs once on mount
 
@@ -111,20 +160,7 @@ export default function Dashboard() {
       }
 
       try {
-        const response = await fetch('http://localhost:4000/api/onboarding/get', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        const data = await response.json();
-        
-        if (!response.ok || !data.data) {
-          router.push('/pre-homepage');
-          return;
-        }
-
-        // Set user data if everything is ok
+        // Set user data from localStorage
         const userData = JSON.parse(localStorage.getItem('user'));
         if (userData) {
           setUser({
@@ -671,12 +707,31 @@ export default function Dashboard() {
           {coreMessage && (
             <div className={styles.coreMessageSection}>
               <div className={styles.coreMessageContainer}>
-                <h3>Your Core Marketing Message</h3>
+                <div className={styles.coreMessageHeader}>
+                  <h3>Your Core Marketing Message</h3>
+                  <button 
+                    onClick={() => fetchCoreMessage(true)}
+                    className={styles.refreshButton}
+                    disabled={isRefreshing}
+                  >
+                    <svg 
+                      width="20" 
+                      height="20" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2"
+                      className={isRefreshing ? styles.spinning : ''}
+                    >
+                      <path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 3.4 0 6.3 2.1 7.4 5M22 12c0 4.4-3.6 8-8 8-3.4 0-6.3-2.1-7.4-5"/>
+                    </svg>
+                  </button>
+                </div>
                 <p>{coreMessage}</p>
               </div>
             </div>
           )}
-            <div className={styles.greetingContainer}>
+            {/* <div className={styles.greetingContainer}>
               <h1>Welcome back, {user.name?.split(' ')[0] || 'Guest'}!</h1>
               <p>Ready to create something amazing?</p>
               <button 
@@ -685,7 +740,7 @@ export default function Dashboard() {
               >
                 Create New Project
               </button>
-            </div>
+            </div> */}
           </section>
         </div>
       </main>
