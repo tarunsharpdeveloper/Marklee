@@ -573,6 +573,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
 }
 
 .greetingContainer {
@@ -2323,5 +2324,51 @@
   .drawerClose {
     right: 16px;
     top: 14px;
+  }
+}
+
+.coreMessageSection {
+  padding: 3rem;
+  /* margin-bottom: 1rem; */
+  /* background: linear-gradient(135deg, rgba(128, 117, 255, 0.1) 0%, rgba(128, 117, 255, 0.05) 100%); */
+  border-radius: 20px;
+ 
+}
+
+.coreMessageContainer {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.coreMessageContainer h3 {
+  color: #1e293b;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.coreMessageContainer p {
+  color: #334155;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  border-left: 4px solid #8075ff;
+}
+
+@media (max-width: 768px) {
+  .coreMessageSection {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .coreMessageContainer h3 {
+    font-size: 1.25rem;
+  }
+
+  .coreMessageContainer p {
+    font-size: 1rem;
   }
 }

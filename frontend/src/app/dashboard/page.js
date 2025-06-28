@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [coreMessage, setCoreMessage] = useState('');
 
   const [folderStructure, setFolderStructure] = useState({
   
@@ -84,6 +85,22 @@ export default function Dashboard() {
       }
     };
   }, [isLoading]);
+
+  useEffect(() => {
+    const fetchCoreMessage = () => {
+      try {
+        const storedMessage = localStorage.getItem('marketingCoreMessage');
+        console.log('Stored core message:', storedMessage); // Debug log
+        if (storedMessage) {
+          setCoreMessage(storedMessage);
+        }
+      } catch (error) {
+        console.error('Error fetching core message:', error);
+      }
+    };
+
+    fetchCoreMessage();
+  }, []); // Empty dependency array means this runs once on mount
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -635,7 +652,7 @@ export default function Dashboard() {
         </div>
       </aside>
       <main className={`${styles.main} ${isSidebarCollapsed ? styles.collapsedMain : ''}`}>
-        <header className={`${styles.header} ${isSidebarCollapsed ? styles.collapsed : ''}`}>
+        <header className={`${styles.header} ${isSidebarCollapsed ? styles.collapsedHeader : ''}`}>
         <div style={{display: 'flex', alignItems: 'center', justifyContent:"start"}}>
         <button onClick={toggleSidebar} className={styles.toggleButton}>
               <svg xmlns="http://www.w3.org/2000/svg" fill="#1A1A1A" viewBox="0 0 30 30" width="30px" height="30px">
@@ -649,7 +666,16 @@ export default function Dashboard() {
           </div>
         </header>
         <div className={styles.sections}>
+        
           <section className={`${styles.section} ${styles.greetingSection}`}>
+          {coreMessage && (
+            <div className={styles.coreMessageSection}>
+              <div className={styles.coreMessageContainer}>
+                <h3>Your Core Marketing Message</h3>
+                <p>{coreMessage}</p>
+              </div>
+            </div>
+          )}
             <div className={styles.greetingContainer}>
               <h1>Welcome back, {user.name?.split(' ')[0] || 'Guest'}!</h1>
               <p>Ready to create something amazing?</p>

@@ -172,3 +172,12 @@ Requirements:
 4. End with the call to action
 5. Format appropriately for the asset type
 6. Simple content, no more than 200 words and do not include any emojis');  
+
+CREATE TABLE IF NOT EXISTS user_onboarding (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    data TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
