@@ -104,6 +104,7 @@ Return only a JSON object with this structure:
       try {
         const formData = req.body;
         const isRefresh = req.query.refresh === 'true';
+        const isModification = formData.currentMessage && formData.modificationRequest;
     
         const requiredFields = [
           'description', 'industry', 'nicheCategory', 'targetMarket', 'coreAudience',
@@ -125,8 +126,38 @@ Return only a JSON object with this structure:
             }
           });
         }
+
+        let prompt;
+        if (isModification) {
+          prompt = `Modify this existing core message according to the specific request. Keep the essence and key information while applying the requested changes.
+
+Current Message:
+${formData.currentMessage}
+
+Modification Request:
+${formData.modificationRequest}
+
+Use these supporting details to ensure accuracy:
+- Description: ${formData.description}
+- Industry: ${formData.industry}
+- Target Market: ${formData.targetMarket}
+- Core Audience: ${formData.coreAudience}
+- Key Features: ${formData.keyFeatures}
+- Unique Offering: ${formData.uniqueOffering}
+
+Return a modified version that maintains accuracy while fulfilling the modification request. Keep it clear, compelling, and suitable for marketing use.`;
+        } else if (isRefresh) {
+          prompt = `Create a new and distinct version of the core message (~100 words), using the same inputs. Present the offering from a different angle or highlight a different major benefit, but still prioritize the following:
     
-        const basePrompt = `Based on the answers provided in the form, write a clear, compelling, and detailed core message (~100 words) for the user's company, brand, product, or service.
+    - What it is
+    - Who it's for
+    - What outcome or benefit it delivers
+    - What makes it unique
+    - Unique selling point
+    
+    Use supporting details like niche, features, problems solved, and additional context. Keep it persuasive, clean, and suitable for formats like websites or email.`;
+        } else {
+          prompt = `Based on the answers provided in the form, write a clear, compelling, and detailed core message (~100 words) for the user's company, brand, product, or service.
     
     Strictly prioritize these key points:
     - What is it? (Description)
@@ -142,16 +173,7 @@ Return only a JSON object with this structure:
     - Additional context (if helpful)
     
     The tone should be confident, persuasive, and adaptable for formats like websites, digital ads, and email introductions. Make sure the message flows naturally while clearly communicating the value proposition. Avoid jargon or fluff — keep it focused, practical, and benefit-driven.`;
-    
-        const refreshPrompt = `Create a new and distinct version of the core message (~100 words), using the same inputs. Present the offering from a different angle or highlight a different major benefit, but still prioritize the following:
-    
-    - What it is
-    - Who it’s for
-    - What outcome or benefit it delivers
-    - What makes it unique
-    - Unique selling point
-    
-    Use supporting details like niche, features, problems solved, and additional context. Keep it persuasive, clean, and suitable for formats like websites or email.`;
+        }
     
         const messages = [
           {
@@ -160,8 +182,8 @@ Return only a JSON object with this structure:
           },
           {
             role: "user",
-            content: `${isRefresh ? refreshPrompt : basePrompt}
-    
+            content: `${prompt}
+
     Input Data:
     - Description: ${formData.description}
     - Industry: ${formData.industry}
@@ -193,17 +215,11 @@ Return only a JSON object with this structure:
       "contentRecommendations": [
         {
           "type": "Content type",
-          "description": "What it’s about",
-          "purpose": "Why it’s useful"
+          "description": "What it's about",
+          "purpose": "Why it's useful"
         }
       ],
-      "channelStrategy": [
-        {
-          "platform": "Platform name",
-          "approach": "Tactic or strategy",
-          "expectedOutcome": "Desired result"
-        }
-      ]
+      "channelStrategy": []
     }`
           }
         ];

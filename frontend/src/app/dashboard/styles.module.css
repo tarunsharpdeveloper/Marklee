@@ -319,7 +319,6 @@
 .questionItem:hover {
   background-color: #ffffff;
   transform: translateX(4px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .questionItem p {
@@ -565,21 +564,30 @@
 }
 
 .greetingSection {
-  padding: 2rem;
+  /* padding: 2rem; */
   width: 100%;
   position: relative;
   overflow: hidden;
   min-height: 400px;
+  
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  
 }
 
 .greetingContainer {
-  text-align: center;
-  max-width: 600px;
-  margin: 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding: 1rem;
+  padding-top: 3rem;
+  background: white;
+  border-radius: 12px;
+  /* margin-bottom: 1.5rem; */
+  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
+  min-width: 800px;
 }
 
 .greetingContainer h1 {
@@ -590,26 +598,25 @@
 }
 
 .greetingContainer p {
-  font-size: 1.2rem;
-  color: #4b5563;
-  margin-bottom: 2rem;
+  color: #334155;
+  font-size: 1.125rem;
+  margin: 0;
 }
 
-.createButton {
-  background: #2563eb;
+.createProjectButton {
+  background: #282ab3;
   color: white;
   border: none;
-  border-radius: 8px;
   padding: 0.75rem 1.5rem;
+  border-radius: 8px;
   font-size: 1rem;
-  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s;
+  font-weight: 600;
 }
 
-.createButton:hover {
-  background: #1d4ed8;
-  transform: translateY(-2px);
+.createProjectButton:hover {
+  background: #6c63e6;
 }
 
 .backgroundPattern {
@@ -2328,7 +2335,7 @@
 }
 
 .coreMessageSection {
-  padding: 3rem;
+  padding: 1.5rem;
   /* margin-bottom: 1rem; */
   /* background: linear-gradient(135deg, rgba(128, 117, 255, 0.1) 0%, rgba(128, 117, 255, 0.05) 100%); */
   border-radius: 20px;
@@ -2646,6 +2653,31 @@ border-left: 4px solid #8075ff;
 
 .fadeIn {
   animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.typewriterContainer {
+  color: #334155;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  border-left: 4px solid #8075ff;
+}
+
+.fadeIn {
+  opacity: 0;
+  animation: fadeIn 0.5s ease-in forwards;
 }
 
 @keyframes fadeIn {
