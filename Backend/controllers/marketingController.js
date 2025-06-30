@@ -40,8 +40,8 @@ class MarketingController {
 For each of the following form fields, provide:
 - "title": The question to be displayed to the user.
 - "nameKey": A machine-friendly key matching the exact field name below.
-- "placeholder": A brief, relevant example.
-- "guidance": A short, static tip (max 25 words) to help the user give a clear, specific answer. Use simple, non-technical language.
+- "placeholder": A long, very user understandable tip (max 70 words) to help the user give a clear, specific and more understandale for the user. Use simple, non-technical language.
+- "guidance": A long, very user understandable tip (max 80 words) to help the user give a clear, specific and more understandale for the user. Use simple, non-technical language.
 
 All fields are required:
 1. Description: "What's the name of the company, brand, service, or product you're marketing?" (nameKey: description)
@@ -101,142 +101,132 @@ Return only a JSON object with this structure:
 
     // Generate marketing content from form data
     async generateMarketingContent(req, res) {
-        try {
-          const formData = req.body;
-          const isRefresh = req.query.refresh === 'true';
-      
-          // List of required fields
-          const requiredFields = [
-            'description',
-            'industry',
-            'nicheCategory',
-            'targetMarket',
-            'coreAudience',
-            'outcome',
-            'problemSolved',
-            'websiteUrl',
-            'competitors',
-            'differentiators',
-            'keyFeatures',
-            'uniqueOffering',
-            'additionalInfo'
-          ];
-      
-          const missingFields = requiredFields.filter(
-            (key) => !formData[key] || formData[key].trim() === ''
-          );
-      
-          if (missingFields.length > 0) {
-            return res.status(400).json({
-              success: false,
-              message: 'Missing required fields',
-              data: {
-                coreMessage: `We need a few more details to generate your core message. Please provide: ${missingFields.join(', ')}`,
-                missingFields
-              }
-            });
-          }
-      
-          const basePrompt = `Based on the answers provided in the form, write a clear and compelling core message for the user's company, brand, product, or service. The message should clearly explain what it is, who it's for, the outcome or benefit it delivers, and how it's different from competitors.
-      
-      Prioritize these:
-      - What is it? (Description)
-      - Who benefits most? (Core audience or target market)
-      - What outcome or benefit does it deliver?
-      - What makes it different from competitors?
-      - Unique selling point
-      
-      Use these for nuance or supporting detail:
-      - Industry and niche
-      - Key features and benefits
-      - Problem it solves
-      - Additional context
-      
-      The tone should be clear, confident, and adaptable to formats like websites, ads, or emails. Keep it concise: no more than 3 sentences or 80 words.`;
-      
-          const refreshPrompt = `Generate a fresh and distinct version of the core message using the same form inputs. Present the offering from a new angle or highlight a different benefit, while keeping the message equally compelling.
-      
-      Ensure it still reflects:
-      - What it is
-      - Who it's for
-      - The main benefit or outcome
-      - What makes it different
-      
-      Tone: Clear, confident, suitable for use in web or ad copy. Max 3 sentences or 80 words.`;
-      
-          const messages = [
-            {
-              role: "system",
-              content: "You are a helpful AI that generates comprehensive marketing strategies. Your response must be a valid JSON object without any markdown formatting or extra text."
-            },
-            {
-              role: "user",
-              content: `${isRefresh ? refreshPrompt : basePrompt}
-      
-      Input Data:
-      - Description: ${formData.description}
-      - Industry: ${formData.industry}
-      - Niche Category: ${formData.nicheCategory}
-      - Target Market: ${formData.targetMarket}
-      - Core Audience: ${formData.coreAudience}
-      - Outcome: ${formData.outcome}
-      - Problem Solved: ${formData.problemSolved}
-      - Website URL: ${formData.websiteUrl}
-      - Competitors: ${formData.competitors}
-      - Differentiators: ${formData.differentiators}
-      - Key Features: ${formData.keyFeatures}
-      - Unique Offering: ${formData.uniqueOffering}
-      - Additional Info: ${formData.additionalInfo}
-      
-      Return only a JSON object in this format:
-      {
-        "coreMessage": "A clear, compelling core message combining the key information above",
-        "valueProposition": "Clear statement of benefits and advantages",
-        "keyMarketingPoints": ["Main point 1", "Main point 2"],
-        "targetAudiencePersonas": [
-          {
-            "name": "Persona name",
-            "description": "Description",
-            "painPoints": ["Pain point 1", "Pain point 2"],
-            "goals": ["Goal 1", "Goal 2"]
-          }
-        ],
-        "contentRecommendations": [
-          {
-            "type": "Content type",
-            "description": "Description",
-            "purpose": "Purpose"
-          }
-        ],
-        "channelStrategy": [
-          {
-            "platform": "Platform name",
-            "approach": "Approach",
-            "expectedOutcome": "Outcome"
-          }
-        ]
-      }`
-            }
-          ];
-      
-          const response = await chatModel.invoke(messages);
-          const marketingContent = cleanJsonResponse(response);
-      
-          res.status(200).json({
-            success: true,
-            message: 'Marketing content generated successfully',
-            data: marketingContent
-          });
-      
-        } catch (error) {
-          console.error('Error generating marketing content:', error);
-          res.status(500).json({
+      try {
+        const formData = req.body;
+        const isRefresh = req.query.refresh === 'true';
+    
+        const requiredFields = [
+          'description', 'industry', 'nicheCategory', 'targetMarket', 'coreAudience',
+          'outcome', 'problemSolved', 'websiteUrl', 'competitors', 'differentiators',
+          'keyFeatures', 'uniqueOffering', 'additionalInfo'
+        ];
+    
+        const missingFields = requiredFields.filter(
+          (key) => !formData[key] || formData[key].trim() === ''
+        );
+    
+        if (missingFields.length > 0) {
+          return res.status(400).json({
             success: false,
-            message: 'Failed to generate marketing content',
-            error: error.message
+            message: 'Missing required fields',
+            data: {
+              coreMessage: `We need a few more details to generate your core message. Please provide: ${missingFields.join(', ')}`,
+              missingFields
+            }
           });
         }
+    
+        const basePrompt = `Based on the answers provided in the form, write a clear, compelling, and detailed core message (~100 words) for the user's company, brand, product, or service.
+    
+    Strictly prioritize these key points:
+    - What is it? (Description)
+    - Who benefits most? (Core audience or target market)
+    - What outcome or benefit does it deliver?
+    - What makes it different from competitors?
+    - Unique selling point
+    
+    Use these elements to support the message:
+    - Industry and niche
+    - Key features and benefits
+    - The problem it solves
+    - Additional context (if helpful)
+    
+    The tone should be confident, persuasive, and adaptable for formats like websites, digital ads, and email introductions. Make sure the message flows naturally while clearly communicating the value proposition. Avoid jargon or fluff — keep it focused, practical, and benefit-driven.`;
+    
+        const refreshPrompt = `Create a new and distinct version of the core message (~100 words), using the same inputs. Present the offering from a different angle or highlight a different major benefit, but still prioritize the following:
+    
+    - What it is
+    - Who it’s for
+    - What outcome or benefit it delivers
+    - What makes it unique
+    - Unique selling point
+    
+    Use supporting details like niche, features, problems solved, and additional context. Keep it persuasive, clean, and suitable for formats like websites or email.`;
+    
+        const messages = [
+          {
+            role: "system",
+            content: "You are a helpful AI that generates structured marketing strategies. Your response must be a clean JSON object only. Do not include markdown or extra text."
+          },
+          {
+            role: "user",
+            content: `${isRefresh ? refreshPrompt : basePrompt}
+    
+    Input Data:
+    - Description: ${formData.description}
+    - Industry: ${formData.industry}
+    - Niche Category: ${formData.nicheCategory}
+    - Target Market: ${formData.targetMarket}
+    - Core Audience: ${formData.coreAudience}
+    - Outcome: ${formData.outcome}
+    - Problem Solved: ${formData.problemSolved}
+    - Website URL: ${formData.websiteUrl}
+    - Competitors: ${formData.competitors}
+    - Differentiators: ${formData.differentiators}
+    - Key Features: ${formData.keyFeatures}
+    - Unique Offering: ${formData.uniqueOffering}
+    - Additional Info: ${formData.additionalInfo}
+    
+    Return only a JSON object in this format:
+    {
+      "coreMessage": "A clear, persuasive message (~130 words), covering the prioritized elements",
+      "valueProposition": "Clear statement of benefit and differentiation",
+      "keyMarketingPoints": ["Point 1", "Point 2"],
+      "targetAudiencePersonas": [
+        {
+          "name": "Persona name",
+          "description": "Brief description",
+          "painPoints": ["Pain 1", "Pain 2"],
+          "goals": ["Goal 1", "Goal 2"]
+        }
+      ],
+      "contentRecommendations": [
+        {
+          "type": "Content type",
+          "description": "What it’s about",
+          "purpose": "Why it’s useful"
+        }
+      ],
+      "channelStrategy": [
+        {
+          "platform": "Platform name",
+          "approach": "Tactic or strategy",
+          "expectedOutcome": "Desired result"
+        }
+      ]
+    }`
+          }
+        ];
+    
+        const response = await chatModel.invoke(messages);
+        const marketingContent = cleanJsonResponse(response);
+    
+        res.status(200).json({
+          success: true,
+          message: 'Marketing content generated successfully',
+          data: marketingContent
+        });
+    
+      } catch (error) {
+        console.error('Error generating marketing content:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Failed to generate marketing content',
+          error: error.message
+        });
       }
+    }
+    
       
 
     async generateMarketingContentWithPrompt(req, res) {

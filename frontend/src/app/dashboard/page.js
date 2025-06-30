@@ -4,6 +4,15 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './styles.module.css';
 
+const MessageSkeleton = () => (
+  <div className={styles.skeleton}>
+    <div className={styles.skeletonLine}></div>
+    <div className={styles.skeletonLine}></div>
+    <div className={styles.skeletonLine}></div>
+    <div className={styles.skeletonLine}></div>
+  </div>
+);
+
 export default function Dashboard() {
   const router = useRouter();
   const [expandedFolders, setExpandedFolders] = useState({
@@ -454,6 +463,94 @@ export default function Dashboard() {
     }
   };
 
+  const handleOptionClick = async (optionType) => {
+    try {
+      setIsRefreshing(true);
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // First get the onboarding data to get the form data
+      const onboardingResponse = await fetch('http://localhost:4000/api/onboarding/get', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!onboardingResponse.ok) {
+        throw new Error('Failed to fetch onboarding data');
+      }
+
+      const { data } = await onboardingResponse.json();
+      
+      if (data) {
+        // Parse the stored form data if it's a string
+        const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+
+        // Add the modification prompt to the form data
+        let modificationPrompt = '';
+        switch(optionType) {
+          case 'shorter':
+            modificationPrompt = 'Make this message shorter and punchier while keeping the main point';
+            break;
+          case 'tone':
+            modificationPrompt = 'Make this message more friendly and confident';
+            break;
+          case 'emphasis':
+            modificationPrompt = 'Emphasize the benefits and value more';
+            break;
+          case 'alternative':
+            modificationPrompt = 'Give me an alternative version with a different angle';
+            break;
+          case 'fresh':
+            modificationPrompt = 'Rewrite this with a fresh perspective';
+            break;
+          default:
+            break;
+        }
+
+        // Add the modification prompt to additional info
+        formData.additionalInfo = `${formData.additionalInfo || ''} ${modificationPrompt}`;
+
+        // Generate new marketing content
+        const marketingResponse = await fetch(`http://localhost:4000/api/marketing/generate?refresh=true`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (!marketingResponse.ok) {
+          throw new Error('Failed to generate new marketing content');
+        }
+
+        const marketingData = await marketingResponse.json();
+        
+        if (marketingData.success && marketingData.data) {
+          // Update the core message in the UI
+          setCoreMessage(marketingData.data.coreMessage);
+          
+          // Update the core message in the database
+          await fetch('http://localhost:4000/api/onboarding/core-message', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ coreMessage: marketingData.data.coreMessage })
+          });
+        } else {
+          throw new Error('Invalid response format from marketing API');
+        }
+      }
+    } catch (error) {
+      console.error('Error modifying message:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const renderProjectPopup = () => {
     if (!isProjectPopupOpen) return null;
 
@@ -810,7 +907,51 @@ export default function Dashboard() {
                     </svg>
                   </button>
                 </div>
-                <p>{coreMessage}</p>
+                <div className={styles.messageContainer}>
+                  {isRefreshing ? (
+                    <MessageSkeleton />
+                  ) : (
+                    <p className={styles.fadeIn}>{coreMessage}</p>
+                  )}
+                </div>
+                
+                <div className={styles.messageOptions}>
+                  <button 
+                    className={styles.optionButton} 
+                    onClick={() => handleOptionClick('shorter')}
+                    disabled={isRefreshing}
+                  >
+                    Make it Shorter
+                  </button>
+                  <button 
+                    className={styles.optionButton} 
+                    onClick={() => handleOptionClick('tone')}
+                    disabled={isRefreshing}
+                  >
+                    Adjust Tone
+                  </button>
+                  <button 
+                    className={styles.optionButton} 
+                    onClick={() => handleOptionClick('emphasis')}
+                    disabled={isRefreshing}
+                  >
+                    Add Emphasis
+                  </button>
+                  <button 
+                    className={styles.optionButton} 
+                    onClick={() => handleOptionClick('alternative')}
+                    disabled={isRefreshing}
+                  >
+                    Try Alternative
+                  </button>
+                  <button 
+                    className={styles.optionButton} 
+                    onClick={() => handleOptionClick('fresh')}
+                    disabled={isRefreshing}
+                  >
+                    Fresh Perspective
+                  </button>
+                </div>
 
                 <div className={styles.chatInterface}>
                   {messages.length > 0 && (
@@ -841,14 +982,14 @@ export default function Dashboard() {
                       placeholder="Type your suggestions (e.g., 'make it more formal')"
                       className={styles.messageInput}
                       onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                      disabled={isSending}
+                      disabled={isRefreshing}
                     />
                     <button
                       onClick={handleSendMessage}
                       className={styles.sendButton}
-                      disabled={isSending || !inputMessage.trim()}
+                      disabled={isRefreshing || !inputMessage.trim()}
                     >
-                      {isSending ? 'Sending...' : 'Send'}
+                      {isRefreshing ? 'Refreshing...' : 'Send'}
                     </button>
                   </div>
                 </div>

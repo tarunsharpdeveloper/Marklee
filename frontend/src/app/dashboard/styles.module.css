@@ -2553,3 +2553,106 @@ padding: 0.5rem 1rem;
 border-radius: 12px;
 border-left: 4px solid #8075ff;
 }
+
+.messageOptions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 15px 0;
+}
+
+.optionButton {
+  padding: 8px 16px;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  color: #333;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.optionButton:hover {
+  background: #004aad;
+  color: white;
+  border-color: #004aad;
+}
+
+.optionButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #f0f0f0;
+}
+
+@media (max-width: 768px) {
+  .messageOptions {
+    gap: 8px;
+  }
+  
+  .optionButton {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #f8f8f8 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+  min-height: 100px;
+  width: 100%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeletonLine {
+  height: 16px;
+  margin: 8px 0;
+  border-radius: 4px;
+}
+
+.skeletonLine:nth-child(1) {
+  width: 90%;
+}
+
+.skeletonLine:nth-child(2) {
+  width: 95%;
+}
+
+.skeletonLine:nth-child(3) {
+  width: 85%;
+}
+
+.skeletonLine:nth-child(4) {
+  width: 92%;
+}
+
+.messageContainer {
+  position: relative;
+}
+
+.fadeIn {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

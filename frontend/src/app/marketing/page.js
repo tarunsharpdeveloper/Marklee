@@ -183,8 +183,7 @@ export default function MarketingPage() {
                       disabled={loading}
                     />
                   ) : (
-                    <input
-                      type="text"
+                    <textarea
                       id={field.nameKey}
                       name={field.nameKey}
                       value={formAnswers[field.nameKey]}
