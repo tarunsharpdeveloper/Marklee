@@ -2343,7 +2343,7 @@
 }
 
 .coreMessageContainer {
-  max-width: 800px;
+  max-width: 850px;
   margin: 0 auto;
 }
 
@@ -2426,9 +2426,9 @@
 }
 
 .chatInterface {
-  margin-top: 1rem;
+  /* margin-top: 1rem; */
   border-top: 1px solid #eee;
-  padding-top: 1rem;
+  /* padding-top: 1rem; */
 }
 
 .chatMessages {
@@ -2536,7 +2536,7 @@
 
 .sendButton {
   padding: 0.75rem 1.5rem;
-  background-color: #004aad;
+  background-color: #282ab3;
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -2565,7 +2565,7 @@ border-left: 4px solid #8075ff;
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
-  margin: 15px 0;
+  /* margin: 15px 0; */
 }
 
 .optionButton {
@@ -2580,9 +2580,9 @@ border-left: 4px solid #8075ff;
 }
 
 .optionButton:hover {
-  background: #004aad;
+  background: #282ab3;
   color: white;
-  border-color: #004aad;
+  
 }
 
 .optionButton:disabled {
@@ -2672,7 +2672,7 @@ border-left: 4px solid #8075ff;
   padding: 1rem;
   background: white;
   border-radius: 12px;
-  border-left: 4px solid #8075ff;
+  border-left: 4px solid #282ab3;
 }
 
 .fadeIn {
