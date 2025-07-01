@@ -108,6 +108,9 @@ CREATE TABLE IF NOT EXISTS ai_prompts_type (
 
 INSERT INTO ai_prompts_type (type) VALUES ('audience'), ('content');
 
+-- Add new prompt types
+INSERT INTO ai_prompts_type (type) VALUES ('business_form'), ('core_message');
+
 
 CREATE TABLE IF NOT EXISTS ai_prompts (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -172,6 +175,62 @@ Requirements:
 4. End with the call to action
 5. Format appropriately for the asset type
 6. Simple content, no more than 200 words and do not include any emojis');  
+
+-- Insert prompts for business form and core message
+INSERT INTO ai_prompts (prompt_for_id, prompt) VALUES 
+(3, 'Generate a clear, friendly welcome message that invites users to fill out a form. The form helps us gather the essential information needed to generate their messaging and marketing copy. The tone should be helpful and confident.
+                    
+For each of the following form fields, provide:
+- "title": The question to be displayed to the user.
+- "nameKey": A machine-friendly key matching the exact field name below.
+- "placeholder": A long, very user understandable tip (max 70 words) to help the user give a clear, specific and more understandale for the user. Use simple, non-technical language.
+- "guidance": A long, very user understandable tip (max 80 words) to help the user give a clear, specific and more understandale for the user. Use simple, non-technical language.
+
+All fields are required:
+1. Description: "What''s the name of the company, brand, service, or product you''re marketing?" (nameKey: description)
+2. Industry: "What industry is it in?" (nameKey: industry)
+3. Niche Category: "What niche or category does it fall under?" (nameKey: nicheCategory)
+4. Target Market: "Who are you trying to reach?" (nameKey: targetMarket)
+5. Core Audience: "Who benefits most from this offering?" (nameKey: coreAudience)
+6. Outcome: "What outcome do they get from using it?" (nameKey: outcome)
+7. Problem Solved: "What problem does it solve for them?" (nameKey: problemSolved)
+8. Website URL: "What''s the website URL?" (nameKey: websiteUrl)
+9. Competitors: "Who are your main competitors?" (nameKey: competitors)
+10. Differentiators: "How is your offering different from competitors?" (nameKey: differentiators)
+11. Key Features: "What are its most important features or benefits?" (nameKey: keyFeatures)
+12. Unique Offering: "What do you offer that no one else does?" (nameKey: uniqueOffering)
+13. Additional Info: "Anything else we should know?" (nameKey: additionalInfo)
+
+Return only a JSON object with this structure:
+{
+  "welcomeMessage": "A friendly welcome message",
+  "fields": [
+    {
+      "title": "Question title",
+      "nameKey": "exactFieldNameFromAbove",
+      "placeholder": "Example text",
+      "guidance": "Short helpful guidance"
+    }
+  ],
+  "footerMessage": "An encouraging message"
+}'),
+
+(4, 'Based on the answers provided in the form, write a clear, compelling, and detailed core message (~100 words) for the user''s company, brand, product, or service.
+    
+Strictly prioritize these key points:
+- What is it? (Description)
+- Who benefits most? (Core audience or target market)
+- What outcome or benefit does it deliver?
+- What makes it different from competitors?
+- Unique selling point
+
+Use these elements to support the message:
+- Industry and niche
+- Key features and benefits
+- The problem it solves
+- Additional context (if helpful)
+
+The tone should be confident, persuasive, and adaptable for formats like websites, digital ads, and email introductions. Make sure the message flows naturally while clearly communicating the value proposition. Avoid jargon or fluff — keep it focused, practical, and benefit-driven.');
 
 CREATE TABLE IF NOT EXISTS user_onboarding (
     id INT AUTO_INCREMENT PRIMARY KEY,

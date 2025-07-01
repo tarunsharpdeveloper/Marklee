@@ -394,6 +394,7 @@ export default function Dashboard() {
     }]);
     setInputMessage('');
     setIsSending(true);
+    setIsRefreshing(true);
 
     try {
         const token = localStorage.getItem('token');
@@ -461,6 +462,7 @@ export default function Dashboard() {
         }]);
     } finally {
         setIsSending(false);
+        setIsRefreshing(false);
     }
   };
 

@@ -1,5 +1,6 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { StringOutputParser } from '@langchain/core/output_parsers';
+import AiPrompt from '../models/AiPrompt.js';
 
 const chatModel = new ChatOpenAI({
     modelName: 'gpt-4o-mini',
@@ -28,6 +29,13 @@ class MarketingController {
     // Get AI-generated form fields
     async getFormFields(req, res) {
         try {
+            // Fetch the business form prompt from database (type id 3)
+            const businessFormPrompts = await AiPrompt.getPromptFor(3);
+            if (!businessFormPrompts || businessFormPrompts.length === 0) {
+                throw new Error('Business form prompt not found');
+            }
+            const formPrompt = businessFormPrompts[0].prompt;
+
             const messages = [
                 {
                     role: "system",
@@ -35,44 +43,7 @@ class MarketingController {
                 },
                 {
                     role: "user",
-                    content: `Generate a clear, friendly welcome message that invites users to fill out a form. The form helps us gather the essential information needed to generate their messaging and marketing copy. The tone should be helpful and confident.
-                    
-For each of the following form fields, provide:
-- "title": The question to be displayed to the user.
-- "nameKey": A machine-friendly key matching the exact field name below.
-- "placeholder": A long, very user understandable tip (max 70 words) to help the user give a clear, specific and more understandale for the user. Use simple, non-technical language.
-- "guidance": A long, very user understandable tip (max 80 words) to help the user give a clear, specific and more understandale for the user. Use simple, non-technical language.
-
-All fields are required:
-1. Description: "What's the name of the company, brand, service, or product you're marketing?" (nameKey: description)
-2. Industry: "What industry is it in?" (nameKey: industry)
-3. Niche Category: "What niche or category does it fall under?" (nameKey: nicheCategory)
-4. Target Market: "Who are you trying to reach?" (nameKey: targetMarket)
-5. Core Audience: "Who benefits most from this offering?" (nameKey: coreAudience)
-6. Outcome: "What outcome do they get from using it?" (nameKey: outcome)
-7. Problem Solved: "What problem does it solve for them?" (nameKey: problemSolved)
-8. Website URL: "What's the website URL?" (nameKey: websiteUrl)
-9. Competitors: "Who are your main competitors?" (nameKey: competitors)
-10. Differentiators: "How is your offering different from competitors?" (nameKey: differentiators)
-11. Key Features: "What are its most important features or benefits?" (nameKey: keyFeatures)
-12. Unique Offering: "What do you offer that no one else does?" (nameKey: uniqueOffering)
-13. Additional Info: "Anything else we should know?" (nameKey: additionalInfo)
-
-Finally, add a short, encouraging footer message to motivate users to complete the form.
-
-Return only a JSON object with this structure:
-{
-  "welcomeMessage": "A friendly welcome message",
-  "fields": [
-    {
-      "title": "Question title",
-      "nameKey": "exactFieldNameFromAbove",
-      "placeholder": "Example text",
-      "guidance": "Short helpful guidance"
-    }
-  ],
-  "footerMessage": "An encouraging message"
-}`
+                    content: formPrompt
                 }
             ];
 
@@ -127,6 +98,13 @@ Return only a JSON object with this structure:
           });
         }
 
+        // Fetch the core message prompt from database (type id 4)
+        const coreMessagePrompts = await AiPrompt.getPromptFor(4);
+        if (!coreMessagePrompts || coreMessagePrompts.length === 0) {
+            throw new Error('Core message prompt not found');
+        }
+        const basePrompt = coreMessagePrompts[0].prompt;
+
         let prompt;
         if (isModification) {
           prompt = `Modify this existing core message according to the specific request. Keep the essence and key information while applying the requested changes.
@@ -147,32 +125,11 @@ Use these supporting details to ensure accuracy:
 
 Return a modified version that maintains accuracy while fulfilling the modification request. Keep it clear, compelling, and suitable for marketing use.`;
         } else if (isRefresh) {
-          prompt = `Create a new and distinct version of the core message (~100 words), using the same inputs. Present the offering from a different angle or highlight a different major benefit, but still prioritize the following:
-    
-    - What it is
-    - Who it's for
-    - What outcome or benefit it delivers
-    - What makes it unique
-    - Unique selling point
-    
-    Use supporting details like niche, features, problems solved, and additional context. Keep it persuasive, clean, and suitable for formats like websites or email.`;
+          prompt = `Create a new and distinct version of the core message (~100 words), using the same inputs. Present the offering from a different angle or highlight a different major benefit, but still follow this guidance:
+
+${basePrompt}`;
         } else {
-          prompt = `Based on the answers provided in the form, write a clear, compelling, and detailed core message (~100 words) for the user's company, brand, product, or service.
-    
-    Strictly prioritize these key points:
-    - What is it? (Description)
-    - Who benefits most? (Core audience or target market)
-    - What outcome or benefit does it deliver?
-    - What makes it different from competitors?
-    - Unique selling point
-    
-    Use these elements to support the message:
-    - Industry and niche
-    - Key features and benefits
-    - The problem it solves
-    - Additional context (if helpful)
-    
-    The tone should be confident, persuasive, and adaptable for formats like websites, digital ads, and email introductions. Make sure the message flows naturally while clearly communicating the value proposition. Avoid jargon or fluff — keep it focused, practical, and benefit-driven.`;
+          prompt = basePrompt;
         }
     
         const messages = [
