@@ -273,6 +273,71 @@ Return only the updated message, no explanations or additional text.`
             });
         }
     }
+
+    async generateFromAudience(req, res) {
+        try {
+            const { labelName, whoTheyAre, whatTheyWant, whatTheyStruggle, additionalInfo } = req.body;
+
+            // Validate required fields
+            if (!labelName || !whoTheyAre || !whatTheyWant) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Missing required audience information'
+                });
+            }
+
+            const messages = [
+                {
+                    role: "system",
+                    content: `You are a messaging strategist helping the user define and refine their Target Audiences. The user has written a basic audience profile.
+
+Your goal is to help them:
+- Clarify or rewrite the summary
+- Add useful details (like pain points, desires, behaviours, channels)
+- Adjust the tone or specificity to match their style or industry
+- Explore alternate ways to frame or describe the same persona
+
+Always offer 1–2 revised versions based on their input. Be collaborative and encouraging. When they're satisfied, offer to save the final version.
+
+Return a JSON object with this structure:
+{
+    "coreMessage": "Primary Version:\\n[The refined version]\\n\\nAlternative Perspective:\\n[The alternative framing]\\n\\nKey Details:\\n• Pain Points:\\n[List of pain points]\\n\\n• Desires:\\n[List of desires]\\n\\n• Behaviors:\\n[List of behaviors]\\n\\n• Channels:\\n[List of channels]",
+    "chatResponse": "A collaborative question to help further refine the description"
+}`
+                },
+                {
+                    role: "user",
+                    content: `Please analyze and enhance this audience profile:
+
+Audience Name/Label: ${labelName}
+Who They Are: ${whoTheyAre}
+What They Want: ${whatTheyWant}
+Their Struggles: ${whatTheyStruggle || 'Not specified'}
+Additional Context: ${additionalInfo || 'Not provided'}
+
+Generate a refined audience description with enhanced details and an alternative framing.`
+                }
+            ];
+
+            const response = await chatModel.invoke(messages);
+            const parsedResponse = JSON.parse(response.content);
+            
+            return res.status(200).json({
+                success: true,
+                data: {
+                    coreMessage: parsedResponse.coreMessage,
+                    chatResponse: parsedResponse.chatResponse
+                }
+            });
+
+        } catch (error) {
+            console.error('Error generating message from audience:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Error generating message'
+            });
+        }
+    }
 }
 
 export default new MarketingController();

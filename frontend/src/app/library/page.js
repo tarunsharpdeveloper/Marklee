@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../dashboard/styles.module.css';
 import Image from 'next/image';
+import { Typewriter } from 'react-simple-typewriter';
 
 export default function Library() {
   const router = useRouter();
@@ -22,7 +23,9 @@ export default function Library() {
   const [showQASection, setShowQASection] = useState(true);
   const [isAssetPopupOpen, setIsAssetPopupOpen] = useState(false);
   const [selectedAssetType, setSelectedAssetType] = useState('');
-  const [briefData, setBriefData] = useState({});
+  const [briefData, setBriefData] = useState({
+    audienceType: null
+  });
   const [currentBriefId, setCurrentBriefId] = useState(null);
   const [selectedAudienceId, setSelectedAudienceId] = useState(null);
   const [generatedContent, setGeneratedContent] = useState(null);
@@ -46,6 +49,12 @@ export default function Library() {
   ]);
   const [briefQuestions, setBriefQuestions] = useState([]);
   const [questionsLoading, setQuestionsLoading] = useState(true);
+  const [coreMessage, setCoreMessage] = useState('');
+  const [showTypewriter, setShowTypewriter] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   useEffect(() => {
     fetchProjects();
     fetchBriefQuestions();
@@ -483,7 +492,7 @@ export default function Library() {
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
               </svg>
             </button>
-            <h2>Create Brief for {selectedFolder.name}</h2>
+            {/* <h2>Create Brief for {selectedFolder.name}</h2> */}
             {error && <div className={styles.error}>{error}</div>}
             
             {loading ? (
@@ -505,48 +514,235 @@ export default function Library() {
                 ) : (
                   <>
                     <div className={styles.formGroup}>
-                      {briefQuestions.map((question, index) => (
-                        <div key={index}>
-                          <label>{question.question}</label>
+                      <label>How would you like to define your audience?</label>
+                      <div className={styles.radioGroup}>
+                        <label className={`${styles.radioOption} ${briefData.audienceType === 'know' ? styles.selected : ''}`}>
+                          <input
+                            type="radio"
+                            name="audienceType"
+                            value="know"
+                            checked={briefData.audienceType === 'know'}
+                            onChange={(e) => setBriefData({ 
+                              audienceType: e.target.value,
+                              labelName: '',
+                              whoTheyAre: '',
+                              whatTheyWant: '',
+                              whatTheyStruggle: '',
+                              additionalInfo: ''
+                            })}
+                          />
+                          <span className={styles.radioLabel}>I know my audience</span>
+                        </label>
+                        <label className={`${styles.radioOption} ${briefData.audienceType === 'suggest' ? styles.selected : ''}`}>
+                          <input
+                            type="radio"
+                            name="audienceType"
+                            value="suggest"
+                            checked={briefData.audienceType === 'suggest'}
+                            onChange={(e) => setBriefData({ 
+                              audienceType: e.target.value,
+                              description: '',
+                              whoItHelps: '',
+                              problemItSolves: ''
+                            })}
+                          />
+                          <span className={styles.radioLabel}>Suggest audiences for me</span>
+                        </label>
+                        
+                      </div>
+                      {briefData.audienceType === 'know' && (
+                      <div className={styles.questionsContainer}>
+                        <div className={styles.formGroup}>
+                          <label>Label / Persona name</label>
                           <textarea
-                            value={briefData[question.input_field_name] || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, [question.input_field_name]: e.target.value }))}
-                            placeholder={question.placeholder}
+                            value={briefData.labelName || ''}
+                            onChange={(e) => setBriefData(prev => ({ ...prev, labelName: e.target.value }))}
                             className={styles.textarea}
                           />
                         </div>
-                      ))}
+                        <div className={styles.formGroup}>
+                          <label>Who they are (role, life stage, market segment)</label>
+                          <textarea
+                            value={briefData.whoTheyAre || ''}
+                            onChange={(e) => setBriefData(prev => ({ ...prev, whoTheyAre: e.target.value }))}
+                            className={styles.textarea}
+                          />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>What they want (main goal or desired outcome)</label>
+                          <textarea
+                            value={briefData.whatTheyWant || ''}
+                            onChange={(e) => setBriefData(prev => ({ ...prev, whatTheyWant: e.target.value }))}
+                            className={styles.textarea}
+                          />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>What they struggle with (main pain point or problem)</label>
+                          <textarea
+                            value={briefData.whatTheyStruggle || ''}
+                            onChange={(e) => setBriefData(prev => ({ ...prev, whatTheyStruggle: e.target.value }))}
+                            className={styles.textarea}
+                          />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>(Optional) Age, channels, purchasing power, etc.</label>
+                          <textarea
+                            value={briefData.additionalInfo || ''}
+                            onChange={(e) => setBriefData(prev => ({ ...prev, additionalInfo: e.target.value }))}
+                            className={styles.textarea}
+                          />
+                        </div>
+                        <button className={styles.submitButton} type="submit" onClick={handleBriefSubmit}>Generate</button>
+                      </div>
+                    )}
+
+                    {briefData.audienceType === 'suggest' && (
+                      <div className={styles.questionsContainer}>
+                        <div className={styles.formGroup}>
+                          <label>Description – what it is and what it does</label>
+                          <textarea
+                            value={briefData.description || ''}
+                            onChange={(e) => setBriefData(prev => ({ ...prev, description: e.target.value }))}
+                            className={styles.textarea}
+                          />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>Who it helps</label>
+                          <textarea
+                            value={briefData.whoItHelps || ''}
+                            onChange={(e) => setBriefData(prev => ({ ...prev, whoItHelps: e.target.value }))}
+                            className={styles.textarea}
+                          />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>Problem it solves</label>
+                          <textarea
+                            value={briefData.problemItSolves || ''}
+                            onChange={(e) => setBriefData(prev => ({ ...prev, problemItSolves: e.target.value }))}
+                            className={styles.textarea}
+                          />
+                        </div>
+                      </div>
+                    )}
                     </div>
-                   
-                    <div className={styles.formActions}>
-                      <button 
-                        type="button" 
-                        className={styles.cancelButton}
-                        onClick={() => {
-                          setIsBriefFormOpen(false);
-                          setSelectedFolder(null);
-                          // Reset briefData to empty values for all fields
-                          const resetBriefData = {};
-                          briefQuestions.forEach(question => {
-                            resetBriefData[question.input_field_name] = '';
-                          });
-                          setBriefData(resetBriefData);
-                        }}
-                      >
-                        Cancel
-                      </button>
-                      <button 
-                        type="submit" 
-                        className={styles.submitButton}
-                        disabled={loading || questionsLoading}
-                      >
-                        {loading ? 'Creating...' : 'Create Brief'}
-                      </button>
-                    </div>
+
+                  
                   </>
                 )}
               </form>
             )}
+          </div>
+        )}
+        {showGeneratedContent && coreMessage && (
+          <div className={styles.coreMessageSection}>
+            <button className={styles.backButton} onClick={handleBackFromAudience}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+            </button>
+            <div className={styles.coreMessageContainer}>
+              <div className={styles.coreMessageHeader}>
+                <h3>Your Core Marketing Message</h3>
+                <button 
+                  onClick={() => fetchCoreMessage(true)}
+                  className={styles.refreshButton}
+                  disabled={isRefreshing}
+                >
+                  <svg 
+                    width="20" 
+                    height="20" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2"
+                    className={isRefreshing ? styles.spinning : ''}
+                  >
+                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 3.4 0 6.3 2.1 7.4 5M22 12c0 4.4-3.6 8-8 8-3.4 0-6.3-2.1-7.4-5"/>
+                  </svg>
+                </button>
+              </div>
+              <div className={styles.messageContainer}>
+                {isRefreshing ? (
+                  <div className={styles.skeleton}>
+                    <div className={styles.skeletonLine} style={{ width: '100%' }}></div>
+                    <div className={styles.skeletonLine} style={{ width: '90%' }}></div>
+                    <div className={styles.skeletonLine} style={{ width: '95%' }}></div>
+                  </div>
+                ) : showTypewriter ? (
+                  <div className={styles.typewriterContainer}>
+                    <Typewriter
+                      words={[coreMessage]}
+                      loop={1}
+                      cursor
+                      cursorStyle=""
+                      typeSpeed={15}
+                      delaySpeed={500}
+                      onLoopDone={() => {
+                        setTimeout(() => setShowTypewriter(false), 500);
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className={styles.typewriterContainer}>
+                    {coreMessage.split('\n\n').map((section, index) => {
+                      if (section.includes(':')) {
+                        const [title, ...content] = section.split('\n');
+                        return (
+                          <div key={index}>
+                            <h4>{title}</h4>
+                            {content.map((line, i) => (
+                              <p key={i}>{line.trim()}</p>
+                            ))}
+                          </div>
+                        );
+                      }
+                      return <p key={index}>{section}</p>;
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.chatInterface}>
+                {messages.length > 0 && (
+                  <div className={styles.chatMessages}>
+                    {messages.map((message, index) => (
+                      <div key={index} className={`${styles.messageContainer} ${styles[message.type + 'Message']}`}>
+                        <div className={styles.messageContent}>
+                          {message.type === 'user' ? (
+                            <p>{message.content}</p>
+                          ) : (
+                            <button
+                              className={styles.questionButton}
+                              onClick={() => setInputMessage(message.content)}
+                            >
+                              {message.content}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className={styles.inputContainer}>
+                  <input
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    placeholder="Type your suggestions (e.g., 'make it more formal')"
+                    className={styles.messageInput}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    disabled={isRefreshing}
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    className={styles.sendButton}
+                    disabled={isRefreshing || !inputMessage.trim()}
+                  >
+                    {isRefreshing ? 'Refreshing...' : 'Send'}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
         {audiences.length > 0 && !showGeneratedContent && (
@@ -593,25 +789,6 @@ export default function Library() {
             </div>
           </div>
         )}
-        {showGeneratedContent && generatedContent && (
-          <div className={styles.generatedContentSection}>
-            <div className={styles.generatedContentHeader}>
-              <h3>Generated Content</h3>
-              <span className={styles.generatedAssetType}>{selectedAssetType}</span>
-            </div>
-            <button 
-              className={styles.generatedContentBackButton}
-              onClick={() => setShowGeneratedContent(false)}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" height={20} width={20} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </button>
-            <div className={styles.generatedContentBody}>
-              <p className={styles.generatedContentText}>{generatedContent}</p>
-            </div>
-          </div>
-        )}
       </div>
     );
   };
@@ -630,123 +807,150 @@ export default function Library() {
 
   const handleBriefSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedFolder) return;
-
-    // Check if questions are loaded
-    if (briefQuestions.length === 0) {
-      setError('Please wait for questions to load before submitting');
-      return;
-    }
-
     setLoading(true);
     setError('');
-    const loadingInterval = startLoadingSequence(loadingQuestions, setLoadingMessage);
 
     try {
       const token = localStorage.getItem('token');
-      
-      // Filter out undefined values and ensure all fields have values
-      const cleanBriefData = {};
-      briefQuestions.forEach(question => {
-        const value = briefData[question.input_field_name];
-        cleanBriefData[question.input_field_name] = value || ''; // Use empty string if undefined
-      });
-      
-      const briefPayload = {
-        projectId: selectedFolder.id,
-        projectName: selectedFolder.name,
-        ...cleanBriefData // Use cleaned data
-      };
+      if (!token) {
+        router.push('/');
+        return;
+      }
 
-      console.log('Sending brief payload:', briefPayload); // Debug log
+      if (briefData.audienceType === 'know') {
+        // Start loading sequence
+        startLoadingSequence(loadingQuestions, setLoadingMessage);
 
-      const response = await fetch(`http://localhost:4000/api/create-brief`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(briefPayload)
-      });
-
-      const responseData = await response.json();
-
-      if (response.ok) {
-        setCurrentBriefId(responseData.data.brief.id); // Save the new brief's ID
-        const newAudiences = responseData.data.audiences.map(audience => {
-          let name = 'Audience Segment';
-          let description = '';
-          try {
-            const segmentData = JSON.parse(audience.segment);
-            if (typeof segmentData === 'object' && segmentData !== null) {
-              name = segmentData.name || 'Untitled Segment';
-              description = segmentData.description || '';
-            } else if (typeof segmentData === 'string') {
-              name = segmentData;
-              try {
-                const insightsData = JSON.parse(audience.insights);
-                if (Array.isArray(insightsData)) {
-                    description = insightsData.join(' ');
-                } else if (typeof insightsData === 'object' && insightsData !== null) {
-                    description = getAllValues(insightsData).join(' ').replace(/<br\s*\/?>/gi, ' ');
-                } else {
-                    description = String(insightsData);
-                }
-                description = description.substring(0, 150) + (description.length > 150 ? '...' : '');
-              } catch (e) {
-                  description = 'No description available.';
-              }
-            }
-          } catch (e) {
-            name = 'Error Parsing Segment';
-            description = '';
-          }
-          return { ...audience, name, description };
+        // Handle "I Know My Audience" path
+        const response = await fetch('http://localhost:4000/api/marketing/generate-from-audience', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            labelName: briefData.labelName,
+            whoTheyAre: briefData.whoTheyAre,
+            whatTheyWant: briefData.whatTheyWant,
+            whatTheyStruggle: briefData.whatTheyStruggle,
+            additionalInfo: briefData.additionalInfo
+          })
         });
-        setAudiences(newAudiences);
 
-        const newBrief = {
-          id: responseData.data.brief.id,
-          title: cleanBriefData[briefQuestions.find(q => q.input_field_name === 'main_message')?.input_field_name] || 'Brief',
-          created_at: new Date().toISOString()
+        if (!response.ok) {
+          throw new Error('Failed to generate core message');
+        }
+
+        const data = await response.json();
+        
+        if (data.success) {
+          // Save the core message
+          await fetch('http://localhost:4000/api/onboarding/core-message', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ coreMessage: data.data.coreMessage })
+          });
+
+          // Hide the form and show the core message
+          setIsBriefFormOpen(false);
+          setCoreMessage(data.data.coreMessage);
+          setShowTypewriter(true);
+          
+          // Initialize chat with the first AI message
+          setMessages([{
+            content: data.data.chatResponse,
+            type: 'ai'
+          }]);
+
+          // Show the core message section
+          setShowGeneratedContent(true);
+        }
+      } else {
+        // Handle "Suggest audiences for me" path
+        const cleanBriefData = {
+          projectId: selectedFolder.id,
+          projectName: selectedFolder.name,
+          ...briefData
         };
 
-        setFolderStructure(prev => {
-          const projectKey = selectedFolder.name.toLowerCase().replace(/\s+/g, '_');
-          return {
-            ...prev,
-            [projectKey]: {
-              ...prev[projectKey],
-              briefs: [...(prev[projectKey].briefs || []), newBrief]
-            }
-          };
+        const response = await fetch('http://localhost:4000/api/brief', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(cleanBriefData)
         });
 
-        // Reset briefData to empty values for all fields
-        const resetBriefData = {};
-        briefQuestions.forEach(question => {
-          resetBriefData[question.input_field_name] = '';
-        });
-        setBriefData(resetBriefData);
-        setError('');
-        fetchProjects();
-        clearInterval(loadingInterval);
-        setLoading(false);
-        setLoadingMessage('');
-      } else {
-        const errorMessage = responseData.message || 'Failed to create brief';
-        console.error('Server error:', errorMessage);
-        setError(errorMessage);
-        clearInterval(loadingInterval);
-        setLoading(false);
-        setLoadingMessage('');
+        const responseData = await response.json();
+
+        if (response.ok) {
+          setCurrentBriefId(responseData.data.brief.id);
+          const newAudiences = responseData.data.audiences.map(audience => {
+            let name = 'Audience Segment';
+            let description = '';
+            try {
+              const segmentData = JSON.parse(audience.segment);
+              if (typeof segmentData === 'object' && segmentData !== null) {
+                name = segmentData.name || 'Untitled Segment';
+                description = segmentData.description || '';
+              } else if (typeof segmentData === 'string') {
+                name = segmentData;
+                try {
+                  const insightsData = JSON.parse(audience.insights);
+                  if (Array.isArray(insightsData)) {
+                    description = insightsData.join(' ');
+                  } else if (typeof insightsData === 'object' && insightsData !== null) {
+                    description = getAllValues(insightsData).join(' ').replace(/<br\s*\/?>/gi, ' ');
+                  } else {
+                    description = String(insightsData);
+                  }
+                  description = description.substring(0, 150) + (description.length > 150 ? '...' : '');
+                } catch (e) {
+                  description = 'No description available.';
+                }
+              }
+            } catch (e) {
+              name = 'Error Parsing Segment';
+              description = '';
+            }
+            return { ...audience, name, description };
+          });
+          setAudiences(newAudiences);
+
+          const newBrief = {
+            id: responseData.data.brief.id,
+            title: cleanBriefData[briefQuestions.find(q => q.input_field_name === 'main_message')?.input_field_name] || 'Brief',
+            created_at: new Date().toISOString()
+          };
+
+          // Update folder structure with new brief
+          setFolderStructure(prev => ({
+            ...prev,
+            [selectedFolder.name.toLowerCase().replace(/\s+/g, '_')]: {
+              ...prev[selectedFolder.name.toLowerCase().replace(/\s+/g, '_')],
+              briefs: [
+                ...(prev[selectedFolder.name.toLowerCase().replace(/\s+/g, '_')].briefs || []),
+                newBrief
+              ]
+            }
+          }));
+
+          setError('');
+        } else {
+          const errorMessage = responseData.message || 'Failed to create brief';
+          console.error('Server error:', errorMessage);
+          setError(errorMessage);
+        }
       }
     } catch (error) {
-      console.error('Error creating brief:', error);
-      setError('Failed to create brief. Please try again.');
-      clearInterval(loadingInterval);
+      console.error('Error submitting brief:', error);
+      setError(error.message || 'Failed to submit brief');
+    } finally {
       setLoading(false);
-      setLoadingMessage('');
     }
   };
 
@@ -877,6 +1081,119 @@ export default function Library() {
     }
     return values;
   }
+
+  const fetchCoreMessage = async (refresh) => {
+    if (refresh) {
+      setIsRefreshing(true);
+    }
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/');
+        return;
+      }
+
+      const response = await fetch('http://localhost:4000/api/onboarding/core-message', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch core message');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setCoreMessage(data.data.coreMessage);
+        setShowTypewriter(true);
+        setIsRefreshing(false);
+      } else {
+        throw new Error(data.message || 'Failed to fetch core message');
+      }
+    } catch (error) {
+      console.error('Error fetching core message:', error);
+      setError(error.message || 'Failed to fetch core message');
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim()) return;
+
+    // Add user message to chat
+    setMessages(prev => [...prev, {
+      content: inputMessage,
+      type: 'user'
+    }]);
+    setInputMessage('');
+    setIsRefreshing(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/');
+        return;
+      }
+
+      // Get the current form data
+      const response = await fetch('http://localhost:4000/api/marketing/generate-with-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          formData: {
+            labelName: briefData.labelName,
+            whoTheyAre: briefData.whoTheyAre,
+            whatTheyWant: briefData.whatTheyWant,
+            whatTheyStruggle: briefData.whatTheyStruggle,
+            additionalInfo: briefData.additionalInfo
+          },
+          currentMessage: coreMessage,
+          userPrompt: inputMessage
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate response');
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update core message
+        setCoreMessage(data.data.coreMessage);
+        setShowTypewriter(true);
+        
+        // Save the new core message
+        await fetch('http://localhost:4000/api/onboarding/core-message', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ coreMessage: data.data.coreMessage })
+        });
+
+        // Add AI response to chat
+        setMessages(prev => [...prev, {
+          content: data.data.chatResponse,
+          type: 'ai'
+        }]);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setMessages(prev => [...prev, {
+        content: 'Sorry, I encountered an error. Please try again.',
+        type: 'ai'
+      }]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   return (
     <div className={styles.sections}>

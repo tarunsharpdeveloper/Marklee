@@ -4,6 +4,204 @@
   background-color: #ffffff;
   position: relative;
 }
+
+/* Modern Form Styles */
+.radioGroup {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.radioOption {
+  flex: 1;
+  min-width: 220px;
+  position: relative;
+  padding: 1.75rem;
+  /* background: rgba(255, 255, 255, 0.9); */
+  border: 2px solid #e5e7eb;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.02),
+    0 1px 3px rgba(0, 0, 0, 0.01);
+}
+
+.radioOption:hover {
+  transform: translateY(-3px);
+  border-color: #60a5fa;
+  box-shadow: 
+    0 8px 16px rgba(96, 165, 250, 0.12),
+    0 4px 8px rgba(96, 165, 250, 0.06);
+ 
+}
+
+.radioOption input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.radioLabel {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #374151;
+  transition: all 0.3s ease;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.radioOption.selected {
+  border-color: #3b82f6;
+  /* background: #f8fafc; */
+  box-shadow: 
+    0 8px 20px rgba(59, 130, 246, 0.15),
+    0 4px 8px rgba(59, 130, 246, 0.08);
+}
+
+.radioOption.selected .radioLabel {
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.radioOption::before {
+  content: '';
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid #d1d5db;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.radioOption.selected::before {
+  border-color: #3b82f6;
+  background: #3b82f6;
+  box-shadow: inset 0 0 0 4px white;
+}
+
+.questionsContainer {
+  margin-top: 2.5rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 24px;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 
+    0 8px 16px rgba(0, 0, 0, 0.03),
+    0 4px 8px rgba(0, 0, 0, 0.02);
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.formGroup {
+  margin-bottom: 2.5rem;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 1.5rem 1.75rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  /* border: 1px solid rgba(226, 232, 240, 0.8); */
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.02),
+    0 2px 4px rgba(0, 0, 0, 0.01);
+}
+
+.formGroup:focus-within {
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.98);
+  /* border-color: #60a5fa; */
+  box-shadow: 
+    0 12px 24px rgba(96, 165, 250, 0.12),
+    0 4px 8px rgba(96, 165, 250, 0.06);
+}
+
+.formGroup label {
+  display: block;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.01em;
+  background: linear-gradient(90deg, #1e293b 0%, #334155 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.formGroup:focus-within label {
+  transform: scale(0.95);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 140px;
+  padding: 1.5rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  font-size: 1.0625rem;
+  color: #1f2937;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.95);
+  resize: vertical;
+  line-height: 1.6;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 
+    0 0 0 4px rgba(96, 165, 250, 0.12),
+    inset 0 2px 4px rgba(0, 0, 0, 0.02);
+  background: white;
+}
+
+.textarea::placeholder {
+  color: #9ca3af;
+  font-size: 1rem;
+  opacity: 0.75;
+}
+
+@media (max-width: 640px) {
+  .radioGroup {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .radioOption {
+    width: 100%;
+    padding: 1.25rem;
+  }
+  
+  .formGroup {
+    padding: 1.25rem;
+  }
+  
+  .textarea {
+    padding: 1.25rem;
+    min-height: 120px;
+  }
+}
+
 .audienceActions{
   display: flex;
   gap: 0.5rem;
@@ -684,7 +882,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: center;  
   }
 
   .createProjectButton {
@@ -2608,7 +2806,7 @@
 /* Large Desktop Styles */
 @media (min-width: 1025px) {
   .coreMessageSection {
-    padding: 2rem;
+    padding: 1rem;
   }
 
   .coreMessageContainer {
@@ -2975,24 +3173,54 @@ border-left: 4px solid #8075ff;
 .typewriterContainer {
   color: #334155;
   font-size: 1.125rem;
-  line-height: 1.6;
+  line-height: 1.8;
   white-space: pre-wrap;
-  padding: 1rem;
+  padding: 1.5rem;
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   border-left: 4px solid #282ab3;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.fadeIn {
-  opacity: 0;
-  animation: fadeIn 0.5s ease-in forwards;
+.typewriterContainer h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 1.5rem 0 1rem;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.typewriterContainer h4:first-child {
+  margin-top: 0;
+}
+
+.typewriterContainer ul {
+  list-style: none;
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+
+.typewriterContainer li {
+  position: relative;
+  padding-left: 1rem;
+  margin: 0.5rem 0;
+  color: #475569;
+}
+
+.typewriterContainer li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #282ab3;
+}
+
+.messageContainer {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.messageContainer p {
+  white-space: pre-wrap;
+  line-height: 1.8;
+  margin: 0;
+  padding: 0;
 }
