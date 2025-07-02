@@ -1,28 +1,15 @@
-name: Publish Website to Cloud Panel
+- name: Create a test file
+  run: echo "Deployed from GitHub Actions" > test.txt
 
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  SFTP-Deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Deploy via SFTP
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: 22
-          source: "."                              # upload everything from root of repo
-          target: "."                              # upload directly into /home/marklee/htdocs/marklee.ai/
-          overwrite: true
-          rm: true                                 # optional: clean remote before uploading
-          debug: true
+- name: Deploy test.txt
+  uses: appleboy/scp-action@v0.1.7
+  with:
+    host: ${{ secrets.FTP_SERVER }}
+    username: ${{ secrets.FTP_USERNAME }}
+    password: ${{ secrets.FTP_PASSWORD }}
+    port: 22
+    source: "test.txt"
+    target: "."
+    overwrite: true
+    rm: false
+    debug: true
