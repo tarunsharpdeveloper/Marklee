@@ -876,12 +876,12 @@ export default function Dashboard() {
       </aside>
       <main className={`${styles.main} ${isSidebarCollapsed ? styles.collapsedMain : ''}`}>
         <header className={`${styles.header} ${isSidebarCollapsed ? styles.collapsedHeader : ''}`}>
-          <div style={{display: 'flex', alignItems: 'center', justifyContent:"start"}}>
-            <button onClick={toggleSidebar} className={styles.toggleButton}>
+        <div style={{display: 'flex', alignItems: 'center', justifyContent:"start"}}>
+        <button onClick={toggleSidebar} className={styles.toggleButton}>
               <svg xmlns="http://www.w3.org/2000/svg" fill="#1A1A1A" viewBox="0 0 30 30" width="30px" height="30px">
                 <path d="M 3 7 A 1.0001 1.0001 0 1 0 3 9 L 27 9 A 1.0001 1.0001 0 1 0 27 7 L 3 7 z M 3 14 A 1.0001 1.0001 0 1 0 3 16 L 27 16 A 1.0001 1.0001 0 1 0 27 14 L 3 14 z M 3 21 A 1.0001 1.0001 0 1 0 3 23 L 27 23 A 1.0001 1.0001 0 1 0 27 21 L 3 21 z"/>
               </svg>
-            </button>
+          </button>
           </div>
           <div className={styles.userProfile}>
             <span className={styles.userName}>{user.name || 'Guest'}</span>
@@ -899,29 +899,29 @@ export default function Dashboard() {
             </div>
           <section className={`${styles.section} ${styles.greetingSection}`}>
             
-            {coreMessage && (
-              <div className={styles.coreMessageSection}>
-                <div className={styles.coreMessageContainer}>
-                  <div className={styles.coreMessageHeader}>
-                    <h3>Your Core Marketing Message</h3>
-                    <button 
-                      onClick={() => fetchCoreMessage(true)}
-                      className={styles.refreshButton}
-                      disabled={isRefreshing}
+          {coreMessage && (
+            <div className={styles.coreMessageSection}>
+              <div className={styles.coreMessageContainer}>
+                <div className={styles.coreMessageHeader}>
+                  <h3>Your Core Marketing Message</h3>
+                  <button 
+                    onClick={() => fetchCoreMessage(true)}
+                    className={styles.refreshButton}
+                    disabled={isRefreshing}
+                  >
+                    <svg 
+                      width="20" 
+                      height="20" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2"
+                      className={isRefreshing ? styles.spinning : ''}
                     >
-                      <svg 
-                        width="20" 
-                        height="20" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2"
-                        className={isRefreshing ? styles.spinning : ''}
-                      >
-                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 3.4 0 6.3 2.1 7.4 5M22 12c0 4.4-3.6 8-8 8-3.4 0-6.3-2.1-7.4-5"/>
-                      </svg>
-                    </button>
-                  </div>
+                      <path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 3.4 0 6.3 2.1 7.4 5M22 12c0 4.4-3.6 8-8 8-3.4 0-6.3-2.1-7.4-5"/>
+                    </svg>
+                  </button>
+                </div>
                   <div className={styles.messageContainer}>
                     {isRefreshing ? (
                       <MessageSkeleton />
@@ -982,49 +982,49 @@ export default function Dashboard() {
                     </button>
                   </div>
 
-                  <div className={styles.chatInterface}>
-                    {messages.length > 0 && (
-                      <div className={styles.chatMessages}>
-                        {messages.map((message, index) => (
-                          <div key={index} className={`${styles.messageContainer} ${styles[message.type + 'Message']}`}>
-                            <div className={styles.messageContent}>
-                              {message.type === 'user' ? (
-                                  <p>{message.content}</p>
-                              ) : (
-                                  <button
-                                      className={styles.questionButton}
-                                      onClick={() => setInputMessage(message.content)}
-                                  >
-                                      {message.content}
-                                  </button>
-                              )}
-                            </div>
+                <div className={styles.chatInterface}>
+                  {messages.length > 0 && (
+                    <div className={styles.chatMessages}>
+                      {messages.map((message, index) => (
+                        <div key={index} className={`${styles.messageContainer} ${styles[message.type + 'Message']}`}>
+                          <div className={styles.messageContent}>
+                            {message.type === 'user' ? (
+                                <p>{message.content}</p>
+                            ) : (
+                                <button
+                                    className={styles.questionButton}
+                                    onClick={() => setInputMessage(message.content)}
+                                >
+                                    {message.content}
+                                </button>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    )}
-                    <div className={styles.inputContainer}>
-                      <input
-                        type="text"
-                        value={inputMessage}
-                        onChange={(e) => setInputMessage(e.target.value)}
-                        placeholder="Type your suggestions (e.g., 'make it more formal')"
-                        className={styles.messageInput}
-                        onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                        disabled={isRefreshing}
-                      />
-                      <button
-                        onClick={handleSendMessage}
-                        className={styles.sendButton}
-                        disabled={isRefreshing || !inputMessage.trim()}
-                      >
-                        {isRefreshing ? 'Refreshing...' : 'Send'}
-                      </button>
+                        </div>
+                      ))}
                     </div>
+                  )}
+                  <div className={styles.inputContainer}>
+                    <input
+                      type="text"
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      placeholder="Type your suggestions (e.g., 'make it more formal')"
+                      className={styles.messageInput}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                        disabled={isRefreshing}
+                    />
+                    <button
+                      onClick={handleSendMessage}
+                      className={styles.sendButton}
+                        disabled={isRefreshing || !inputMessage.trim()}
+                    >
+                        {isRefreshing ? 'Refreshing...' : 'Send'}
+                    </button>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
           </section>
         </div>
       </main>

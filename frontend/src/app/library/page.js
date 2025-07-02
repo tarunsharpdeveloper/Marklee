@@ -24,7 +24,15 @@ export default function Library() {
   const [isAssetPopupOpen, setIsAssetPopupOpen] = useState(false);
   const [selectedAssetType, setSelectedAssetType] = useState('');
   const [briefData, setBriefData] = useState({
-    audienceType: null
+    audienceType: null,
+    labelName: '',
+    whoTheyAre: '',
+    whatTheyWant: '',
+    whatTheyStruggle: '',
+    additionalInfo: '',
+    description: '',
+    whoItHelps: '',
+    problemItSolves: ''
   });
   const [currentBriefId, setCurrentBriefId] = useState(null);
   const [selectedAudienceId, setSelectedAudienceId] = useState(null);
@@ -514,9 +522,9 @@ export default function Library() {
                 ) : (
                   <>
                     <div className={styles.formGroup}>
-                      <label>How would you like to define your audience?</label>
+                      <h1>How would you like to define your audience?</h1>
                       <div className={styles.radioGroup}>
-                        <label className={`${styles.radioOption} ${briefData.audienceType === 'know' ? styles.selected : ''}`}>
+                        <div className={`${styles.radioOption} ${briefData.audienceType === 'know' ? styles.selected : ''}`}>
                           <input
                             type="radio"
                             name="audienceType"
@@ -530,10 +538,11 @@ export default function Library() {
                               whatTheyStruggle: '',
                               additionalInfo: ''
                             })}
+                            id="know"
                           />
-                          <span className={styles.radioLabel}>I know my audience</span>
-                        </label>
-                        <label className={`${styles.radioOption} ${briefData.audienceType === 'suggest' ? styles.selected : ''}`}>
+                          <label htmlFor="know" className={styles.radioLabel}>I know my audience</label>
+                        </div>
+                        <div className={`${styles.radioOption} ${briefData.audienceType === 'suggest' ? styles.selected : ''}`}>
                           <input
                             type="radio"
                             name="audienceType"
@@ -545,15 +554,15 @@ export default function Library() {
                               whoItHelps: '',
                               problemItSolves: ''
                             })}
+                            id="suggest"
                           />
-                          <span className={styles.radioLabel}>Suggest audiences for me</span>
-                        </label>
-                        
+                          <label htmlFor="suggest" className={styles.radioLabel}>Suggest audiences for me</label>
+                        </div>
                       </div>
                       {briefData.audienceType === 'know' && (
                       <div className={styles.questionsContainer}>
                         <div className={styles.formGroup}>
-                          <label>Label / Persona name</label>
+                          <h4>Label / Persona name</h4>
                           <textarea
                             value={briefData.labelName || ''}
                             onChange={(e) => setBriefData(prev => ({ ...prev, labelName: e.target.value }))}
@@ -561,15 +570,15 @@ export default function Library() {
                           />
                         </div>
                         <div className={styles.formGroup}>
-                          <label>Who they are (role, life stage, market segment)?</label>
+                          <h4>Who they are (role, life stage, market segment)?</h4>
                           <textarea
                             value={briefData.whoTheyAre || ''}
                             onChange={(e) => setBriefData(prev => ({ ...prev, whoTheyAre: e.target.value }))}
                             className={styles.textarea}
                           />
-                        </div>
+                    </div>
                         <div className={styles.formGroup}>
-                          <label>What they want (main goal or desired outcome)?</label>
+                          <h4>What they want (main goal or desired outcome)?</h4>
                           <textarea
                             value={briefData.whatTheyWant || ''}
                             onChange={(e) => setBriefData(prev => ({ ...prev, whatTheyWant: e.target.value }))}
@@ -577,7 +586,7 @@ export default function Library() {
                           />
                         </div>
                         <div className={styles.formGroup}>
-                          <label>What they struggle with (main pain point or problem)?</label>
+                          <h4>What they struggle with (main pain point or problem)?</h4>
                           <textarea
                             value={briefData.whatTheyStruggle || ''}
                             onChange={(e) => setBriefData(prev => ({ ...prev, whatTheyStruggle: e.target.value }))}
@@ -585,7 +594,7 @@ export default function Library() {
                           />
                         </div>
                         <div className={styles.formGroup}>
-                          <label>(Optional) Age, channels, purchasing power, etc.</label>
+                            <h4>(Optional) Age, channels, purchasing power, etc.</h4>
                           <textarea
                             value={briefData.additionalInfo || ''}
                             onChange={(e) => setBriefData(prev => ({ ...prev, additionalInfo: e.target.value }))}
@@ -599,7 +608,7 @@ export default function Library() {
                     {briefData.audienceType === 'suggest' && (
                       <div className={styles.questionsContainer}>
                         <div className={styles.formGroup}>
-                          <label>what it is and what it does?</label>
+                          <h4>what it is and what it does?</h4>
                           <textarea
                             value={briefData.description || ''}
                             onChange={(e) => setBriefData(prev => ({ ...prev, description: e.target.value }))}
@@ -607,7 +616,7 @@ export default function Library() {
                           />
                         </div>
                         <div className={styles.formGroup}>
-                          <label>Who it helps?</label>
+                          <h4>Who it helps?</h4>
                           <textarea
                             value={briefData.whoItHelps || ''}
                             onChange={(e) => setBriefData(prev => ({ ...prev, whoItHelps: e.target.value }))}
@@ -615,7 +624,7 @@ export default function Library() {
                           />
                         </div>
                         <div className={styles.formGroup}>
-                          <label>Problem it solves?</label>
+                          <h4>Problem it solves?</h4>
                           <textarea
                             value={briefData.problemItSolves || ''}
                             onChange={(e) => setBriefData(prev => ({ ...prev, problemItSolves: e.target.value }))}
@@ -646,24 +655,121 @@ export default function Library() {
             </button>
             <div className={styles.coreMessageContainer}>
               <div className={styles.coreMessageHeader}>
-                <h3>Generated {selectedAssetType}</h3>
+                <h3>Your Core Marketing Message</h3>
+                      <button 
+                  onClick={() => fetchCoreMessage(true)}
+                  className={styles.refreshButton}
+                  disabled={isRefreshing}
+                >
+                  <svg 
+                    width="20" 
+                    height="20" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2"
+                    className={isRefreshing ? styles.spinning : ''}
+                  >
+                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 3.4 0 6.3 2.1 7.4 5M22 12c0 4.4-3.6 8-8 8-3.4 0-6.3-2.1-7.4-5"/>
+                  </svg>
+                </button>
               </div>
               <div className={styles.messageContainer}>
-                <div className={styles.typewriterContainer}>
-                  {generatedContent.split('\n\n').map((section, index) => {
-                    if (section.includes(':')) {
-                      const [title, ...content] = section.split('\n');
-                      return (
-                        <div key={index}>
-                          <h4>{title}</h4>
-                          {content.map((line, i) => (
-                            <p key={i}>{line.trim()}</p>
-                          ))}
-                        </div>
-                      );
-                    }
-                    return <p key={index}>{section}</p>;
-                  })}
+                {isRefreshing ? (
+                  <div className={styles.skeleton}>
+                    <div className={styles.skeletonLine}></div>
+                    <div className={styles.skeletonLine}></div>
+                    <div className={styles.skeletonLine}></div>
+                    <div className={styles.skeletonLine}></div>
+                  </div>
+                ) : showTypewriter ? (
+                  <div className={styles.typewriterContainer}>
+                    <Typewriter
+                      words={[generatedContent]}
+                      loop={1}
+                      cursor
+                      cursorStyle=""
+                      typeSpeed={15}
+                      delaySpeed={500}
+                      onLoopDone={() => {
+                        setTimeout(() => setShowTypewriter(false), 500);
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className={styles.typewriterContainer}>
+                    {generatedContent.split('\n\n').map((section, index) => {
+                      if (section.includes(':')) {
+                        const [title, ...content] = section.split('\n');
+                        return (
+                          <div key={index}>
+                            <h4>{title}</h4>
+                            {content.map((line, i) => (
+                              <p key={i}>{line.trim()}</p>
+                            ))}
+                          </div>
+                        );
+                      }
+                      return <p key={index}>{section}</p>;
+                    })}
+                  </div>
+                )}
+              </div>
+              <div className={styles.messageOptions}>
+                <button 
+                  className={styles.optionButton}
+                  onClick={() => handleOptionClick('make it shorter')}
+                  disabled={isRefreshing}
+                >
+                  Make it shorter
+                      </button>
+                      <button 
+                  className={styles.optionButton}
+                  onClick={() => handleOptionClick('make it longer')}
+                  disabled={isRefreshing}
+                >
+                  Make it longer
+                </button>
+                <button 
+                  className={styles.optionButton}
+                  onClick={() => handleOptionClick('make it more professional')}
+                  disabled={isRefreshing}
+                >
+                  More professional
+                </button>
+                <button 
+                  className={styles.optionButton}
+                  onClick={() => handleOptionClick('make it more casual')}
+                  disabled={isRefreshing}
+                >
+                  More casual
+                      </button>
+                    </div>
+              <div className={styles.chatInterface}>
+                <div className={styles.chatMessages}>
+                  {messages.map((message, index) => (
+                    <div key={index} className={`${styles.messageContent} ${message.type === 'user' ? styles.userMessage : styles.aiMessage}`}>
+                      <p>{message.content}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className={styles.inputContainer}>
+                  <input
+                    type="text"
+                    className={styles.messageInput}
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    disabled={isRefreshing}
+                  />
+                  <button
+                    className={styles.sendButton}
+                    onClick={handleSendMessage}
+                    disabled={!inputMessage.trim() || isRefreshing}
+                  >
+                    Send
+                  </button>
                 </div>
               </div>
             </div>
@@ -672,11 +778,11 @@ export default function Library() {
         {audiences.length > 0 && !showGeneratedContent && (
           console.log(audiences),
           <div className={styles.audienceSegments}>
-            <button className={styles.backButton} onClick={handleBackFromAudience}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-              </svg>
-            </button>
+              <button className={styles.backButton} onClick={handleBackFromAudience}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+              </button>
             <div className={styles.audienceHeader}>
               <h3>Target Audience Segments</h3>
             </div>
@@ -687,23 +793,23 @@ export default function Library() {
                   <h4>{audience.name}</h4>
                   <p>{audience.description}</p>
                   <div className={styles.audienceActions}>
-                    <button
-                      className={styles.viewDetailsButton}
-                      onClick={() => handleViewAudience(audience)}
-                    >
-                      view
-                    </button>
-                    <button className={styles.generateDocumentButton} onClick={() => {
-                      setSelectedAudienceId(audience.id);
-                      setSelectedAssetType(audience.name);
-                      setIsAssetPopupOpen(true);
-                    }}>Generate <Image
-                      src="/GenerateDoc.png"
-                      alt="Marklee Logo"
-                      width={20}
-                      height={20}
-                      priority
-                    /></button>
+                  <button
+                    className={styles.viewDetailsButton}
+                    onClick={() => handleViewAudience(audience)}
+                  >
+                    view
+                  </button>
+                  <button className={styles.generateDocumentButton} onClick={() => {
+                    setSelectedAudienceId(audience.id);
+                    setSelectedAssetType(audience.name);
+                    setIsAssetPopupOpen(true);
+                  }}>Generate <Image
+                  src="/GenerateDoc.png"
+                  alt="Marklee Logo"
+                  width={20}
+                  height={20}
+                  priority
+                /></button>
                   </div>
                 </div>
               ))}
@@ -739,21 +845,26 @@ export default function Library() {
       }
 
       if (briefData.audienceType === 'know') {
-        // Start loading sequence
-        startLoadingSequence(loadingQuestions, setLoadingMessage);
+        // Validate required fields
+        if (!briefData.labelName || !briefData.whoTheyAre || !briefData.whatTheyWant || !briefData.whatTheyStruggle) {
+          throw new Error('Please fill in all required fields');
+        }
 
         // Add validation for selectedFolder
         if (!selectedFolder || !selectedFolder.id) {
           throw new Error('No folder selected. Please select a folder first.');
         }
 
+        // Start loading sequence
+        const loadingInterval = startLoadingSequence(loadingQuestions, setLoadingMessage);
+
         // Handle "I Know My Audience" path
         const response = await fetch('http://localhost:4000/api/marketing/generate-from-audience', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
           body: JSON.stringify({
             labelName: briefData.labelName,
             whoTheyAre: briefData.whoTheyAre,
@@ -766,13 +877,16 @@ export default function Library() {
         });
 
         if (!response.ok) {
+          clearInterval(loadingInterval);
           const errorData = await response.json();
           throw new Error(errorData.message || 'Failed to generate core message');
         }
 
         const data = await response.json();
+        clearInterval(loadingInterval);
         
         if (data.success) {
+          setGeneratedContent(data.data.coreMessage);
           setCoreMessage(data.data.coreMessage);
           setMessages(prevMessages => [
             ...prevMessages,
@@ -848,12 +962,12 @@ export default function Library() {
             
             // Update folder structure with new brief and audiences
             const folderKey = selectedFolder.name.toLowerCase().replace(/\s+/g, '_');
-            setFolderStructure(prev => {
+        setFolderStructure(prev => {
               const currentFolder = prev[folderKey] || {};
               const currentBriefs = currentFolder.briefs || [];
               
-              return {
-                ...prev,
+          return {
+            ...prev,
                 [folderKey]: {
                   ...currentFolder,
                   briefs: [
@@ -863,9 +977,9 @@ export default function Library() {
                       audiences: data.data.audiences
                     }
                   ]
-                }
-              };
-            });
+            }
+          };
+        });
           }
         }
       }
@@ -1131,6 +1245,61 @@ export default function Library() {
         content: 'Sorry, I encountered an error. Please try again.',
         type: 'ai'
       }]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleOptionClick = async (option) => {
+    setIsRefreshing(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/');
+        return;
+      }
+
+      const response = await fetch('http://localhost:4000/api/marketing/generate-with-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          formData: {
+            labelName: briefData.labelName,
+            whoTheyAre: briefData.whoTheyAre,
+            whatTheyWant: briefData.whatTheyWant,
+            whatTheyStruggle: briefData.whatTheyStruggle,
+            additionalInfo: briefData.additionalInfo
+          },
+          currentMessage: generatedContent,
+          userPrompt: option
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to modify message');
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setGeneratedContent(data.data.coreMessage);
+        setCoreMessage(data.data.coreMessage);
+        setShowTypewriter(true);
+        
+        // Add AI response to chat if available
+        if (data.data.chatResponse) {
+          setMessages(prev => [...prev, {
+            content: data.data.chatResponse,
+            type: 'ai'
+          }]);
+        }
+      }
+    } catch (error) {
+      console.error('Error modifying message:', error);
+      setError('Failed to modify message. Please try again.');
     } finally {
       setIsRefreshing(false);
     }
