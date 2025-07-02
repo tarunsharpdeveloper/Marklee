@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import emailService from '../utils/emailService.js';
 import bcrypt from 'bcrypt';
 import UserMetadata from '../models/UserMetadata.js';
+import UserOnboarding from '../models/UserOnboarding.js';
 
 class AuthController {
   async register(req, res) {
@@ -100,7 +101,7 @@ class AuthController {
       let isUserMetaData = true;
 
       if(user.role !== 'admin'){
-        const metadata = await UserMetadata.findByUserId(user.id);
+        const metadata = await UserOnboarding.findByUserId(user.id);
         isUserMetaData = metadata ? true : false;
       }
 

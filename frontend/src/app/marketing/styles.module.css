@@ -1,0 +1,396 @@
+.container {
+    min-height: 100vh;
+    background-color: #ffffff;
+    /* padding-bottom: 2rem; */
+    background: url('/BackgroundPREHOME.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    /* margin-top: 4rem; */
+}
+
+.formContainer {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 30px;
+    padding: 3rem;
+    margin-top: 4rem;
+    box-shadow: 
+        20px 20px 60px rgba(0, 0, 0, 0.15),
+        -20px -20px 60px rgba(255, 255, 255, 0.8);
+}
+
+.formContainer h2 {
+    color: #1e293b;
+    font-size: 2.25rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: relative;
+}
+
+.inputGroup label {
+    font-weight: 600;
+    color: #334155;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.inputGroup label::after {
+    content: '*';
+    color: #8075ff;
+    margin-left: 2px;
+    font-size: 1.2em;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.inputGroup label[data-required="true"]::after {
+    opacity: 1;
+}
+
+.inputGroup input,
+.inputGroup textarea {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    border: 2px solid transparent;
+    border-radius: 15px;
+    font-size: 1rem;
+    color: #1e293b;
+    background: #f8fafc;
+    box-shadow: 
+        inset 2px 2px 5px rgba(0, 0, 0, 0.05),
+        inset -2px -2px 5px rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+}
+
+.inputGroup input:hover,
+.inputGroup textarea:hover {
+    background: #f1f5f9;
+}
+
+.inputGroup input:focus,
+.inputGroup textarea:focus {
+    outline: none;
+    border-color: #8075ff;
+    background: #ffffff;
+    box-shadow: 
+        0 0 0 3px rgba(128, 117, 255, 0.1),
+        inset 2px 2px 5px rgba(0, 0, 0, 0.02),
+        inset -2px -2px 5px rgba(255, 255, 255, 0.6);
+}
+
+.inputGroup textarea {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.guidance {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.guidance::before {
+    content: 'ℹ️';
+    position: absolute;
+    left: 0;
+    opacity: 0.7;
+}
+
+.buttonContainer {
+    margin-top: 3rem;
+    display: flex;
+    justify-content: center;
+}
+
+.continueButton {
+    background-color: #8075ff;
+    color: white;
+    padding: 1rem 3rem;
+    border: none;
+    border-radius: 15px;
+    font-size: 1.125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 
+        5px 5px 10px rgba(0, 0, 0, 0.1),
+        -5px -5px 10px rgba(255, 255, 255, 0.8);
+    position: relative;
+    overflow: hidden;
+}
+
+.continueButton::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    transition: 0.5s;
+}
+
+.continueButton:hover {
+    transform: translateY(-2px);
+    background-color: #6c63e6;
+    box-shadow: 
+        8px 8px 15px rgba(0, 0, 0, 0.1),
+        -8px -8px 15px rgba(255, 255, 255, 0.8);
+}
+
+.continueButton:hover::before {
+    left: 100%;
+}
+
+.continueButton:active {
+    transform: translateY(1px);
+    box-shadow: 
+        3px 3px 8px rgba(0, 0, 0, 0.1),
+        -3px -3px 8px rgba(255, 255, 255, 0.8);
+}
+
+.error {
+    background: #fef2f2;
+    border-left: 4px solid #dc2626;
+    padding: 1rem;
+    color: #dc2626;
+    border-radius: 0 10px 10px 0;
+    font-size: 0.875rem;
+    margin-top: 1rem;
+    animation: slideIn 0.3s ease;
+}
+
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 1.5rem;
+}
+
+.loadingSpinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #8075ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 640px) {
+    .formContainer {
+        padding: 2rem;
+        margin-top: 2rem;
+        border-radius: 20px;
+    }
+
+    .formContainer h2 {
+        font-size: 1.75rem;
+    }
+
+    .continueButton {
+        width: 100%;
+        padding: 0.875rem 2rem;
+    }
+}
+
+.loaderContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+}
+
+.loader {
+    border: 4px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 4px solid #0070f3;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loaderContainer p {
+    color: #666;
+    font-size: 1.1rem;
+    margin-top: 1rem;
+}
+
+.errorContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: 2rem;
+}
+
+.errorContainer h2 {
+    color: #dc3545;
+    margin-bottom: 1rem;
+}
+
+.errorContainer p {
+    color: #666;
+    margin-bottom: 1.5rem;
+}
+
+.retryButton {
+    background-color: #0070f3;
+    color: white;
+    border: none;
+    padding: 0.8rem 2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.retryButton:hover {
+    background-color: #0051b3;
+}
+
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: calc(100vh - 80px);
+    background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+}
+
+.loadingSpinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #0070f3;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 20px;
+}
+
+.loadingContainer p {
+    font-size: 1rem;
+    color: #666;
+    font-weight: 500;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.validationMessage {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    border: 1px solid #ffeeba;
+}
+
+.errorMessage {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    border: 1px solid #f5c6cb;
+}
+
+.missingField label {
+    color: #dc3545;
+}
+
+.missingInput {
+    border-color: #dc3545 !important;
+    background-color: #fff8f8;
+}
+
+.requiredIndicator {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-left: 0.25rem;
+}
+
+.missingField textarea,
+.missingField input {
+    border-color: #dc3545;
+}
+
+.missingField textarea:focus,
+.missingField input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    border-color: #dc3545;
+}
+
+.inputWithGuidance {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.fieldGuidance {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+} 

@@ -106,7 +106,7 @@ export const Signup = ({ isOpen, onClose, onBack }) => {
         onVerificationSuccess={() => {
           // Close modal and redirect to pre-homepage
           onClose();
-          router.push('/pre-homepage');
+          router.push('/marketing');
         }}
         onClose={onClose}
       />

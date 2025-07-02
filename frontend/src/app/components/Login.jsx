@@ -58,7 +58,7 @@ export const Login = ({ isOpen, onClose }) => {
           router.push('/usermanagement');
         } else {
           // If user has completed onboarding, go to dashboard, otherwise go to pre-homepage
-          router.push(data.isUserMetaData ? '/dashboard' : '/pre-homepage');
+          router.push(data.isUserMetaData ? '/dashboard' : '/marketing');
         }
       }, 2000);
 
@@ -83,7 +83,7 @@ export const Login = ({ isOpen, onClose }) => {
       onVerificationSuccess={() => {
         setShowVerification(false);
         onClose();
-        router.push('/pre-homepage');
+        router.push('/marketing');
       }}
       onBack={() => setShowVerification(false)}
       onClose={onClose}

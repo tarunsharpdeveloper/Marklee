@@ -2,7 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Typewriter } from 'react-simple-typewriter';
 import styles from './styles.module.css';
+
+const MessageSkeleton = () => (
+  <div className={styles.skeleton}>
+    <div className={styles.skeletonLine}></div>
+    <div className={styles.skeletonLine}></div>
+    <div className={styles.skeletonLine}></div>
+    <div className={styles.skeletonLine}></div>
+  </div>
+);
 
 export default function Dashboard() {
   const router = useRouter();
@@ -19,6 +29,13 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [coreMessage, setCoreMessage] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [showTypewriter, setShowTypewriter] = useState(false);
+  const [newMessage, setNewMessage] = useState('');
 
   const [folderStructure, setFolderStructure] = useState({
   
@@ -85,6 +102,68 @@ export default function Dashboard() {
     };
   }, [isLoading]);
 
+  const fetchCoreMessage = async (shouldRefresh = false) => {
+    try {
+      setIsRefreshing(true);
+      setShowTypewriter(false);
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const onboardingResponse = await fetch('http://localhost:4000/api/onboarding/get', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!onboardingResponse.ok) {
+        throw new Error('Failed to fetch onboarding data');
+      }
+
+      const { data } = await onboardingResponse.json();
+      
+      if (shouldRefresh && data) {
+        const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+
+        const marketingResponse = await fetch(`http://localhost:4000/api/marketing/generate?refresh=true`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (!marketingResponse.ok) {
+          throw new Error('Failed to generate new marketing content');
+        }
+
+        const marketingData = await marketingResponse.json();
+        
+        await fetch('http://localhost:4000/api/onboarding/core-message', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ coreMessage: marketingData.data.coreMessage })
+        });
+
+        setCoreMessage(marketingData.data.coreMessage);
+        setShowTypewriter(true);
+      } else if (data && data.core_message) {
+        setCoreMessage(data.core_message);
+      }
+    } catch (error) {
+      console.error('Error fetching core message:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCoreMessage();
+  }, []); // Empty dependency array means this runs once on mount
+
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('token');
@@ -94,20 +173,7 @@ export default function Dashboard() {
       }
 
       try {
-        const response = await fetch('http://localhost:4000/api/onboarding/get', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        const data = await response.json();
-        
-        if (!response.ok || !data.data) {
-          router.push('/pre-homepage');
-          return;
-        }
-
-        // Set user data if everything is ok
+        // Set user data from localStorage
         const userData = JSON.parse(localStorage.getItem('user'));
         if (userData) {
           setUser({
@@ -315,6 +381,180 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
       setIsLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim()) return;
+
+    // Add user message to chat
+    setMessages(prev => [...prev, {
+        content: inputMessage,
+        type: 'user'
+    }]);
+    setInputMessage('');
+    setIsSending(true);
+    setIsRefreshing(true);
+
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            router.push('/');
+            return;
+        }
+
+        // First get the onboarding data
+        const onboardingResponse = await fetch('http://localhost:4000/api/onboarding/get', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!onboardingResponse.ok) {
+            throw new Error('Failed to fetch onboarding data');
+        }
+
+        const { data } = await onboardingResponse.json();
+        const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+
+        // Now make the generate request with the form data
+        const response = await fetch('http://localhost:4000/api/marketing/generate-with-prompt', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                formData,
+                currentMessage: coreMessage,
+                userPrompt: inputMessage
+            })
+        });
+
+        const marketingData = await response.json();
+        
+        if (marketingData.success) {
+            // Update core message silently
+            setCoreMessage(marketingData.data.coreMessage);
+            
+            // Save the new core message to the database
+            await fetch('http://localhost:4000/api/onboarding/core-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ coreMessage: marketingData.data.coreMessage })
+            });
+
+            // Add AI response with questions to chat
+            setMessages(prev => [...prev, {
+                content: marketingData.data.chatResponse,
+                type: 'ai'
+            }]);
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        // Show error message in chat
+        setMessages(prev => [...prev, {
+            content: 'Sorry, I encountered an error. Please try again.',
+            type: 'ai'
+        }]);
+    } finally {
+        setIsSending(false);
+        setIsRefreshing(false);
+    }
+  };
+
+  // Add effect to handle message updates
+  useEffect(() => {
+    if (coreMessage && !isRefreshing) {
+      setNewMessage(coreMessage);
+      setShowTypewriter(true);
+    }
+  }, [coreMessage, isRefreshing]);
+
+  const handleOptionClick = async (optionType) => {
+    try {
+      setIsRefreshing(true);
+      setShowTypewriter(false);
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const onboardingResponse = await fetch('http://localhost:4000/api/onboarding/get', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!onboardingResponse.ok) {
+        throw new Error('Failed to fetch onboarding data');
+      }
+
+      const { data } = await onboardingResponse.json();
+      
+      if (data) {
+        const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+
+        let modificationPrompt = '';
+        switch(optionType) {
+          case 'shorter':
+            modificationPrompt = 'Make this message shorter and punchier while keeping the main point';
+            break;
+          case 'tone':
+            modificationPrompt = 'Make this message more friendly and confident';
+            break;
+          case 'emphasis':
+            modificationPrompt = 'Emphasize the benefits and value more';
+            break;
+          case 'alternative':
+            modificationPrompt = 'Give me an alternative version with a different angle';
+            break;
+          case 'fresh':
+            modificationPrompt = 'Rewrite this with a fresh perspective';
+            break;
+          default:
+            break;
+        }
+
+        // Add the current core message and modification request to the form data
+        formData.currentMessage = coreMessage;
+        formData.modificationRequest = modificationPrompt;
+        formData.additionalInfo = `Please modify this core message: "${coreMessage}". ${modificationPrompt}`;
+
+        const marketingResponse = await fetch(`http://localhost:4000/api/marketing/generate?refresh=true`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (!marketingResponse.ok) {
+          throw new Error('Failed to generate new marketing content');
+        }
+
+        const marketingData = await marketingResponse.json();
+        
+        if (marketingData.success && marketingData.data) {
+          setCoreMessage(marketingData.data.coreMessage);
+          setShowTypewriter(true);
+          
+          await fetch('http://localhost:4000/api/onboarding/core-message', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ coreMessage: marketingData.data.coreMessage })
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error modifying message:', error);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -635,7 +875,7 @@ export default function Dashboard() {
         </div>
       </aside>
       <main className={`${styles.main} ${isSidebarCollapsed ? styles.collapsedMain : ''}`}>
-        <header className={`${styles.header} ${isSidebarCollapsed ? styles.collapsed : ''}`}>
+        <header className={`${styles.header} ${isSidebarCollapsed ? styles.collapsedHeader : ''}`}>
         <div style={{display: 'flex', alignItems: 'center', justifyContent:"start"}}>
         <button onClick={toggleSidebar} className={styles.toggleButton}>
               <svg xmlns="http://www.w3.org/2000/svg" fill="#1A1A1A" viewBox="0 0 30 30" width="30px" height="30px">
@@ -649,17 +889,142 @@ export default function Dashboard() {
           </div>
         </header>
         <div className={styles.sections}>
-          <section className={`${styles.section} ${styles.greetingSection}`}>
-            <div className={styles.greetingContainer}>
-              <h1>Welcome back, {user.name?.split(' ')[0] || 'Guest'}!</h1>
-              <p>Ready to create something amazing?</p>
+        <div className={styles.greetingContainer}>
               <button 
-                className={styles.createButton}
+                className={styles.createProjectButton}
                 onClick={() => setIsProjectPopupOpen(true)}
               >
                 Create New Project
               </button>
             </div>
+          <section className={`${styles.section} ${styles.greetingSection}`}>
+            
+          {coreMessage && (
+            <div className={styles.coreMessageSection}>
+              <div className={styles.coreMessageContainer}>
+                <div className={styles.coreMessageHeader}>
+                  <h3>Your Core Marketing Message</h3>
+                  <button 
+                    onClick={() => fetchCoreMessage(true)}
+                    className={styles.refreshButton}
+                    disabled={isRefreshing}
+                  >
+                    <svg 
+                      width="20" 
+                      height="20" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2"
+                      className={isRefreshing ? styles.spinning : ''}
+                    >
+                      <path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 3.4 0 6.3 2.1 7.4 5M22 12c0 4.4-3.6 8-8 8-3.4 0-6.3-2.1-7.4-5"/>
+                    </svg>
+                  </button>
+                </div>
+                  <div className={styles.messageContainer}>
+                    {isRefreshing ? (
+                      <MessageSkeleton />
+                    ) : showTypewriter ? (
+                      <div className={styles.typewriterContainer}>
+                        <Typewriter
+                          words={[coreMessage]}
+                          loop={1}
+                          cursor
+                          cursorStyle=""
+                          typeSpeed={15}
+                          delaySpeed={500}
+                          onLoopDone={() => {
+                            setTimeout(() => setShowTypewriter(false), 500);
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <p className={styles.fadeIn}>{coreMessage}</p>
+                    )}
+                  </div>
+                  
+                  <div className={styles.messageOptions}>
+                    <button 
+                      className={styles.optionButton} 
+                      onClick={() => handleOptionClick('shorter')}
+                      disabled={isRefreshing}
+                    >
+                      Make it Shorter
+                    </button>
+                    <button 
+                      className={styles.optionButton} 
+                      onClick={() => handleOptionClick('tone')}
+                      disabled={isRefreshing}
+                    >
+                      Adjust Tone
+                    </button>
+                    <button 
+                      className={styles.optionButton} 
+                      onClick={() => handleOptionClick('emphasis')}
+                      disabled={isRefreshing}
+                    >
+                      Add Emphasis
+                    </button>
+                    <button 
+                      className={styles.optionButton} 
+                      onClick={() => handleOptionClick('alternative')}
+                      disabled={isRefreshing}
+                    >
+                      Try Alternative
+                    </button>
+                    <button 
+                      className={styles.optionButton} 
+                      onClick={() => handleOptionClick('fresh')}
+                      disabled={isRefreshing}
+                    >
+                      Fresh Perspective
+                    </button>
+                  </div>
+
+                <div className={styles.chatInterface}>
+                  {messages.length > 0 && (
+                    <div className={styles.chatMessages}>
+                      {messages.map((message, index) => (
+                        <div key={index} className={`${styles.messageContainer} ${styles[message.type + 'Message']}`}>
+                          <div className={styles.messageContent}>
+                            {message.type === 'user' ? (
+                                <p>{message.content}</p>
+                            ) : (
+                                <button
+                                    className={styles.questionButton}
+                                    onClick={() => setInputMessage(message.content)}
+                                >
+                                    {message.content}
+                                </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className={styles.inputContainer}>
+                    <input
+                      type="text"
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      placeholder="Type your suggestions (e.g., 'make it more formal')"
+                      className={styles.messageInput}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                        disabled={isRefreshing}
+                    />
+                    <button
+                      onClick={handleSendMessage}
+                      className={styles.sendButton}
+                        disabled={isRefreshing || !inputMessage.trim()}
+                    >
+                        {isRefreshing ? 'Refreshing...' : 'Send'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           </section>
         </div>
       </main>
