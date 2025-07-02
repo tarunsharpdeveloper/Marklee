@@ -1,4 +1,4 @@
-name: Publish Website to CloudPanel
+name: Publish Website to CloudPanel 
 
 on:
   push:
