@@ -15,9 +15,9 @@ jobs:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: "147.93.84.179"
+          host: ${{ secrets.SSH_HOST }}
           username: "marklee-api"
-          password: "SEjjJizU44oZrdXmhRY9"
+          password: ${{ secrets.BE_SSH_PASSWORD }}
           port: 22
           script: |
             cd htdocs/api.marklee.ai/Marklee
