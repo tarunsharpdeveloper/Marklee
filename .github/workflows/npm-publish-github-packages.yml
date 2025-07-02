@@ -1,4 +1,4 @@
-name: Deploy via SSH to Node.js Server
+name: Deploy to Server
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Deploy to Server 1
+      - name: Deploy to Backend
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -34,10 +34,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Deploy to Server 2
+      - name: Deploy Frontend
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ secrets.SSH_HOST_2 }}
+          host: ${{ secrets.SSH_HOST }}
           username: "marklee-aap"
           password: ${{ secrets.FE_SSH_PASSWORD }}
           port: 22
