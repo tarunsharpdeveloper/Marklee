@@ -12,7 +12,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Ensures git history is available
+          fetch-depth: 0
 
       - name: FTP Deploy
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
