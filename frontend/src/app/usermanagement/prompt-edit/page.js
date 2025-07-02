@@ -367,7 +367,7 @@ export default function PromptEdit() {
                                         ))}
                                     </div>
                                     <div className={styles.updatedAt}>
-                                        Updated: {prompt.updatedAt}
+                                        {/* Updated: {prompt.updatedAt} */}
                                     </div>
                                 </div>
                             </div>
