@@ -20,6 +20,8 @@ jobs:
           password: ${{ secrets.BE_SSH_PASSWORD }}
           port: 22
           script: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             cd htdocs/api.marklee.ai/Marklee
             git pull origin main
             cd Backend
