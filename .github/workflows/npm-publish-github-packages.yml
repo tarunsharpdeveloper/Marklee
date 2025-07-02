@@ -1,4 +1,4 @@
-name: Publish Website to CPanel
+name: Publish Website to Cloud Panel
 
 on:
   push:
@@ -6,20 +6,17 @@ on:
       - main
 
 jobs:
-  SFTP-Deploy:
+  FTP-Deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Ensures git history is available
 
-      - name: Deploy via SFTP
-        uses: appleboy/scp-action@v0.1.7
+      - name: FTP Deploy
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          host: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: 22  # default SFTP port; adjust if needed
-          source: "."  # adjust paths as needed
-          target: "."  # your web root on the server
+            server: ${{ secrets.FTP_SERVER }}
+            username: ${{ secrets.FTP_USERNAME }}
+            password: ${{ secrets.FTP_PASSWORD }}
