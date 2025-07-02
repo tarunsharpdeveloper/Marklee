@@ -14,5 +14,6 @@ router.get('/form', marketingController.getFormFields);
 router.post('/generate', marketingController.generateMarketingContent);
 router.post('/generate-with-prompt', marketingController.generateMarketingContentWithPrompt);
 router.post('/generate-from-audience', marketingController.generateFromAudience);
+router.post('/generate-suggested-audiences', marketingController.generateSuggestedAudiences);
 
 export default router; 

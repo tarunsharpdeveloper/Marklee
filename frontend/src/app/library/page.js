@@ -561,7 +561,7 @@ export default function Library() {
                           />
                         </div>
                         <div className={styles.formGroup}>
-                          <label>Who they are (role, life stage, market segment)</label>
+                          <label>Who they are (role, life stage, market segment)?</label>
                           <textarea
                             value={briefData.whoTheyAre || ''}
                             onChange={(e) => setBriefData(prev => ({ ...prev, whoTheyAre: e.target.value }))}
@@ -569,7 +569,7 @@ export default function Library() {
                           />
                         </div>
                         <div className={styles.formGroup}>
-                          <label>What they want (main goal or desired outcome)</label>
+                          <label>What they want (main goal or desired outcome)?</label>
                           <textarea
                             value={briefData.whatTheyWant || ''}
                             onChange={(e) => setBriefData(prev => ({ ...prev, whatTheyWant: e.target.value }))}
@@ -577,7 +577,7 @@ export default function Library() {
                           />
                         </div>
                         <div className={styles.formGroup}>
-                          <label>What they struggle with (main pain point or problem)</label>
+                          <label>What they struggle with (main pain point or problem)?</label>
                           <textarea
                             value={briefData.whatTheyStruggle || ''}
                             onChange={(e) => setBriefData(prev => ({ ...prev, whatTheyStruggle: e.target.value }))}
@@ -599,7 +599,7 @@ export default function Library() {
                     {briefData.audienceType === 'suggest' && (
                       <div className={styles.questionsContainer}>
                         <div className={styles.formGroup}>
-                          <label>Description – what it is and what it does</label>
+                          <label>what it is and what it does?</label>
                           <textarea
                             value={briefData.description || ''}
                             onChange={(e) => setBriefData(prev => ({ ...prev, description: e.target.value }))}
@@ -607,7 +607,7 @@ export default function Library() {
                           />
                         </div>
                         <div className={styles.formGroup}>
-                          <label>Who it helps</label>
+                          <label>Who it helps?</label>
                           <textarea
                             value={briefData.whoItHelps || ''}
                             onChange={(e) => setBriefData(prev => ({ ...prev, whoItHelps: e.target.value }))}
@@ -615,13 +615,14 @@ export default function Library() {
                           />
                         </div>
                         <div className={styles.formGroup}>
-                          <label>Problem it solves</label>
+                          <label>Problem it solves?</label>
                           <textarea
                             value={briefData.problemItSolves || ''}
                             onChange={(e) => setBriefData(prev => ({ ...prev, problemItSolves: e.target.value }))}
                             className={styles.textarea}
                           />
                         </div>
+                        <button className={styles.submitButton} type="submit" onClick={handleBriefSubmit}>Generate</button>
                       </div>
                     )}
                     </div>
@@ -633,113 +634,36 @@ export default function Library() {
             )}
           </div>
         )}
-        {showGeneratedContent && coreMessage && (
+        {showGeneratedContent && (
           <div className={styles.coreMessageSection}>
-            <button className={styles.backButton} onClick={handleBackFromAudience}>
+            <button className={styles.backButton} onClick={() => {
+              setShowGeneratedContent(false);
+              setGeneratedContent('');
+            }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
               </svg>
             </button>
             <div className={styles.coreMessageContainer}>
               <div className={styles.coreMessageHeader}>
-                <h3>Your Core Marketing Message</h3>
-                <button 
-                  onClick={() => fetchCoreMessage(true)}
-                  className={styles.refreshButton}
-                  disabled={isRefreshing}
-                >
-                  <svg 
-                    width="20" 
-                    height="20" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2"
-                    className={isRefreshing ? styles.spinning : ''}
-                  >
-                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 3.4 0 6.3 2.1 7.4 5M22 12c0 4.4-3.6 8-8 8-3.4 0-6.3-2.1-7.4-5"/>
-                  </svg>
-                </button>
+                <h3>Generated {selectedAssetType}</h3>
               </div>
               <div className={styles.messageContainer}>
-                {isRefreshing ? (
-                  <div className={styles.skeleton}>
-                    <div className={styles.skeletonLine} style={{ width: '100%' }}></div>
-                    <div className={styles.skeletonLine} style={{ width: '90%' }}></div>
-                    <div className={styles.skeletonLine} style={{ width: '95%' }}></div>
-                  </div>
-                ) : showTypewriter ? (
-                  <div className={styles.typewriterContainer}>
-                    <Typewriter
-                      words={[coreMessage]}
-                      loop={1}
-                      cursor
-                      cursorStyle=""
-                      typeSpeed={15}
-                      delaySpeed={500}
-                      onLoopDone={() => {
-                        setTimeout(() => setShowTypewriter(false), 500);
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className={styles.typewriterContainer}>
-                    {coreMessage.split('\n\n').map((section, index) => {
-                      if (section.includes(':')) {
-                        const [title, ...content] = section.split('\n');
-                        return (
-                          <div key={index}>
-                            <h4>{title}</h4>
-                            {content.map((line, i) => (
-                              <p key={i}>{line.trim()}</p>
-                            ))}
-                          </div>
-                        );
-                      }
-                      return <p key={index}>{section}</p>;
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div className={styles.chatInterface}>
-                {messages.length > 0 && (
-                  <div className={styles.chatMessages}>
-                    {messages.map((message, index) => (
-                      <div key={index} className={`${styles.messageContainer} ${styles[message.type + 'Message']}`}>
-                        <div className={styles.messageContent}>
-                          {message.type === 'user' ? (
-                            <p>{message.content}</p>
-                          ) : (
-                            <button
-                              className={styles.questionButton}
-                              onClick={() => setInputMessage(message.content)}
-                            >
-                              {message.content}
-                            </button>
-                          )}
+                <div className={styles.typewriterContainer}>
+                  {generatedContent.split('\n\n').map((section, index) => {
+                    if (section.includes(':')) {
+                      const [title, ...content] = section.split('\n');
+                      return (
+                        <div key={index}>
+                          <h4>{title}</h4>
+                          {content.map((line, i) => (
+                            <p key={i}>{line.trim()}</p>
+                          ))}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div className={styles.inputContainer}>
-                  <input
-                    type="text"
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    placeholder="Type your suggestions (e.g., 'make it more formal')"
-                    className={styles.messageInput}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    disabled={isRefreshing}
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    className={styles.sendButton}
-                    disabled={isRefreshing || !inputMessage.trim()}
-                  >
-                    {isRefreshing ? 'Refreshing...' : 'Send'}
-                  </button>
+                      );
+                    }
+                    return <p key={index}>{section}</p>;
+                  })}
                 </div>
               </div>
             </div>
@@ -748,14 +672,11 @@ export default function Library() {
         {audiences.length > 0 && !showGeneratedContent && (
           console.log(audiences),
           <div className={styles.audienceSegments}>
-           
-              <button className={styles.backButton} onClick={handleBackFromAudience}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-                
-              </button>
-          
+            <button className={styles.backButton} onClick={handleBackFromAudience}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+            </button>
             <div className={styles.audienceHeader}>
               <h3>Target Audience Segments</h3>
             </div>
@@ -766,23 +687,23 @@ export default function Library() {
                   <h4>{audience.name}</h4>
                   <p>{audience.description}</p>
                   <div className={styles.audienceActions}>
-                  <button
-                    className={styles.viewDetailsButton}
-                    onClick={() => handleViewAudience(audience)}
-                  >
-                    view
-                  </button>
-                  <button className={styles.generateDocumentButton} onClick={() => {
-                    setSelectedAudienceId(audience.id);
-                    setSelectedAssetType(audience.name);
-                    setIsAssetPopupOpen(true);
-                  }}>Generate <Image
-                  src="/GenerateDoc.png"
-                  alt="Marklee Logo"
-                  width={20}
-                  height={20}
-                  priority
-                /></button>
+                    <button
+                      className={styles.viewDetailsButton}
+                      onClick={() => handleViewAudience(audience)}
+                    >
+                      view
+                    </button>
+                    <button className={styles.generateDocumentButton} onClick={() => {
+                      setSelectedAudienceId(audience.id);
+                      setSelectedAssetType(audience.name);
+                      setIsAssetPopupOpen(true);
+                    }}>Generate <Image
+                      src="/GenerateDoc.png"
+                      alt="Marklee Logo"
+                      width={20}
+                      height={20}
+                      priority
+                    /></button>
                   </div>
                 </div>
               ))}
@@ -821,6 +742,11 @@ export default function Library() {
         // Start loading sequence
         startLoadingSequence(loadingQuestions, setLoadingMessage);
 
+        // Add validation for selectedFolder
+        if (!selectedFolder || !selectedFolder.id) {
+          throw new Error('No folder selected. Please select a folder first.');
+        }
+
         // Handle "I Know My Audience" path
         const response = await fetch('http://localhost:4000/api/marketing/generate-from-audience', {
           method: 'POST',
@@ -833,124 +759,122 @@ export default function Library() {
             whoTheyAre: briefData.whoTheyAre,
             whatTheyWant: briefData.whatTheyWant,
             whatTheyStruggle: briefData.whatTheyStruggle,
-            additionalInfo: briefData.additionalInfo
+            additionalInfo: briefData.additionalInfo,
+            projectId: selectedFolder.id,
+            projectName: selectedFolder.name
           })
         });
 
         if (!response.ok) {
-          throw new Error('Failed to generate core message');
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to generate core message');
         }
 
         const data = await response.json();
         
         if (data.success) {
-          // Save the core message
-          await fetch('http://localhost:4000/api/onboarding/core-message', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ coreMessage: data.data.coreMessage })
-          });
-
-          // Hide the form and show the core message
-          setIsBriefFormOpen(false);
           setCoreMessage(data.data.coreMessage);
+          setMessages(prevMessages => [
+            ...prevMessages,
+            { type: 'assistant', content: data.data.chatResponse }
+          ]);
           setShowTypewriter(true);
-          
-          // Initialize chat with the first AI message
-          setMessages([{
-            content: data.data.chatResponse,
-            type: 'ai'
-          }]);
-
-          // Show the core message section
           setShowGeneratedContent(true);
+
+          // If we have brief and audience data, update the folder structure
+          if (data.data.brief && data.data.audience) {
+            setCurrentBriefId(data.data.brief.id);
+            
+            // Update folder structure with new brief and audience
+            const folderKey = selectedFolder.name.toLowerCase().replace(/\s+/g, '_');
+            setFolderStructure(prev => {
+              const currentFolder = prev[folderKey] || {};
+              const currentBriefs = currentFolder.briefs || [];
+              
+              return {
+                ...prev,
+                [folderKey]: {
+                  ...currentFolder,
+                  briefs: [
+                    ...currentBriefs,
+                    {
+                      ...data.data.brief,
+                      audiences: [data.data.audience]
+                    }
+                  ]
+                }
+              };
+            });
+          }
         }
       } else {
         // Handle "Suggest audiences for me" path
-        const cleanBriefData = {
-          projectId: selectedFolder.id,
-          projectName: selectedFolder.name,
-          ...briefData
-        };
+        // Start loading sequence
+        startLoadingSequence(loadingQuestions, setLoadingMessage);
 
-        const response = await fetch('http://localhost:4000/api/brief', {
+        // Add validation for selectedFolder
+        if (!selectedFolder || !selectedFolder.id) {
+          throw new Error('No folder selected. Please select a folder first.');
+        }
+
+        const response = await fetch('http://localhost:4000/api/marketing/generate-suggested-audiences', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(cleanBriefData)
+          body: JSON.stringify({
+            description: briefData.description,
+            whoItHelps: briefData.whoItHelps,
+            problemItSolves: briefData.problemItSolves,
+            projectId: selectedFolder.id,
+            projectName: selectedFolder.name
+          })
         });
 
-        const responseData = await response.json();
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to generate audience suggestions');
+        }
 
-        if (response.ok) {
-          setCurrentBriefId(responseData.data.brief.id);
-          const newAudiences = responseData.data.audiences.map(audience => {
-            let name = 'Audience Segment';
-            let description = '';
-            try {
-              const segmentData = JSON.parse(audience.segment);
-              if (typeof segmentData === 'object' && segmentData !== null) {
-                name = segmentData.name || 'Untitled Segment';
-                description = segmentData.description || '';
-              } else if (typeof segmentData === 'string') {
-                name = segmentData;
-                try {
-                  const insightsData = JSON.parse(audience.insights);
-                  if (Array.isArray(insightsData)) {
-                    description = insightsData.join(' ');
-                  } else if (typeof insightsData === 'object' && insightsData !== null) {
-                    description = getAllValues(insightsData).join(' ').replace(/<br\s*\/?>/gi, ' ');
-                  } else {
-                    description = String(insightsData);
-                  }
-                  description = description.substring(0, 150) + (description.length > 150 ? '...' : '');
-                } catch (e) {
-                  description = 'No description available.';
+        const data = await response.json();
+        
+        if (data.success) {
+          setAudiences(data.data.audiences);
+
+          // If we have brief data, update the folder structure
+          if (data.data.brief) {
+            setCurrentBriefId(data.data.brief.id);
+            
+            // Update folder structure with new brief and audiences
+            const folderKey = selectedFolder.name.toLowerCase().replace(/\s+/g, '_');
+            setFolderStructure(prev => {
+              const currentFolder = prev[folderKey] || {};
+              const currentBriefs = currentFolder.briefs || [];
+              
+              return {
+                ...prev,
+                [folderKey]: {
+                  ...currentFolder,
+                  briefs: [
+                    ...currentBriefs,
+                    {
+                      ...data.data.brief,
+                      audiences: data.data.audiences
+                    }
+                  ]
                 }
-              }
-            } catch (e) {
-              name = 'Error Parsing Segment';
-              description = '';
-            }
-            return { ...audience, name, description };
-          });
-          setAudiences(newAudiences);
-
-          const newBrief = {
-            id: responseData.data.brief.id,
-            title: cleanBriefData[briefQuestions.find(q => q.input_field_name === 'main_message')?.input_field_name] || 'Brief',
-            created_at: new Date().toISOString()
-          };
-
-          // Update folder structure with new brief
-          setFolderStructure(prev => ({
-            ...prev,
-            [selectedFolder.name.toLowerCase().replace(/\s+/g, '_')]: {
-              ...prev[selectedFolder.name.toLowerCase().replace(/\s+/g, '_')],
-              briefs: [
-                ...(prev[selectedFolder.name.toLowerCase().replace(/\s+/g, '_')].briefs || []),
-                newBrief
-              ]
-            }
-          }));
-
-          setError('');
-        } else {
-          const errorMessage = responseData.message || 'Failed to create brief';
-          console.error('Server error:', errorMessage);
-          setError(errorMessage);
+              };
+            });
+          }
         }
       }
     } catch (error) {
-      console.error('Error submitting brief:', error);
-      setError(error.message || 'Failed to submit brief');
+      console.error('Error in brief submission:', error);
+      setError(error.message);
     } finally {
       setLoading(false);
+      setLoadingMessage('');
     }
   };
 
@@ -1093,15 +1017,24 @@ export default function Library() {
         return;
       }
 
-      const response = await fetch('http://localhost:4000/api/onboarding/core-message', {
-        method: 'GET',
+      // Use the correct endpoint for generating core message from audience data
+      const response = await fetch('http://localhost:4000/api/marketing/generate-from-audience', {
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        }
+        },
+        body: JSON.stringify({
+          labelName: briefData.labelName,
+          whoTheyAre: briefData.whoTheyAre,
+          whatTheyWant: briefData.whatTheyWant,
+          whatTheyStruggle: briefData.whatTheyStruggle,
+          additionalInfo: briefData.additionalInfo
+        })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch core message');
+        throw new Error('Failed to generate core message');
       }
 
       const data = await response.json();
@@ -1109,12 +1042,20 @@ export default function Library() {
         setCoreMessage(data.data.coreMessage);
         setShowTypewriter(true);
         setIsRefreshing(false);
+        
+        // Add AI response to chat if available
+        if (data.data.chatResponse) {
+          setMessages(prev => [...prev, {
+            content: data.data.chatResponse,
+            type: 'ai'
+          }]);
+        }
       } else {
-        throw new Error(data.message || 'Failed to fetch core message');
+        throw new Error(data.message || 'Failed to generate core message');
       }
     } catch (error) {
-      console.error('Error fetching core message:', error);
-      setError(error.message || 'Failed to fetch core message');
+      console.error('Error generating core message:', error);
+      setError(error.message || 'Failed to generate core message');
       setIsRefreshing(false);
     }
   };

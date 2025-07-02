@@ -1,6 +1,8 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import AiPrompt from '../models/AiPrompt.js';
+import Brief from '../models/Brief.js';
+import Audience from '../models/Audience.js';
 
 const chatModel = new ChatOpenAI({
     modelName: 'gpt-4o-mini',
@@ -276,13 +278,21 @@ Return only the updated message, no explanations or additional text.`
 
     async generateFromAudience(req, res) {
         try {
-            const { labelName, whoTheyAre, whatTheyWant, whatTheyStruggle, additionalInfo } = req.body;
+            const { labelName, whoTheyAre, whatTheyWant, whatTheyStruggle, additionalInfo, projectId, projectName } = req.body;
 
             // Validate required fields
             if (!labelName || !whoTheyAre || !whatTheyWant) {
                 return res.status(400).json({
                     success: false,
                     message: 'Missing required audience information'
+                });
+            }
+
+            // Validate project information
+            if (!projectId || !projectName) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Missing project information. Please select a project first.'
                 });
             }
 
@@ -302,7 +312,11 @@ Always offer 1–2 revised versions based on their input. Be collaborative and e
 Return a JSON object with this structure:
 {
     "coreMessage": "Primary Version:\\n[The refined version]\\n\\nAlternative Perspective:\\n[The alternative framing]\\n\\nKey Details:\\n• Pain Points:\\n[List of pain points]\\n\\n• Desires:\\n[List of desires]\\n\\n• Behaviors:\\n[List of behaviors]\\n\\n• Channels:\\n[List of channels]",
-    "chatResponse": "A collaborative question to help further refine the description"
+    "chatResponse": "A collaborative question to help further refine the description",
+    "insights": ["Key insight 1", "Key insight 2"],
+    "messagingAngle": "How to position the offering for this audience",
+    "tone": "Appropriate tone for this audience",
+    "supportPoints": ["Support point 1", "Support point 2"]
 }`
                 },
                 {
@@ -321,12 +335,53 @@ Generate a refined audience description with enhanced details and an alternative
 
             const response = await chatModel.invoke(messages);
             const parsedResponse = JSON.parse(response.content);
+
+            // Create a new brief
+            const briefResult = await Brief.create({
+                projectId,
+                projectName,
+                purpose: whoTheyAre,
+                mainMessage: whatTheyWant,
+                specialFeatures: '',
+                beneficiaries: labelName,
+                benefits: whatTheyStruggle || '',
+                callToAction: '',
+                importance: '',
+                additionalInfo: additionalInfo || ''
+            });
+
+            // Create the audience
+            const audienceData = [{
+                briefId: briefResult,
+                segment: JSON.stringify({
+                    name: labelName,
+                    description: whoTheyAre
+                }),
+                insights: JSON.stringify(parsedResponse.insights || []),
+                messagingAngle: parsedResponse.messagingAngle || '',
+                supportPoints: JSON.stringify(parsedResponse.supportPoints || []),
+                tone: parsedResponse.tone || '',
+                personaProfile: JSON.stringify({
+                    whoTheyAre,
+                    whatTheyWant,
+                    whatTheyStruggle: whatTheyStruggle || '',
+                    additionalInfo: additionalInfo || ''
+                })
+            }];
+
+            const audienceResult = await Audience.create(audienceData);
+            
+            // Fetch the created brief and audience for response
+            const brief = await Brief.findById(briefResult);
+            const audiences = await Audience.findByBriefId(briefResult);
             
             return res.status(200).json({
                 success: true,
                 data: {
                     coreMessage: parsedResponse.coreMessage,
-                    chatResponse: parsedResponse.chatResponse
+                    chatResponse: parsedResponse.chatResponse,
+                    brief,
+                    audience: audiences[0]
                 }
             });
 
@@ -334,7 +389,141 @@ Generate a refined audience description with enhanced details and an alternative
             console.error('Error generating message from audience:', error);
             return res.status(500).json({
                 success: false,
-                message: 'Error generating message'
+                message: 'Error generating message',
+                error: error.message
+            });
+        }
+    }
+
+    async generateSuggestedAudiences(req, res) {
+        try {
+            const { description, whoItHelps, problemItSolves, projectId, projectName } = req.body;
+
+            // Validate required fields
+            if (!description || !whoItHelps || !problemItSolves) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Missing required fields: description, whoItHelps, or problemItSolves'
+                });
+            }
+
+            // Validate project information
+            if (!projectId || !projectName) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Missing project information. Please select a project first.'
+                });
+            }
+
+            const messages = [
+                {
+                    role: "system",
+                    content: `Based on the user's input, generate a list of 3–5 clearly defined target audiences who are likely to benefit from their product, service, or brand.
+
+Each audience should include:
+- A short name or label (e.g. "Solo coaches scaling their practice")
+- A 1–2 sentence summary describing who they are, what they care about, and why this offering is relevant to them.
+
+Keep outputs diverse in sector, job type, or context (e.g. solopreneurs, mid-sized ops teams, buyers, community-driven users, etc.).
+
+When this prompt is used again to regenerate new audience options, do not repeat any of the previously returned audiences. Return fresh options based on different possible market angles or overlooked personas.
+
+Return a JSON object with this structure:
+{
+    "audiences": [
+        {
+            "name": "Audience name/label",
+            "description": "1-2 sentence summary",
+            "insights": ["Key insight 1", "Key insight 2"],
+            "messagingAngle": "How to position the offering for this audience",
+            "tone": "Appropriate tone for this audience"
+        }
+    ]
+}`
+                },
+                {
+                    role: "user",
+                    content: `Generate audience segments based on this information:
+
+Description of the offering: ${description}
+Who it helps: ${whoItHelps}
+Problem it solves: ${problemItSolves}`
+                }
+            ];
+
+            const response = await chatModel.invoke(messages);
+            
+            // Clean the response by removing markdown formatting
+            const cleanResponse = response.content
+                .replace(/```json/g, '')
+                .replace(/```/g, '')
+                .trim();
+                
+            const parsedResponse = JSON.parse(cleanResponse);
+
+            // Create a new brief
+            const briefResult = await Brief.create({
+                projectId,
+                projectName,
+                purpose: description,
+                mainMessage: whoItHelps,
+                specialFeatures: '',
+                beneficiaries: whoItHelps,
+                benefits: problemItSolves,
+                callToAction: '',
+                importance: '',
+                additionalInfo: ''
+            });
+
+            // Create audiences
+            const audienceData = parsedResponse.audiences.map(audience => ({
+                briefId: briefResult,
+                segment: JSON.stringify({
+                    name: audience.name,
+                    description: audience.description
+                }),
+                insights: JSON.stringify(audience.insights || []),
+                messagingAngle: audience.messagingAngle || '',
+                supportPoints: JSON.stringify([]),
+                tone: audience.tone || '',
+                personaProfile: JSON.stringify({
+                    description,
+                    whoItHelps,
+                    problemItSolves
+                })
+            }));
+
+            await Audience.create(audienceData);
+            
+            // Fetch the created brief and audiences for response
+            const brief = await Brief.findById(briefResult);
+            const audiences = await Audience.findByBriefId(briefResult);
+            
+            // Transform the audiences for frontend
+            const formattedAudiences = audiences.map(audience => ({
+                id: audience.id,
+                name: JSON.parse(audience.segment).name,
+                description: JSON.parse(audience.segment).description,
+                segment: audience.segment,
+                insights: audience.insights,
+                messagingAngle: audience.messagingAngle,
+                tone: audience.tone
+            }));
+
+            return res.status(200).json({
+                success: true,
+                data: {
+                    audiences: formattedAudiences,
+                    brief
+                }
+            });
+
+        } catch (error) {
+            console.error('Error generating suggested audiences:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Error generating suggested audiences',
+                error: error.message
             });
         }
     }
