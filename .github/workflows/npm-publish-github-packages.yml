@@ -20,7 +20,7 @@ jobs:
           password: "SEjjJizU44oZrdXmhRY9"
           port: 22
           script: |
-            cd htdocs/api.marklee.ai/marklee
+            cd htdocs/api.marklee.ai/Marklee
             git pull origin main
             cd backend
             npm install
