@@ -1,48 +1,22 @@
-name: FTP Auto Deployment
+name: Publish Website to CPanel
 
 on:
   push:
-    branches: [main]  # Change if your default branch is different
+    branches:
+      - main
 
 jobs:
-  build-and-deploy:
+  FTP-Deploy:
     runs-on: ubuntu-latest
-
     steps:
-      # - name: Checkout code
-      #   uses: actions/checkout@v4
-
-      # - name: Setup Node.js
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: 20
-
-      # # ----- FRONTEND -----
-      # - name: Install frontend dependencies
-      #   working-directory: ./frontend
-      #   run: npm install
-
-      # - name: Build frontend (Next.js)
-      #   working-directory: ./frontend
-      #   run: npm run build
-
-      # - name: Export static frontend (optional)
-      #   working-directory: ./frontend
-      #   run: npm run export
-
-      # # ----- BACKEND -----
-      # - name: Install backend dependencies
-      #   working-directory: ./backend
-      #   run: npm install
-
-      # (Optional) You can run backend tests here
-      # - run: npm test
-      #   working-directory: ./backend
-
-      # ----- DEPLOY VIA FTP -----
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+          fetch-depth: 0  # Ensures git history is available
+
+      - name: FTP Deploy
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+            server: ${{ secrets.FTP_SERVER }}
+            username: ${{ secrets.FTP_USERNAME }}
+            password: ${{ secrets.FTP_PASSWORD }}
