@@ -1,15 +1,30 @@
-- name: Create a test file
-  run: echo "Deployed from GitHub Actions" > test.txt
+name: Test SCP Deployment
 
-- name: Deploy test.txt
-  uses: appleboy/scp-action@v0.1.7
-  with:
-    host: ${{ secrets.FTP_SERVER }}
-    username: ${{ secrets.FTP_USERNAME }}
-    password: ${{ secrets.FTP_PASSWORD }}
-    port: 22
-    source: "test.txt"
-    target: "."
-    overwrite: true
-    rm: false
-    debug: true
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create a test file
+        run: echo "Deployed from GitHub Actions" > test.txt
+
+      - name: Deploy test.txt
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 22
+          source: "test.txt"
+          target: "."
+          overwrite: true
+          rm: false
+          debug: true
