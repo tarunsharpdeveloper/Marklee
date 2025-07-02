@@ -25,4 +25,4 @@ jobs:
             cd htdocs/api.marklee.ai/Marklee
             git pull origin main
             cd Backend
-            /usr/bin/npm install
+            npm install
