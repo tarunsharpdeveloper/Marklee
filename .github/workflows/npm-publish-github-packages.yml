@@ -21,7 +21,8 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 22
-          source: "."                      # current folder
-          target: "/public_html/"          # double-check this path!
+          source: "."                              # upload everything from root of repo
+          target: "."                              # upload directly into /home/marklee/htdocs/marklee.ai/
           overwrite: true
+          rm: true                                 # optional: clean remote before uploading
           debug: true
