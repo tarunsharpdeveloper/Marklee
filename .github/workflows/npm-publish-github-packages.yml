@@ -21,5 +21,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 22
-          source: "."
-          target: "/" # 
+          source: "."                      # current folder
+          target: "/public_html/"          # double-check this path!
+          overwrite: true
+          debug: true
