@@ -6,13 +6,13 @@ on:
       - main
 
 jobs:
-  deploy:
+  deploy-server-1:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Deploy over SSH
+      - name: Deploy to Server 1
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -27,3 +27,27 @@ jobs:
             cd Backend
             npm install
             pm2 restart marklee-api
+
+  deploy-server-2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Deploy to Server 2
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST_2 }}
+          username: "marklee-aap"
+          password: ${{ secrets.FE_SSH_PASSWORD }}
+          port: 22
+          script: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            cd htdocs/marklee.ai/Marklee
+            git pull origin main
+            cd frontend
+            npm install
+            npm run build
+            pm2 restart marklee
+
