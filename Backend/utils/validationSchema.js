@@ -3,7 +3,6 @@ import Joi from 'joi';
 const authSchema = {
   signup: Joi.object({
     name: Joi.string()
-      .alphanum()
       .min(3)
       .max(30)
       .required()
@@ -11,7 +10,6 @@ const authSchema = {
         'string.empty': 'Username is required',
         'string.min': 'Username must be at least 3 characters long',
         'string.max': 'Username cannot exceed 30 characters',
-        'string.alphanum': 'Username must contain only alphanumeric characters'
       }),
 
     email: Joi.string()
