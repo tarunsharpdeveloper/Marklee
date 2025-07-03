@@ -17,6 +17,14 @@ export default function MarketingPage() {
   const [error, setError] = useState(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [loadingMessages] = useState([
+    "Analyzing your inputs...",
+    "Generating your marketing content...",
+    "Crafting your brand message...",
+    "Shaping content to fit your audience...",
+    "Finalizing your personalized copy."
+  ]);
 
   useEffect(() => {
     try {
@@ -86,10 +94,24 @@ export default function MarketingPage() {
     }
   };
 
+  const startLoadingSequence = () => {
+    let currentIndex = 0;
+    setLoadingMessage(loadingMessages[currentIndex]);
+    
+    const interval = setInterval(() => {
+      currentIndex = (currentIndex + 1) % loadingMessages.length;
+      setLoadingMessage(loadingMessages[currentIndex]);
+    }, 3000);
+
+    return interval;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    const loadingInterval = startLoadingSequence();
 
     try {
       const token = localStorage.getItem('token');
@@ -105,9 +127,13 @@ export default function MarketingPage() {
         body: JSON.stringify(formAnswers)
       });
 
-      if (!response.ok) throw new Error('Failed to generate marketing content');
+      if (!response.ok) {
+        clearInterval(loadingInterval);
+        throw new Error('Failed to generate marketing content');
+      }
 
       const data = await response.json();
+      clearInterval(loadingInterval);
       setGeneratedContent(data.data);
 
       // Save both form data and core message to onboarding
@@ -133,6 +159,7 @@ export default function MarketingPage() {
       setError(error.message);
     } finally {
       setLoading(false);
+      setLoadingMessage('');
     }
   };
 
@@ -151,6 +178,14 @@ export default function MarketingPage() {
   return (
     <div className={styles.container}>
       <PreHomeNavbar />
+      {loading && (
+        <div className={styles.loaderOverlay}>
+          <div className={styles.loaderContainer}>
+            <div className={styles.loaderSpinner}></div>
+            <p className={styles.loaderMessage}>{loadingMessage}</p>
+          </div>
+        </div>
+      )}
       {showWelcome && formFields ? (
         <WelcomePopup 
           welcomeMessage={formFields.welcomeMessage} 
@@ -159,7 +194,7 @@ export default function MarketingPage() {
       ) : (
         <div className={styles.content}>
           <div className={styles.formContainer}>
-            <h2>Create Your Marketing Strategy</h2>
+            <h2>Discovery Questionnaire</h2>
             <form onSubmit={handleSubmit} className={styles.form}>
               {formFields?.fields.map((field, index) => (
                 <div key={index} className={styles.inputGroup}>
@@ -198,21 +233,13 @@ export default function MarketingPage() {
                   )}
                 </div>
               ))}
-
               <div className={styles.buttonContainer}>
                 <button 
                   type="submit" 
                   className={styles.continueButton}
                   disabled={loading}
                 >
-                  {loading ? (
-                    <>
-                      <div className={styles.loadingSpinner} />
-                      <span>Generating...</span>
-                    </>
-                  ) : (
-                    'Generate Marketing Content'
-                  )}
+                  Generate Marketing Content
                 </button>
               </div>
 
