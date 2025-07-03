@@ -23,7 +23,7 @@ export default function UserManagement() {
       try {
         setLoading(true);
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:4000/api/admin/users?limit=${limit}&page=${currentPage}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/users?limit=${limit}&page=${currentPage}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
