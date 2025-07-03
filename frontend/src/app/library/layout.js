@@ -18,7 +18,7 @@ export default function LibraryLayout({ children }) {
       }
 
       try {
-        const response = await fetch('http://localhost:4000/api/onboarding/get', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

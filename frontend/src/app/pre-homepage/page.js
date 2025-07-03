@@ -46,7 +46,7 @@ export default function PreHomePage() {
           return;
         }
 
-        const response = await fetch('http://localhost:4000/api/onboarding/create', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/create`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

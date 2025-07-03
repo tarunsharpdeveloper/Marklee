@@ -47,7 +47,7 @@ export default function MarketingPage() {
           return;
         }
 
-        const response = await fetch('http://localhost:4000/api/marketing/form', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/form`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -118,7 +118,7 @@ export default function MarketingPage() {
       if (!token) throw new Error('No authentication token found');
 
       // Generate marketing content first to get the core message
-      const response = await fetch('http://localhost:4000/api/marketing/generate', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -137,7 +137,7 @@ export default function MarketingPage() {
       setGeneratedContent(data.data);
 
       // Save both form data and core message to onboarding
-      await fetch('http://localhost:4000/api/onboarding/user', {
+      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/user`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

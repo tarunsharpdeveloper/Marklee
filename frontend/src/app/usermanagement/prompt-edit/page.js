@@ -21,7 +21,7 @@ export default function PromptEdit() {
 
     const fetchPrompts = async () => {
         try {
-            const response = await fetch('http://localhost:4000/api/admin/ai-prompts', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/ai-prompts`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ export default function PromptEdit() {
 
             console.log('Attempting to create prompt with payload:', payload);
 
-            const response = await fetch('http://localhost:4000/api/admin/ai-prompt', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/ai-prompt`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -117,7 +117,7 @@ export default function PromptEdit() {
                 prompt: newPrompt.prompt.trim()
             };
 
-            const response = await fetch(`http://localhost:4000/api/admin/ai-prompt/${editingPrompt.id}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/ai-prompt/${editingPrompt.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -168,7 +168,7 @@ export default function PromptEdit() {
 
     const handleDeletePrompt = async (id) => {
         try {
-            const response = await fetch(`http://localhost:4000/api/admin/ai-prompt/${id}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/ai-prompt/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -192,7 +192,7 @@ export default function PromptEdit() {
 
     const getAiPromptsType = async () => {
         try {
-            const response = await fetch('http://localhost:4000/api/admin/ai-prompts-type', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/ai-prompts-type`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

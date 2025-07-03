@@ -109,7 +109,7 @@ export default function Dashboard() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const onboardingResponse = await fetch('http://localhost:4000/api/onboarding/get', {
+      const onboardingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -124,7 +124,7 @@ export default function Dashboard() {
       if (shouldRefresh && data) {
         const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
 
-        const marketingResponse = await fetch(`http://localhost:4000/api/marketing/generate?refresh=true`, {
+        const marketingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate?refresh=true`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -139,7 +139,7 @@ export default function Dashboard() {
 
         const marketingData = await marketingResponse.json();
         
-        await fetch('http://localhost:4000/api/onboarding/core-message', {
+        await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -216,7 +216,7 @@ export default function Dashboard() {
         return;
       }
 
-      const response = await fetch('http://localhost:4000/api/projects', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/projects`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -281,7 +281,7 @@ export default function Dashboard() {
       const token = localStorage.getItem('token');
       const userData = JSON.parse(localStorage.getItem('user'));
 
-      const response = await fetch('http://localhost:4000/api/project', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/project`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -335,7 +335,7 @@ export default function Dashboard() {
 
       console.log('Creating brief with payload:', briefPayload);
 
-      const response = await fetch(`http://localhost:4000/api/create-brief`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/create-brief`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -404,7 +404,7 @@ export default function Dashboard() {
         }
 
         // First get the onboarding data
-        const onboardingResponse = await fetch('http://localhost:4000/api/onboarding/get', {
+        const onboardingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -418,7 +418,7 @@ export default function Dashboard() {
         const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
 
         // Now make the generate request with the form data
-        const response = await fetch('http://localhost:4000/api/marketing/generate-with-prompt', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -438,7 +438,7 @@ export default function Dashboard() {
             setCoreMessage(marketingData.data.coreMessage);
             
             // Save the new core message to the database
-            await fetch('http://localhost:4000/api/onboarding/core-message', {
+            await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -481,7 +481,7 @@ export default function Dashboard() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const onboardingResponse = await fetch('http://localhost:4000/api/onboarding/get', {
+      const onboardingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -522,7 +522,7 @@ export default function Dashboard() {
         formData.modificationRequest = modificationPrompt;
         formData.additionalInfo = `Please modify this core message: "${coreMessage}". ${modificationPrompt}`;
 
-        const marketingResponse = await fetch(`http://localhost:4000/api/marketing/generate?refresh=true`, {
+        const marketingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate?refresh=true`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -541,7 +541,7 @@ export default function Dashboard() {
           setCoreMessage(marketingData.data.coreMessage);
           setShowTypewriter(true);
           
-          await fetch('http://localhost:4000/api/onboarding/core-message', {
+          await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

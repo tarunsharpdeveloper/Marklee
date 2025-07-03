@@ -20,7 +20,7 @@ export default function BriefQuestions() {
   const fetchBriefQuestions = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:4000/api/admin/brief-questions', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/brief-questions`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ export default function BriefQuestions() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:4000/api/admin/brief-question', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/brief-question`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -85,7 +85,7 @@ export default function BriefQuestions() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:4000/api/admin/brief-question/${id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/brief-question/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

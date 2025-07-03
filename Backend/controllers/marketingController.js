@@ -109,24 +109,34 @@ class MarketingController {
 
         let prompt;
         if (isModification) {
-          prompt = `Modify this existing core message according to the specific request. Keep the essence and key information while applying the requested changes.
-
-Current Message:
-${formData.currentMessage}
-
-Modification Request:
-${formData.modificationRequest}
-
-Use these supporting details to ensure accuracy:
-- Description: ${formData.description}
-- Industry: ${formData.industry}
-- Target Market: ${formData.targetMarket}
-- Core Audience: ${formData.coreAudience}
-- Key Features: ${formData.keyFeatures}
-- Unique Offering: ${formData.uniqueOffering}
-
-Return a modified version that maintains accuracy while fulfilling the modification request. Keep it clear, compelling, and suitable for marketing use.`;
-        } else if (isRefresh) {
+            prompt = `You're an AI messaging assistant. The user has just provided a specific request to refine their existing Core Message. Modify the message according to their input while keeping its original meaning and purpose.
+          
+          Current Message:
+          ${formData.currentMessage}
+          
+          Modification Request:
+          ${formData.modificationRequest}
+          
+          Use these supporting details to ensure accuracy:
+          - Description: ${formData.description}
+          - Industry: ${formData.industry}
+          - Target Market: ${formData.targetMarket}
+          - Core Audience: ${formData.coreAudience}
+          - Key Features: ${formData.keyFeatures}
+          - Unique Offering: ${formData.uniqueOffering}
+          
+          Return only the **revised Core Message** (max 3 sentences). Make sure it is clear, compelling, strategic, and marketing-ready.
+          
+          After showing the updated Core Message, invite the user to refine it further by asking if they’d like to:
+          1. Make it shorter or punchier  
+          2. Adjust the tone (e.g. more friendly, confident, playful, professional, etc.)  
+          3. Emphasize something more (e.g. the benefit, the audience, the difference)  
+          4. Try alternative angles or versions  
+          5. Start fresh with new info
+          
+          Be collaborative and encouraging. Each time they give feedback, rewrite the Core Message accordingly and check if it's getting closer to what they want. Always keep it tight and on point.`;
+          }
+           else if (isRefresh) {
           prompt = `Create a new and distinct version of the core message (~100 words), using the same inputs. Present the offering from a different angle or highlight a different major benefit, but still follow this guidance:
 
 ${basePrompt}`;
@@ -278,8 +288,7 @@ Return only the updated message, no explanations or additional text.`
 
     async generateFromAudience(req, res) {
         try {
-            const { labelName, whoTheyAre, whatTheyWant, whatTheyStruggle, additionalInfo, projectId, projectName, currentMessage } = req.body;
-            const isRefresh = req.query.refresh === 'true';
+            const { labelName, whoTheyAre, whatTheyWant, whatTheyStruggle, additionalInfo, projectId, projectName } = req.body;
 
             // Validate required fields
             if (!labelName || !whoTheyAre || !whatTheyWant) {
@@ -297,7 +306,10 @@ Return only the updated message, no explanations or additional text.`
                 });
             }
 
-            let systemPrompt = `You are a messaging strategist helping the user define and refine their Target Audiences. The user has written a basic audience profile.
+            const messages = [
+                {
+                    role: "system",
+                    content: `You are a messaging strategist helping the user define and refine their Target Audiences. The user has written a basic audience profile.
 
 Your goal is to help them:
 - Clarify or rewrite the summary
@@ -315,109 +327,73 @@ Return a JSON object with this structure:
     "messagingAngle": "How to position the offering for this audience",
     "tone": "Appropriate tone for this audience",
     "supportPoints": ["Support point 1", "Support point 2"]
-}`;
-
-            let userPrompt;
-            if (isRefresh && currentMessage) {
-                userPrompt = `Please create a fresh, alternative version of this audience profile and core message. Keep the essence but present it from a different angle or highlight different benefits.
-
-Current Core Message:
-${currentMessage}
-
-Audience Profile:
-Audience Name/Label: ${labelName}
-Who They Are: ${whoTheyAre}
-What They Want: ${whatTheyWant}
-Their Struggles: ${whatTheyStruggle || 'Not specified'}
-Additional Context: ${additionalInfo || 'Not provided'}
-
-Generate a completely new version that maintains accuracy while offering a fresh perspective.`;
-            } else {
-                userPrompt = `Please analyze and enhance this audience profile:
-
-Audience Name/Label: ${labelName}
-Who They Are: ${whoTheyAre}
-What They Want: ${whatTheyWant}
-Their Struggles: ${whatTheyStruggle || 'Not specified'}
-Additional Context: ${additionalInfo || 'Not provided'}
-
-Generate a refined audience description with enhanced details and an alternative framing.`;
-            }
-
-            const messages = [
-                {
-                    role: "system",
-                    content: systemPrompt
+}`
                 },
                 {
                     role: "user",
-                    content: userPrompt
+                    content: `Please analyze and enhance this audience profile:
+
+Audience Name/Label: ${labelName}
+Who They Are: ${whoTheyAre}
+What They Want: ${whatTheyWant}
+Their Struggles: ${whatTheyStruggle || 'Not specified'}
+Additional Context: ${additionalInfo || 'Not provided'}
+
+Generate a refined audience description with enhanced details and an alternative framing.`
                 }
             ];
 
             const response = await chatModel.invoke(messages);
             const parsedResponse = JSON.parse(response.content);
 
-            // Only create brief and audience if not refreshing
-            if (!isRefresh) {
-                // Create a new brief
-                const briefResult = await Brief.create({
-                    projectId,
-                    projectName,
-                    purpose: whoTheyAre,
-                    mainMessage: whatTheyWant,
-                    specialFeatures: '',
-                    beneficiaries: labelName,
-                    benefits: whatTheyStruggle || '',
-                    callToAction: '',
-                    importance: '',
+            // Create a new brief
+            const briefResult = await Brief.create({
+                projectId,
+                projectName,
+                purpose: whoTheyAre,
+                mainMessage: whatTheyWant,
+                specialFeatures: '',
+                beneficiaries: labelName,
+                benefits: whatTheyStruggle || '',
+                callToAction: '',
+                importance: '',
+                additionalInfo: additionalInfo || ''
+            });
+
+            // Create the audience
+            const audienceData = [{
+                briefId: briefResult,
+                segment: JSON.stringify({
+                    name: labelName,
+                    description: whoTheyAre
+                }),
+                insights: JSON.stringify(parsedResponse.insights || []),
+                messagingAngle: parsedResponse.messagingAngle || '',
+                supportPoints: JSON.stringify(parsedResponse.supportPoints || []),
+                tone: parsedResponse.tone || '',
+                personaProfile: JSON.stringify({
+                    whoTheyAre,
+                    whatTheyWant,
+                    whatTheyStruggle: whatTheyStruggle || '',
                     additionalInfo: additionalInfo || ''
-                });
+                })
+            }];
 
-                // Create the audience
-                const audienceData = [{
-                    briefId: briefResult,
-                    segment: JSON.stringify({
-                        name: labelName,
-                        description: whoTheyAre
-                    }),
-                    insights: JSON.stringify(parsedResponse.insights || []),
-                    messagingAngle: parsedResponse.messagingAngle || '',
-                    supportPoints: JSON.stringify(parsedResponse.supportPoints || []),
-                    tone: parsedResponse.tone || '',
-                    personaProfile: JSON.stringify({
-                        whoTheyAre,
-                        whatTheyWant,
-                        whatTheyStruggle: whatTheyStruggle || '',
-                        additionalInfo: additionalInfo || ''
-                    })
-                }];
-
-                const audienceResult = await Audience.create(audienceData);
-                
-                // Fetch the created brief and audience for response
-                const brief = await Brief.findById(briefResult);
-                const audiences = await Audience.findByBriefId(briefResult);
-                
-                return res.status(200).json({
-                    success: true,
-                    data: {
-                        coreMessage: parsedResponse.coreMessage,
-                        chatResponse: parsedResponse.chatResponse,
-                        brief,
-                        audience: audiences[0]
-                    }
-                });
-            } else {
-                // For refresh, just return the new message
-                return res.status(200).json({
-                    success: true,
-                    data: {
-                        coreMessage: parsedResponse.coreMessage,
-                        chatResponse: parsedResponse.chatResponse
-                    }
-                });
-            }
+            const audienceResult = await Audience.create(audienceData);
+            
+            // Fetch the created brief and audience for response
+            const brief = await Brief.findById(briefResult);
+            const audiences = await Audience.findByBriefId(briefResult);
+            
+            return res.status(200).json({
+                success: true,
+                data: {
+                    coreMessage: parsedResponse.coreMessage,
+                    chatResponse: parsedResponse.chatResponse,
+                    brief,
+                    audience: audiences[0]
+                }
+            });
 
         } catch (error) {
             console.error('Error generating message from audience:', error);

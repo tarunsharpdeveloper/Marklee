@@ -127,7 +127,7 @@ export default function Library() {
         return;
       }
 
-      const response = await fetch('http://localhost:4000/api/projects', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/projects`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -187,7 +187,7 @@ export default function Library() {
     try {
       const token = localStorage.getItem('token');
 
-      const response = await fetch('http://localhost:4000/api/project', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/project`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -293,7 +293,7 @@ export default function Library() {
     try {
       setQuestionsLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:4000/api/admin/brief-questions', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/brief-questions`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -403,7 +403,7 @@ export default function Library() {
   const handleBriefClick = async (briefId) => {
     try {
       setCurrentBriefId(briefId); // Store the current brief ID
-      const response = await fetch(`http://localhost:4000/api/brief/${briefId}/audience`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/brief/${briefId}/audience`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -859,7 +859,7 @@ export default function Library() {
         const loadingInterval = startLoadingSequence(loadingQuestions, setLoadingMessage);
 
         // Handle "I Know My Audience" path
-        const response = await fetch('http://localhost:4000/api/marketing/generate-from-audience', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-from-audience`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -931,7 +931,7 @@ export default function Library() {
           throw new Error('No folder selected. Please select a folder first.');
         }
 
-        const response = await fetch('http://localhost:4000/api/marketing/generate-suggested-audiences', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-suggested-audiences`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1058,7 +1058,7 @@ export default function Library() {
                     setLoading(true);
                     loadingInterval = startLoadingSequence(assetLoadingQuestions, setLoadingMessage);
                     
-                    const response = await fetch(`http://localhost:4000/api/generate-content`, {
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/generate-content`, {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
@@ -1136,7 +1136,7 @@ export default function Library() {
       }
 
       // Use generate-from-audience endpoint with refresh parameter
-      const response = await fetch(`http://localhost:4000/api/marketing/generate-from-audience${refresh ? '?refresh=true' : ''}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-from-audience${refresh ? '?refresh=true' : ''}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1204,7 +1204,7 @@ export default function Library() {
       }
 
       // Get the current form data
-      const response = await fetch('http://localhost:4000/api/marketing/generate-with-prompt', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1260,7 +1260,7 @@ export default function Library() {
         return;
       }
 
-      const response = await fetch('http://localhost:4000/api/marketing/generate-with-prompt', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
