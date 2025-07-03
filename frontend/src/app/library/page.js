@@ -655,7 +655,7 @@ export default function Library() {
             </button>
             <div className={styles.coreMessageContainer}>
               <div className={styles.coreMessageHeader}>
-                <h3>Your Core Marketing Message</h3>
+                {/* <h3>Your Core Marketing Message</h3> */}
                       <button 
                   onClick={() => fetchCoreMessage(true)}
                   className={styles.refreshButton}
@@ -715,7 +715,7 @@ export default function Library() {
                   </div>
                 )}
               </div>
-              <div className={styles.messageOptions}>
+              {/* <div className={styles.messageOptions}>
                 <button 
                   className={styles.optionButton}
                   onClick={() => handleOptionClick('make it shorter')}
@@ -744,7 +744,7 @@ export default function Library() {
                 >
                   More casual
                       </button>
-                    </div>
+                    </div> */}
               <div className={styles.chatInterface}>
                 <div className={styles.chatMessages}>
                   {messages.map((message, index) => (
@@ -1120,19 +1120,23 @@ export default function Library() {
     return values;
   }
 
-  const fetchCoreMessage = async (refresh) => {
-    if (refresh) {
-      setIsRefreshing(true);
-    }
+  const fetchCoreMessage = async (refresh = false) => {
     try {
+      setIsRefreshing(true);
+      setShowTypewriter(false);
       const token = localStorage.getItem('token');
       if (!token) {
         router.push('/');
         return;
       }
 
-      // Use the correct endpoint for generating core message from audience data
-      const response = await fetch('http://localhost:4000/api/marketing/generate-from-audience', {
+      // Validate project information
+      if (!selectedFolder || !selectedFolder.id) {
+        throw new Error('No folder selected. Please select a folder first.');
+      }
+
+      // Use generate-from-audience endpoint with refresh parameter
+      const response = await fetch(`http://localhost:4000/api/marketing/generate-from-audience${refresh ? '?refresh=true' : ''}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1143,7 +1147,10 @@ export default function Library() {
           whoTheyAre: briefData.whoTheyAre,
           whatTheyWant: briefData.whatTheyWant,
           whatTheyStruggle: briefData.whatTheyStruggle,
-          additionalInfo: briefData.additionalInfo
+          additionalInfo: briefData.additionalInfo,
+          currentMessage: generatedContent,
+          projectId: selectedFolder.id,
+          projectName: selectedFolder.name
         })
       });
 
@@ -1153,10 +1160,9 @@ export default function Library() {
 
       const data = await response.json();
       if (data.success) {
-        setCoreMessage(data.data.coreMessage);
+        setGeneratedContent(data.data.coreMessage);
         setShowTypewriter(true);
-        setIsRefreshing(false);
-        
+
         // Add AI response to chat if available
         if (data.data.chatResponse) {
           setMessages(prev => [...prev, {
@@ -1170,6 +1176,11 @@ export default function Library() {
     } catch (error) {
       console.error('Error generating core message:', error);
       setError(error.message || 'Failed to generate core message');
+      setMessages(prev => [...prev, {
+        content: 'Sorry, I encountered an error while refreshing the core message. Please try again.',
+        type: 'ai'
+      }]);
+    } finally {
       setIsRefreshing(false);
     }
   };
@@ -1223,16 +1234,6 @@ export default function Library() {
         setCoreMessage(data.data.coreMessage);
         setShowTypewriter(true);
         
-        // Save the new core message
-        await fetch('http://localhost:4000/api/onboarding/core-message', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ coreMessage: data.data.coreMessage })
-        });
-
         // Add AI response to chat
         setMessages(prev => [...prev, {
           content: data.data.chatResponse,

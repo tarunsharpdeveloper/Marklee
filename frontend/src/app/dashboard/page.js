@@ -983,45 +983,32 @@ export default function Dashboard() {
                   </div>
 
                 <div className={styles.chatInterface}>
-                  {messages.length > 0 && (
-                    <div className={styles.chatMessages}>
-                      {messages.map((message, index) => (
-                        <div key={index} className={`${styles.messageContainer} ${styles[message.type + 'Message']}`}>
-                          <div className={styles.messageContent}>
-                            {message.type === 'user' ? (
-                                <p>{message.content}</p>
-                            ) : (
-                                <button
-                                    className={styles.questionButton}
-                                    onClick={() => setInputMessage(message.content)}
-                                >
-                                    {message.content}
-                                </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                <div className={styles.chatMessages}>
+                  {messages.map((message, index) => (
+                    <div key={index} className={`${styles.messageContent} ${message.type === 'user' ? styles.userMessage : styles.aiMessage}`}>
+                      <p>{message.content}</p>
                     </div>
-                  )}
-                  <div className={styles.inputContainer}>
-                    <input
-                      type="text"
-                      value={inputMessage}
-                      onChange={(e) => setInputMessage(e.target.value)}
-                      placeholder="Type your suggestions (e.g., 'make it more formal')"
-                      className={styles.messageInput}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                        disabled={isRefreshing}
-                    />
-                    <button
-                      onClick={handleSendMessage}
-                      className={styles.sendButton}
-                        disabled={isRefreshing || !inputMessage.trim()}
-                    >
-                        {isRefreshing ? 'Refreshing...' : 'Send'}
-                    </button>
-                  </div>
+                  ))}
                 </div>
+                <div className={styles.inputContainer}>
+                  <input
+                    type="text"
+                    className={styles.messageInput}
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    disabled={isRefreshing}
+                  />
+                  <button
+                    className={styles.sendButton}
+                    onClick={handleSendMessage}
+                    disabled={!inputMessage.trim() || isRefreshing}
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
               </div>
             </div>
           )}
