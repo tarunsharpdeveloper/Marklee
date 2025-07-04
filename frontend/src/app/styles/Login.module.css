@@ -87,7 +87,24 @@
   outline: none;
   border-color: #646cff;
 }
-
+.close_button {
+  color: #666;
+  cursor: pointer;
+  z-index: 10;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  transition: all .2s;
+  display: flex;
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+}
 .form_footer {
   display: flex;
   justify-content: space-between;
@@ -349,26 +366,12 @@
     width: 100%;
     justify-content: center;
   }
+  .close_button {
+    top: 3.25rem;
+  }
 }
 
-.close_button {
-  color: #666;
-  cursor: pointer;
-  z-index: 10;
-  background: none;
-  border: none;
-  border-radius: 50%;
-  justify-content: center;
-  align-items: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  transition: all .2s;
-  display: flex;
-  position: absolute;
-  top: 2.25rem;
-  right: 1.25rem;
-}
+
 
 .close_button::before,
 .close_button::after {

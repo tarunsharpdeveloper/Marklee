@@ -167,7 +167,7 @@ ${basePrompt}`;
     - Key Features: ${formData.keyFeatures}
     - Unique Offering: ${formData.uniqueOffering}
     - Additional Info: ${formData.additionalInfo}
-    
+    Avoid using emojis or decorative symbols
     Return only a JSON object in this format:
     {
       "coreMessage": "A clear, persuasive message (~130 words), covering the prioritized elements",
