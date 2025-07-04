@@ -1593,7 +1593,6 @@
 .formGroup {
   margin-bottom: 1.5rem;
 }
-
 .formGroup label {
   display: block;
   font-size: 0.95rem;
@@ -2649,11 +2648,18 @@
 }
 
 .messageContainer {
-  padding: 1rem;
+ width: 100%;
+  padding: 1.5rem;
   background: white;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  width: 100%;
+  border-radius: 16px;
+  border-left: 4px solid #282ab3;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  word-wrap: break-word;
+  hyphens: auto;
+  color: #334155;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
 }
 
 .messageContainer p {
@@ -2664,21 +2670,20 @@
   white-space: pre-wrap;
 }
 
-.typewriterContainer {
+/* .typewriterContainer {
   width: 100%;
   padding: 1.5rem;
   background: white;
   border-radius: 16px;
   border-left: 4px solid #282ab3;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  overflow-wrap: break-word;
   word-wrap: break-word;
   hyphens: auto;
   color: #334155;
   font-size: 1.125rem;
   line-height: 1.8;
   white-space: pre-wrap;
-}
+} */
 
 .typewriterContainer h4 {
   font-size: 1.2rem;
@@ -2976,6 +2981,8 @@
   position: relative;
   display: flex;
   align-items: center;
+  
+  
 }
 
 .editCoreMessageContainer {
@@ -2992,19 +2999,22 @@
 }
 
 .editCoreMessageInput {
-  width: 100%;
-  height: auto;
-  min-height: 200px;
-  padding: 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 1rem;
-  line-height: 1.6;
-  color: #1f2937;
+  /* width: 100%; */
+  height: calc(100vh - 200px);
+  word-wrap: break-word;
+  hyphens: auto;
+  color: #334155;
+  white-space: pre-wrap;
   background: #fff;
-  resize: none;
-  display: block;
+  border-left: 4px solid #282ab3;
+  border-radius: 16px;
+  width: 100%;
+  padding: 1.5rem;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  box-shadow: 0 4px 12px #0000000d;  
 }
+
 
 .editCoreMessageInput:focus {
   outline: none;
@@ -3014,8 +3024,8 @@
 
 .editCoreMessageActions {
   display: flex;
-  gap: 0.75rem;
   justify-content: flex-end;
+  gap: 1rem;
 }
 
 .cancelButton {
@@ -3076,22 +3086,43 @@
 }
 
 .messageInput {
-  flex: 1;
+  width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 1rem;
-  outline: none;
-  transition: border-color 0.2s ease;
+  font-size: 0.95rem;
+  color: #1a202c;
+  background: white;
+  transition: all 0.2s ease;
+  min-height: 44px;
+  font-family: inherit;
+  text-align: left;
+  unicode-bidi: normal;
+  -webkit-text-orientation: upright;
+  text-orientation: upright;
+  -webkit-writing-mode: horizontal-tb;
+  writing-mode: horizontal-tb;
 }
 
 .messageInput:focus {
-  border-color: #282ab3;
+  outline: none;
+  border-color: #4a5568;
+  box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.1);
 }
 
 .messageInput:disabled {
-  background-color: #f3f4f6;
+  background-color: #f7fafc;
   cursor: not-allowed;
+}
+
+.inputContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  width: 100%;
 }
 
 .sendButton {
@@ -3135,3 +3166,68 @@
     width: 100%;
   }
 }
+
+.editPopupOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.editPopupContent {
+  width: 100%;
+  height: 100%;
+  background: white;
+  display: flex;
+  overflow: hidden;
+}
+.editPopupLeft {
+  width: 30%;
+  background-color: #f8f9fa;
+  border-right: 1px solid #e5e7eb;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.editPopupRight {
+  width: 70%;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.editPopupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.editPopupHeader h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.editPopupCloseButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+}
+
+.editPopupCloseButton:hover {
+  background-color: #f3f4f6;
+}
+
+

@@ -114,11 +114,13 @@ export default function Dashboard() {
     }
   };
 
+  const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
+
   const handleEditCoreMessage = async () => {
     try {
-      if (!isEditingCoreMessage) {
+      if (!isEditPopupOpen) {
         setEditedCoreMessage(coreMessage);
-        setIsEditingCoreMessage(true);
+        setIsEditPopupOpen(true);
       } else {
         setIsLoading(true);
         const token = localStorage.getItem('token');
@@ -136,7 +138,7 @@ export default function Dashboard() {
         }
 
         setCoreMessage(editedCoreMessage);
-        setIsEditingCoreMessage(false);
+        setIsEditPopupOpen(false);
         setShowTypewriter(true);
       }
     } catch (error) {
@@ -428,9 +430,28 @@ export default function Dashboard() {
     }
   };
 
+  const handleInputChange = (e) => {
+    const input = e.target;
+    const value = input.value;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    
+    // Handle backspace
+    if (e.nativeEvent.inputType === 'deleteContentBackward') {
+      setInputMessage(prevMessage => prevMessage.slice(0, -1));
+      return;
+    }
+    
+    // Handle regular input
+    const newChar = value.charAt(start - 1);
+    if (newChar) {
+      setInputMessage(prevMessage => prevMessage + newChar);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
-
+  
     // Add user message to chat
     setMessages(prev => [...prev, {
         content: inputMessage,
@@ -438,7 +459,6 @@ export default function Dashboard() {
     }]);
     setInputMessage('');
     setIsSending(true);
-    setIsRefreshing(true);
 
     try {
         const token = localStorage.getItem('token');
@@ -461,7 +481,7 @@ export default function Dashboard() {
         const { data } = await onboardingResponse.json();
         const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
 
-        // Now make the generate request with the form data
+        // Now make the chat request with the form data
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`, {
             method: 'POST',
             headers: {
@@ -470,32 +490,42 @@ export default function Dashboard() {
             },
             body: JSON.stringify({
                 formData,
-                currentMessage: coreMessage,
+                currentMessage: isEditPopupOpen ? editedCoreMessage : coreMessage, // Use appropriate current message
                 userPrompt: inputMessage
             })
         });
 
-        const marketingData = await response.json();
+        if (!response.ok) {
+            throw new Error('Failed to send message');
+        }
+
+        const responseData = await response.json();
         
-        if (marketingData.success) {
-            // Update core message silently
-            setCoreMessage(marketingData.data.coreMessage);
-            
-            // Save the new core message to the database
+        if (responseData.success) {
+            // Add AI response to chat
+            setMessages(prev => [...prev, {
+                content: responseData.data.chatResponse,
+                type: 'ai'
+            }]);
+
+            // Update both core message states to keep them in sync
+            const newMessage = responseData.data.coreMessage;
+            setCoreMessage(newMessage);
+            setEditedCoreMessage(newMessage);
+
+            // Show typewriter effect for the update
+            setShowTypewriter(true);
+            setTimeout(() => setShowTypewriter(false), 1000);
+
+            // Save the updated message to the database
             await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ coreMessage: marketingData.data.coreMessage })
+                body: JSON.stringify({ coreMessage: newMessage })
             });
-
-            // Add AI response with questions to chat
-            setMessages(prev => [...prev, {
-                content: marketingData.data.chatResponse,
-                type: 'ai'
-            }]);
         }
     } catch (error) {
         console.error('Error sending message:', error);
@@ -506,7 +536,6 @@ export default function Dashboard() {
         }]);
     } finally {
         setIsSending(false);
-        setIsRefreshing(false);
     }
   };
 
@@ -962,9 +991,144 @@ export default function Dashboard() {
     );
   };
 
+  // Add this component for the edit popup
+  const EditPopup = () => {
+    if (!isEditPopupOpen) return null;
+
+    return (
+      <div className={styles.editPopupOverlay}>
+        <div className={styles.editPopupContent}>
+          <div className={styles.editPopupLeft}>
+            <div className={styles.editPopupHeader}>
+              <h2>Message Assistant</h2>
+              <button 
+                className={styles.editPopupCloseButton}
+                onClick={() => {
+                  setIsEditPopupOpen(false);
+                  setEditedCoreMessage('');
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div className={styles.chatInterface}>
+              <div className={styles.chatMessages}>
+                {messages.map((message, index) => (
+                  <div key={index} className={`${styles.messageContent} ${message.type === 'user' ? styles.userMessage : styles.aiMessage}`}>
+                    {message.type === 'user' && editingMessageIndex !== index ? (
+                      <>
+                        <button
+                          className={styles.editButton}
+                          onClick={() => {
+                            setEditingMessageIndex(index);
+                            setEditInputValue(message.content);
+                          }}
+                          aria-label="Edit message"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                        </button>
+                        <p>{message.content}</p>
+                      </>
+                    ) : editingMessageIndex === index ? (
+                      <div className={styles.editInputContainer}>
+                        <input
+                          type="text"
+                          className={styles.editInput}
+                          value={editInputValue}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setEditInputValue(value);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleEditSubmit(index);
+                            }
+                          }}
+                          onBlur={() => {
+                            setTimeout(() => {
+                              setEditingMessageIndex(null);
+                              setEditInputValue('');
+                            }, 200);
+                          }}
+                          autoFocus
+                        />
+                        <button
+                          className={styles.editSendButton}
+                          onClick={() => handleEditSubmit(index)}
+                          disabled={!editInputValue.trim()}
+                          aria-label="Send edited message"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M22 2L11 13" />
+                            <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <p>{message.content}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className={styles.inputContainer}>
+                <input
+                  type="text"
+                  className={styles.messageInput}
+                  value={inputMessage}
+                  onChange={handleInputChange}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  placeholder="Type your message..."
+                  disabled={isRefreshing}
+                  autoFocus
+                />
+                <button
+                  className={styles.sendButton}
+                  onClick={handleSendMessage}
+                  disabled={!inputMessage.trim() || isRefreshing}
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className={styles.editPopupRight}>
+            <textarea
+              className={styles.editCoreMessageInput}
+              value={editedCoreMessage}
+              onChange={(e) => setEditedCoreMessage(e.target.value)}
+              placeholder="Enter your core message..."
+            />
+            <div className={styles.editCoreMessageActions}>
+              <button
+                className={styles.saveButton}
+                onClick={handleEditCoreMessage}
+                disabled={!editedCoreMessage.trim()}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={styles.container}>
       {renderProjectPopup()}
+      <EditPopup />
       <aside className={`${styles.sidebar} ${isSidebarCollapsed ? styles.collapsed : ''}`}>
         <div className={styles.sidebarContent}>
           <div className={styles.sidebarHeader}>
@@ -1101,9 +1265,8 @@ export default function Dashboard() {
                         <button
                           className={styles.editButtonCore}
                           onClick={() => {
-                            setIsEditingCoreMessage(true);
+                            setIsEditPopupOpen(true);
                             setEditedCoreMessage(coreMessage);
-                            
                           }}
                           aria-label="Edit core message"
                         >
@@ -1119,7 +1282,7 @@ export default function Dashboard() {
                         <button
                           className={styles.editButtonCore}
                           onClick={() => {
-                            setIsEditingCoreMessage(true);
+                            setIsEditPopupOpen(true);
                             setEditedCoreMessage(coreMessage);
                           }}
                           aria-label="Edit core message"
@@ -1206,7 +1369,6 @@ export default function Dashboard() {
                               }
                             }}
                             onBlur={() => {
-                              // Small delay to allow button click to register before blur
                               setTimeout(() => {
                                 setEditingMessageIndex(null);
                                 setEditInputValue('');
@@ -1237,10 +1399,16 @@ export default function Dashboard() {
                     type="text"
                     className={styles.messageInput}
                     value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
+                    onChange={handleInputChange}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
                     placeholder="Type your message..."
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                     disabled={isRefreshing}
+                    autoFocus
                   />
                   <button
                     className={styles.sendButton}
