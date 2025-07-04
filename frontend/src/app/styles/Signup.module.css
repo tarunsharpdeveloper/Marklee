@@ -234,7 +234,7 @@
   }
   .signup_modal_content {
     padding: 4.25rem 1rem;
-    height: auto;
+    height: 100vh;
   }
 
   .social_buttons {
