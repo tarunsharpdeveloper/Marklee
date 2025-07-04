@@ -2874,6 +2874,7 @@
 .userMessage {
   justify-content: flex-end;
   margin-left: auto;
+  position: relative;
 }
 
 .userMessage p {
@@ -2882,6 +2883,69 @@
   padding: 0.5rem 1rem;
   border-radius: 12px;
   border-left: 4px solid #8075ff;
+}
+
+.editButton {
+  cursor: pointer;
+  opacity: 0;
+  color: #666;
+  background: none;
+  border: none;
+  padding: 4px;
+  transition: opacity .2s;
+  position: absolute;
+  top: 53%;
+  left: -13px;
+  transform: translateY(-50%);
+}
+
+.userMessage:hover .editButton {
+  opacity: 1;
+}
+
+.editButton:hover {
+  color: #8075ff;
+}
+
+.editInputContainer {
+  position: relative;
+  width: 100%;
+}
+
+.editInput {
+  width: 100%;
+  padding: 0.5rem 2.5rem 0.5rem 1rem;  /* Added right padding for the send button */
+  border-radius: 12px;
+  border: 2px solid #8075ff;
+  background-color: white;
+  color: #333;
+  font-size: inherit;
+  font-family: inherit;
+  outline: none;
+}
+
+.editSendButton {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #8075ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editSendButton:hover {
+  color: #6c63ff;
+}
+
+.editSendButton:disabled {
+  color: #ccc;
+  cursor: not-allowed;
 }
 
 .aiMessage {
