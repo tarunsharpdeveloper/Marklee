@@ -91,7 +91,6 @@
   color: #213547;
   font-size: 1.5rem;
   margin-bottom: 0.25rem;
-  margin-top:2rem ;
 }
 
 .signup_header p {
@@ -237,7 +236,10 @@
     padding: 4.25rem 1rem;
     height: auto;
   }
-
+  .signup_header h2 {
+ 
+    margin-top:2rem ;
+  }
   .social_buttons {
     flex-direction: row;
     gap: 0.5rem;
