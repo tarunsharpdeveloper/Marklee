@@ -229,9 +229,11 @@
     max-height: 100vh;
     border-radius: 0;
   }
-
+  .back_button {
+    top: 2.8rem;
+  }
   .signup_modal_content {
-    padding: 1.25rem 1rem;
+    padding: 3.25rem 1rem;
     height: auto;
   }
 
