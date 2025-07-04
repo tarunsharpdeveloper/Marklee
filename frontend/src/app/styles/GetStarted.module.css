@@ -369,9 +369,12 @@
 /* Small Mobile Styles */
 @media (max-width: 480px) {
   .getstarted_modal_header {
-    padding: 1rem 0.75rem;
+    padding: 0rem;
+    margin-top: 3.9rem;
   }
-
+.getstarted_modal_close{
+  top: 2rem;
+}
   .getstarted_plans_container {
     padding: 0.75rem;
   }
