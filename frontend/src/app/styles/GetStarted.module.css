@@ -370,10 +370,10 @@
 @media (max-width: 480px) {
   .getstarted_modal_header {
     padding: 0rem;
-    margin-top: 3.9rem;
+    margin-top: 4.5rem;
   }
 .getstarted_modal_close{
-  top: 2rem;
+  top: 2.5rem;
 }
   .getstarted_plans_container {
     padding: 0.75rem;
