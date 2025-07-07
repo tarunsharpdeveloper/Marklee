@@ -5,7 +5,6 @@ import styles from './styles.module.css';
 export default function PromptEdit() {
     const [prompts, setPrompts] = useState([]);
     const [categories, setCategories] = useState([]);
-    const [activePrompt, setActivePrompt] = useState(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingPrompt, setEditingPrompt] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -182,9 +181,6 @@ export default function PromptEdit() {
             }
 
             setPrompts(prompts.filter(prompt => prompt.id !== id));
-            if (activePrompt?.id === id) {
-                setActivePrompt(null);
-            }
         } catch (error) {
             console.error('Error deleting prompt:', error);
             setError('Failed to delete prompt');
@@ -326,8 +322,7 @@ export default function PromptEdit() {
                         prompts.map((prompt) => (
                             <div
                                 key={prompt.id}
-                                className={`${styles.promptCard} ${activePrompt?.id === prompt.id ? styles.activeCard : ''}`}
-                                onClick={() => setActivePrompt(prompt)}
+                                className={`${styles.promptCard}`}
                             >
                                 <div className={styles.promptCardHeader}>
                                     <span className={styles.categoryTag}>
@@ -394,34 +389,6 @@ export default function PromptEdit() {
                             </div>
                         ))
                     )}
-                </div>
-            )}
-
-            {activePrompt && (
-                <div className={styles.promptPreview}>
-                    <div className={styles.previewHeader}>
-                        <h3>Preview</h3>
-                        <button
-                            className={styles.closeButton}
-                            onClick={() => setActivePrompt(null)}
-                        >
-                            ✕
-                        </button>
-                    </div>
-                    <div className={styles.previewContent}>
-                        <p>{activePrompt.prompt}</p>
-                        {activePrompt.variables.length > 0 && (
-                            <div className={styles.variableInputs}>
-                                <h4>Variables</h4>
-                                {activePrompt.variables.map((variable, index) => (
-                                    <div key={index} className={styles.variableInput}>
-                                        <label>{variable}:</label>
-                                        <input type="text" placeholder={`Enter ${variable}`} />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
                 </div>
             )}
 
