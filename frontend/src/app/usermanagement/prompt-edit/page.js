@@ -364,7 +364,7 @@ export default function PromptEdit() {
                                     </div>
                                 </div>
                                 <div 
-                                    className={styles.promptContent}
+                                    className={`${styles.promptContent} ${expandedPromptId === prompt.id ? styles.expanded : ''}`}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         if (countWords(prompt.prompt) > 100) {

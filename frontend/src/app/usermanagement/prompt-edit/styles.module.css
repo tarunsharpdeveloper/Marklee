@@ -156,10 +156,15 @@
   font-size: 1.2rem;
   color: #8075ff;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.promptContent:hover:after {
+.promptContent.expanded:after {
+  content: '⌃';
+  opacity: 1;
+}
+
+.promptContent:not(.expanded):hover:after {
   opacity: 1;
 }
 
