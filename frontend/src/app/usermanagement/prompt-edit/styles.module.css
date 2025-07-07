@@ -2,12 +2,12 @@
 
 
 .container {
-  padding-top: 3rem;
-  padding-left: 1rem;
+  /* padding-top: 4rem; */
+  padding: 4rem;
   max-width: 1400px;
   margin: 0 auto;
   min-height: 100vh;
-  background-color: #f8fafc;
+  background-color: #ffffff;
 }
 
 .header {
@@ -35,7 +35,7 @@
   background-color: #8075ff;
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
+  padding: 0.65rem 1.5rem;
   border-radius: 12px;
   cursor: pointer;
   font-size: 1rem;
