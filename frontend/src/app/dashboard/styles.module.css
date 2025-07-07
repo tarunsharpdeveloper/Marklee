@@ -3187,6 +3187,7 @@
   display: flex;
   overflow: hidden;
 }
+
 .editPopupLeft {
   width: 30%;
   background-color: #f8f9fa;
@@ -3230,4 +3231,52 @@
   background-color: #f3f4f6;
 }
 
+@media (max-width: 480px) {
+  .editPopupContent {
+    flex-direction: column;
+  }
 
+  .editPopupLeft {
+    width: 100%;
+    height: 50%;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .editPopupRight {
+    width: 100%;
+    height: auto;
+  }
+}
+
+
+@media (max-width: 838px) {
+  .editPopupContent {
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .editPopupLeft {
+    width: 100%;
+    height: auto;
+    min-height: 50vh;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .editPopupRight {
+    width: 100%;
+    height: auto;
+    min-height: 40vh;
+  }
+
+  .chatMessages {
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+
+  .editCoreMessageInput {
+    min-height: 30vh;
+  }
+}
