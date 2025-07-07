@@ -18,6 +18,7 @@ export default function PromptEdit() {
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [expandedPromptId, setExpandedPromptId] = useState(null);
 
     const fetchPrompts = async () => {
         try {
@@ -213,6 +214,18 @@ export default function PromptEdit() {
         }
     };
 
+    const countWords = (text) => {
+        return text.trim().split(/\s+/).length;
+    };
+
+    const truncateText = (text) => {
+        const words = text.trim().split(/\s+/);
+        if (words.length > 100) {
+            return words.slice(0, 100).join(' ') + '...';
+        }
+        return text;
+    };
+
     useEffect(() => {
         getAiPromptsType();
     }, []);
@@ -355,8 +368,16 @@ export default function PromptEdit() {
                                         </button>
                                     </div>
                                 </div>
-                                <div className={styles.promptContent}>
-                                    {prompt.prompt}
+                                <div 
+                                    className={styles.promptContent}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (countWords(prompt.prompt) > 100) {
+                                            setExpandedPromptId(expandedPromptId === prompt.id ? null : prompt.id);
+                                        }
+                                    }}
+                                >
+                                    {expandedPromptId === prompt.id ? prompt.prompt : truncateText(prompt.prompt)}
                                 </div>
                                 <div className={styles.promptFooter}>
                                     <div className={styles.variables}>
