@@ -87,7 +87,24 @@
   outline: none;
   border-color: #646cff;
 }
-
+.close_button {
+  color: #666;
+  cursor: pointer;
+  z-index: 10;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  transition: all .2s;
+  display: flex;
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+}
 .form_footer {
   display: flex;
   justify-content: space-between;
@@ -338,7 +355,7 @@
   }
 
   .login_modal_content {
-    padding: 1.5rem;
+    padding-top: 5rem;
   }
 
   .social_buttons {
@@ -349,26 +366,12 @@
     width: 100%;
     justify-content: center;
   }
+  .close_button {
+    top: 3.25rem;
+  }
 }
 
-.close_button {
-  position: absolute;
-  top: 1.25rem;
-  right: 1.25rem;
-  background: none;
-  border: none;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-  padding: 0;
-  z-index: 10;
-}
+
 
 .close_button::before,
 .close_button::after {

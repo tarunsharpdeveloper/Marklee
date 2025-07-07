@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { Typewriter } from 'react-simple-typewriter';
-import styles from './styles.module.css';
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { Typewriter } from "react-simple-typewriter";
+import styles from "./styles.module.css";
 
 const MessageSkeleton = () => (
   <div className={styles.skeleton}>
@@ -19,41 +19,39 @@ export default function Dashboard() {
   const [expandedFolders, setExpandedFolders] = useState({
     marketing: false,
     content: false,
-    social: false
+    social: false,
   });
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [user, setUser] = useState({ name: '', initials: '' });
-  const [activeSection, setActiveSection] = useState('greeting');
+  const [user, setUser] = useState({ name: "", initials: "" });
+  const [activeSection, setActiveSection] = useState("greeting");
   const [isProjectPopupOpen, setIsProjectPopupOpen] = useState(false);
-  const [projectName, setProjectName] = useState('');
+  const [projectName, setProjectName] = useState("");
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [coreMessage, setCoreMessage] = useState('');
+  const [error, setError] = useState("");
+  const [coreMessage, setCoreMessage] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [messages, setMessages] = useState([]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputMessage, setInputMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [showTypewriter, setShowTypewriter] = useState(false);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const [editingMessageIndex, setEditingMessageIndex] = useState(null);
-  const [editInputValue, setEditInputValue] = useState('');
+  const [editInputValue, setEditInputValue] = useState("");
 
-  const [folderStructure, setFolderStructure] = useState({
-  
-  });
+  const [folderStructure, setFolderStructure] = useState({});
 
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [isBriefFormOpen, setIsBriefFormOpen] = useState(false);
   const [briefData, setBriefData] = useState({
-    purpose: '',
-    main_message: '',
-    special_features: '',
-    beneficiaries: '',
-    benefits: '',
-    call_to_action: '',
-    importance: '',
-    additional_info: ''
+    purpose: "",
+    main_message: "",
+    special_features: "",
+    beneficiaries: "",
+    benefits: "",
+    call_to_action: "",
+    importance: "",
+    additional_info: "",
   });
 
   const [audiences, setAudiences] = useState([]);
@@ -61,31 +59,31 @@ export default function Dashboard() {
   const qaPairs = [
     {
       question: "What type of content are you looking to create?",
-      options: ["Blog Post", "Social Media", "Email", "Ad Copy"]
+      options: ["Blog Post", "Social Media", "Email", "Ad Copy"],
     },
     {
       question: "What's your content goal?",
-      options: ["Engagement", "Lead Generation", "Brand Awareness", "Sales"]
-    }
+      options: ["Engagement", "Lead Generation", "Brand Awareness", "Sales"],
+    },
   ];
 
   // Add loading state
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState('');
+  const [loadingMessage, setLoadingMessage] = useState("");
 
   const loadingMessages = [
-    'Thinking about the best approach...',
-    'Analyzing your request in detail...',
-    'Consulting my AI colleagues...',
-    'Working on a personalized solution...',
-    'Generating some creative ideas...',
-    'Putting the finishing touches on your response...',
-    'Almost ready with something great...',
-    'Just a few more calculations...',
-    'Cross-checking for accuracy...',
-    'Preparing your tailored answer...'
+    "Thinking about the best approach...",
+    "Analyzing your request in detail...",
+    "Consulting my AI colleagues...",
+    "Working on a personalized solution...",
+    "Generating some creative ideas...",
+    "Putting the finishing touches on your response...",
+    "Almost ready with something great...",
+    "Just a few more calculations...",
+    "Cross-checking for accuracy...",
+    "Preparing your tailored answer...",
   ];
-  
+
   useEffect(() => {
     let messageIndex = 0;
     let intervalId;
@@ -105,11 +103,11 @@ export default function Dashboard() {
   }, [isLoading]);
 
   const [isEditingCoreMessage, setIsEditingCoreMessage] = useState(false);
-  const [editedCoreMessage, setEditedCoreMessage] = useState('');
+  const [editedCoreMessage, setEditedCoreMessage] = useState("");
 
   const adjustTextareaHeight = (element) => {
     if (element) {
-      element.style.height = 'auto';
+      element.style.height = "auto";
       element.style.height = `${element.scrollHeight}px`;
     }
   };
@@ -123,18 +121,21 @@ export default function Dashboard() {
         setIsEditPopupOpen(true);
       } else {
         setIsLoading(true);
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ coreMessage: editedCoreMessage })
-        });
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ coreMessage: editedCoreMessage }),
+          }
+        );
 
         if (!response.ok) {
-          throw new Error('Failed to update core message');
+          throw new Error("Failed to update core message");
         }
 
         setCoreMessage(editedCoreMessage);
@@ -142,7 +143,7 @@ export default function Dashboard() {
         setShowTypewriter(true);
       }
     } catch (error) {
-      console.error('Error updating core message:', error);
+      console.error("Error updating core message:", error);
     } finally {
       setIsLoading(false);
     }
@@ -152,47 +153,59 @@ export default function Dashboard() {
     try {
       setIsRefreshing(true);
       setShowTypewriter(false);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) return;
 
-      const onboardingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const onboardingResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
       if (!onboardingResponse.ok) {
-        throw new Error('Failed to fetch onboarding data');
+        throw new Error("Failed to fetch onboarding data");
       }
 
       const { data } = await onboardingResponse.json();
-      
-      if (shouldRefresh && data) {
-        const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
 
-        const marketingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate?refresh=true`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(formData)
-        });
+      if (shouldRefresh && data) {
+        const formData =
+          typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+
+        const marketingResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate?refresh=true`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(formData),
+          }
+        );
 
         if (!marketingResponse.ok) {
-          throw new Error('Failed to generate new marketing content');
+          throw new Error("Failed to generate new marketing content");
         }
 
         const marketingData = await marketingResponse.json();
-        
-        await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ coreMessage: marketingData.data.coreMessage })
-        });
+
+        await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              coreMessage: marketingData.data.coreMessage,
+            }),
+          }
+        );
 
         setCoreMessage(marketingData.data.coreMessage);
         setShowTypewriter(true);
@@ -200,7 +213,7 @@ export default function Dashboard() {
         setCoreMessage(data.core_message);
       }
     } catch (error) {
-      console.error('Error fetching core message:', error);
+      console.error("Error fetching core message:", error);
     } finally {
       setIsRefreshing(false);
     }
@@ -212,24 +225,28 @@ export default function Dashboard() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
-        router.push('/');
+        router.push("/");
         return;
       }
 
       try {
         // Set user data from localStorage
-        const userData = JSON.parse(localStorage.getItem('user'));
+        const userData = JSON.parse(localStorage.getItem("user"));
         if (userData) {
           setUser({
             name: userData.name,
-            initials: userData.name.split(' ').map(n => n[0]).join('').toUpperCase()
+            initials: userData.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .toUpperCase(),
           });
         }
       } catch (error) {
-        console.error('Error checking auth:', error);
-        router.push('/');
+        console.error("Error checking auth:", error);
+        router.push("/");
       }
     };
 
@@ -238,16 +255,16 @@ export default function Dashboard() {
 
   useEffect(() => {
     // Get user data from localStorage
-    const userData = localStorage.getItem('user');
+    const userData = localStorage.getItem("user");
     if (userData) {
       const parsedUser = JSON.parse(userData);
       const initials = parsedUser.name
-        .split(' ')
-        .map(word => word[0])
-        .join('')
+        .split(" ")
+        .map((word) => word[0])
+        .join("")
         .toUpperCase();
       setUser({ ...parsedUser, initials });
-      
+
       // Fetch projects when user data is available
       fetchProjects();
     }
@@ -255,30 +272,33 @@ export default function Dashboard() {
 
   const fetchProjects = async () => {
     try {
-      const token = localStorage.getItem('token');
-      
+      const token = localStorage.getItem("token");
+
       if (!token) {
-        router.push('/');
+        router.push("/");
         return;
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/projects`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/projects`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
       if (response.ok) {
         const { data } = await response.json();
-        console.log('Fetched projects:', data);
-        
+        console.log("Fetched projects:", data);
+
         // Convert to folder structure without filtering
         const newFolderStructure = data.reduce((acc, project) => {
-          const projectKey = project.name.toLowerCase().replace(/\s+/g, '_');
+          const projectKey = project.name.toLowerCase().replace(/\s+/g, "_");
           acc[projectKey] = {
             id: project.id,
             name: project.name,
-            status: project.status
+            status: project.status,
           };
           return acc;
         }, {});
@@ -286,10 +306,10 @@ export default function Dashboard() {
         setFolderStructure(newFolderStructure);
         setProjects(data);
       } else {
-        console.error('Failed to fetch projects:', response.status);
+        console.error("Failed to fetch projects:", response.status);
       }
     } catch (error) {
-      console.error('Error fetching projects:', error);
+      console.error("Error fetching projects:", error);
     }
   };
 
@@ -298,59 +318,62 @@ export default function Dashboard() {
   };
 
   const toggleFolder = (folderKey) => {
-    setExpandedFolders(prev => {
+    setExpandedFolders((prev) => {
       // Create a new object with all folders closed
       const allClosed = Object.keys(prev).reduce((acc, key) => {
         acc[key] = false;
         return acc;
       }, {});
-      
+
       // Toggle only the clicked folder
       return {
         ...allClosed,
-        [folderKey]: !prev[folderKey]
+        [folderKey]: !prev[folderKey],
       };
     });
   };
 
   const handleLogout = () => {
     localStorage.clear();
-    router.push('/');
+    router.push("/");
   };
 
   const handleCreateProject = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const token = localStorage.getItem('token');
-      const userData = JSON.parse(localStorage.getItem('user'));
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/project`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          userId: userData.id,
-          projectName: projectName.trim()
-        })
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/project`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId: userData.id,
+            projectName: projectName.trim(),
+          }),
+        }
+      );
 
       if (response.ok) {
-        setProjectName('');
+        setProjectName("");
         setIsProjectPopupOpen(false);
         // Navigate to library after successful project creation
-        router.push('/library');
+        router.push("/library");
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to create project');
+        setError(errorData.message || "Failed to create project");
       }
     } catch (error) {
-      console.error('Error creating project:', error);
-      setError('Failed to create project. Please try again.');
+      console.error("Error creating project:", error);
+      setError("Failed to create project. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -360,11 +383,11 @@ export default function Dashboard() {
     e.preventDefault();
     setLoading(true);
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const token = localStorage.getItem('token');
-      const userData = JSON.parse(localStorage.getItem('user'));
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("user"));
 
       const briefPayload = {
         projectId: selectedFolder.id,
@@ -376,54 +399,57 @@ export default function Dashboard() {
         benefits: briefData.benefits,
         callToAction: briefData.call_to_action,
         importance: briefData.importance,
-        additionalInfo: briefData.additional_info
+        additionalInfo: briefData.additional_info,
       };
 
-      console.log('Creating brief with payload:', briefPayload);
+      console.log("Creating brief with payload:", briefPayload);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/create-brief`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(briefPayload)
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/create-brief`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(briefPayload),
+        }
+      );
 
       const responseData = await response.json();
 
       if (response.ok) {
         // Parse and store audiences
-        const newAudiences = responseData.data.audiences.map(audience => {
+        const newAudiences = responseData.data.audiences.map((audience) => {
           const segmentData = JSON.parse(audience.segment);
           return {
             id: audience.id,
             name: segmentData.name,
-            description: segmentData.description
+            description: segmentData.description,
           };
         });
         setAudiences(newAudiences);
 
         setBriefData({
-          purpose: '',
-          main_message: '',
-          special_features: '',
-          beneficiaries: '',
-          benefits: '',
-          call_to_action: '',
-          importance: '',
-          additional_info: ''
+          purpose: "",
+          main_message: "",
+          special_features: "",
+          beneficiaries: "",
+          benefits: "",
+          call_to_action: "",
+          importance: "",
+          additional_info: "",
         });
         setIsBriefFormOpen(false);
-        setError('');
+        setError("");
       } else {
-        const errorMessage = responseData.message || 'Failed to create brief';
-        console.error('Server error:', errorMessage);
+        const errorMessage = responseData.message || "Failed to create brief";
+        console.error("Server error:", errorMessage);
         setError(errorMessage);
       }
     } catch (error) {
-      console.error('Error creating brief:', error);
-      setError(error.message || 'Failed to create brief. Please try again.');
+      console.error("Error creating brief:", error);
+      setError(error.message || "Failed to create brief. Please try again.");
     } finally {
       setLoading(false);
       setIsLoading(false);
@@ -435,107 +461,126 @@ export default function Dashboard() {
     const value = input.value;
     const start = input.selectionStart;
     const end = input.selectionEnd;
-    
+
     // Handle backspace
-    if (e.nativeEvent.inputType === 'deleteContentBackward') {
-      setInputMessage(prevMessage => prevMessage.slice(0, -1));
+    if (e.nativeEvent.inputType === "deleteContentBackward") {
+      setInputMessage((prevMessage) => prevMessage.slice(0, -1));
       return;
     }
-    
+
     // Handle regular input
     const newChar = value.charAt(start - 1);
     if (newChar) {
-      setInputMessage(prevMessage => prevMessage + newChar);
+      setInputMessage((prevMessage) => prevMessage + newChar);
     }
   };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
-  
+
     // Add user message to chat
-    setMessages(prev => [...prev, {
+    setMessages((prev) => [
+      ...prev,
+      {
         content: inputMessage,
-        type: 'user'
-    }]);
-    setInputMessage('');
+        type: "user",
+      },
+    ]);
+    setInputMessage("");
     setIsSending(true);
 
     try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            router.push('/');
-            return;
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/");
+        return;
+      }
+
+      // First get the onboarding data
+      const onboardingResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
+      );
 
-        // First get the onboarding data
-        const onboardingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
+      if (!onboardingResponse.ok) {
+        throw new Error("Failed to fetch onboarding data");
+      }
 
-        if (!onboardingResponse.ok) {
-            throw new Error('Failed to fetch onboarding data');
+      const { data } = await onboardingResponse.json();
+      const formData =
+        typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+
+      // Now make the chat request with the form data
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            formData,
+            currentMessage: isEditPopupOpen ? editedCoreMessage : coreMessage,
+            userPrompt: inputMessage,
+          }),
         }
+      );
 
-        const { data } = await onboardingResponse.json();
-        const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
 
-        // Now make the chat request with the form data
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`, {
-            method: 'POST',
+      const responseData = await response.json();
+
+      if (responseData.success) {
+        // Add AI response to chat
+        setMessages((prev) => [
+          ...prev,
+          {
+            content: responseData.data.chatResponse,
+            type: "ai",
+          },
+        ]);
+
+        // Update both core message states to keep them in sync
+        const newMessage = responseData.data.coreMessage;
+        setCoreMessage(newMessage);
+        setEditedCoreMessage(newMessage);
+
+        // Show typewriter effect for the update
+        setShowTypewriter(true);
+        setTimeout(() => setShowTypewriter(false), 1000);
+
+        // Save the updated message to the database
+        await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
+          {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({
-                formData,
-                currentMessage: isEditPopupOpen ? editedCoreMessage : coreMessage,
-                userPrompt: inputMessage
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to send message');
-        }
-
-        const responseData = await response.json();
-        
-        if (responseData.success) {
-            // Add AI response to chat
-            setMessages(prev => [...prev, {
-                content: responseData.data.chatResponse,
-                type: 'ai'
-            }]);
-
-            // Update both core message states to keep them in sync
-            const newMessage = responseData.data.coreMessage;
-            setCoreMessage(newMessage);
-            setEditedCoreMessage(newMessage);
-
-            // Show typewriter effect for the update
-            setShowTypewriter(true);
-            setTimeout(() => setShowTypewriter(false), 1000);
-
-            // Save the updated message to the database
-            await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ coreMessage: newMessage })
-            });
-        }
+            body: JSON.stringify({ coreMessage: newMessage }),
+          }
+        );
+      }
     } catch (error) {
-        console.error('Error sending message:', error);
-        // Show error message in chat
-        setMessages(prev => [...prev, {
-            content: 'Sorry, I encountered an error. Please try again.',
-            type: 'ai'
-        }]);
+      console.error("Error sending message:", error);
+      // Show error message in chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          content: "Sorry, I encountered an error. Please try again.",
+          type: "ai",
+        },
+      ]);
     } finally {
-        setIsSending(false);
+      setIsSending(false);
     }
   };
 
@@ -551,40 +596,47 @@ export default function Dashboard() {
     try {
       setIsRefreshing(true);
       setShowTypewriter(false);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) return;
 
-      const onboardingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const onboardingResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
       if (!onboardingResponse.ok) {
-        throw new Error('Failed to fetch onboarding data');
+        throw new Error("Failed to fetch onboarding data");
       }
 
       const { data } = await onboardingResponse.json();
-      
-      if (data) {
-        const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
 
-        let modificationPrompt = '';
-        switch(optionType) {
-          case 'shorter':
-            modificationPrompt = 'Make this message shorter and punchier while keeping the main point';
+      if (data) {
+        const formData =
+          typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+
+        let modificationPrompt = "";
+        switch (optionType) {
+          case "shorter":
+            modificationPrompt =
+              "Make this message shorter and punchier while keeping the main point";
             break;
-          case 'tone':
-            modificationPrompt = 'Make this message more friendly and confident';
+          case "tone":
+            modificationPrompt =
+              "Make this message more friendly and confident";
             break;
-          case 'emphasis':
-            modificationPrompt = 'Emphasize the benefits and value more';
+          case "emphasis":
+            modificationPrompt = "Emphasize the benefits and value more";
             break;
-          case 'alternative':
-            modificationPrompt = 'Give me an alternative version with a different angle';
+          case "alternative":
+            modificationPrompt =
+              "Give me an alternative version with a different angle";
             break;
-          case 'fresh':
-            modificationPrompt = 'Rewrite this with a fresh perspective';
+          case "fresh":
+            modificationPrompt = "Rewrite this with a fresh perspective";
             break;
           default:
             break;
@@ -595,37 +647,45 @@ export default function Dashboard() {
         formData.modificationRequest = modificationPrompt;
         formData.additionalInfo = `Please modify this core message: "${coreMessage}". ${modificationPrompt}`;
 
-        const marketingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate?refresh=true`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(formData)
-        });
+        const marketingResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate?refresh=true`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(formData),
+          }
+        );
 
         if (!marketingResponse.ok) {
-          throw new Error('Failed to generate new marketing content');
+          throw new Error("Failed to generate new marketing content");
         }
 
         const marketingData = await marketingResponse.json();
-        
+
         if (marketingData.success && marketingData.data) {
           setCoreMessage(marketingData.data.coreMessage);
           setShowTypewriter(true);
-          
-          await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ coreMessage: marketingData.data.coreMessage })
-          });
+
+          await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                coreMessage: marketingData.data.coreMessage,
+              }),
+            }
+          );
         }
       }
     } catch (error) {
-      console.error('Error modifying message:', error);
+      console.error("Error modifying message:", error);
     } finally {
       setIsRefreshing(false);
     }
@@ -634,87 +694,105 @@ export default function Dashboard() {
   // Add new function to handle edit submission
   const handleEditSubmit = async (index) => {
     if (!editInputValue.trim()) return;
-    
+
     const originalMessage = messages[index];
-    
+
     // Update the message immediately for better UX
     const updatedMessages = [...messages];
     updatedMessages[index] = {
       ...originalMessage,
-      content: editInputValue
+      content: editInputValue,
     };
     setMessages(updatedMessages);
-    
+
     // Reset edit state
     setEditingMessageIndex(null);
-    setEditInputValue('');
+    setEditInputValue("");
     setIsRefreshing(true);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
-        router.push('/');
+        router.push("/");
         return;
       }
 
       // Get the onboarding data
-      const onboardingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const onboardingResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
       if (!onboardingResponse.ok) {
-        throw new Error('Failed to fetch onboarding data');
+        throw new Error("Failed to fetch onboarding data");
       }
 
       const { data } = await onboardingResponse.json();
-      const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+      const formData =
+        typeof data.data === "string" ? JSON.parse(data.data) : data.data;
 
       // Make the generate request with the edited message
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          formData,
-          currentMessage: coreMessage,
-          userPrompt: editInputValue
-        })
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            formData,
+            currentMessage: coreMessage,
+            userPrompt: editInputValue,
+          }),
+        }
+      );
 
       const marketingData = await response.json();
-      
+
       if (marketingData.success) {
         // Update core message silently
         setCoreMessage(marketingData.data.coreMessage);
-        
+
         // Save the new core message to the database
-        await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ coreMessage: marketingData.data.coreMessage })
-        });
+        await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              coreMessage: marketingData.data.coreMessage,
+            }),
+          }
+        );
 
         // Add AI response to chat
-        setMessages(prev => [...prev, {
-          content: marketingData.data.chatResponse,
-          type: 'ai'
-        }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            content: marketingData.data.chatResponse,
+            type: "ai",
+          },
+        ]);
       }
     } catch (error) {
-      console.error('Error updating message:', error);
+      console.error("Error updating message:", error);
       // Revert the message on error
       setMessages(messages);
-      setMessages(prev => [...prev, {
-        content: 'Sorry, I encountered an error. Please try again.',
-        type: 'ai'
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          content: "Sorry, I encountered an error. Please try again.",
+          type: "ai",
+        },
+      ]);
     } finally {
       setIsRefreshing(false);
     }
@@ -728,15 +806,22 @@ export default function Dashboard() {
         <div className={styles.popup}>
           <div className={styles.popupHeader}>
             <h2>Create New Project</h2>
-            <button 
+            <button
               className={styles.closeButton}
               onClick={() => {
                 setIsProjectPopupOpen(false);
-                setProjectName('');
-                setError('');
+                setProjectName("");
+                setError("");
               }}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
@@ -757,23 +842,23 @@ export default function Dashboard() {
               />
             </div>
             <div className={styles.popupActions}>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className={styles.cancelButton}
                 onClick={() => {
                   setIsProjectPopupOpen(false);
-                  setProjectName('');
-                  setError('');
+                  setProjectName("");
+                  setError("");
                 }}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 type="submit"
                 className={styles.submitButton}
                 disabled={loading || !projectName.trim()}
               >
-                {loading ? 'Creating...' : 'Create Project'}
+                {loading ? "Creating..." : "Create Project"}
               </button>
             </div>
           </form>
@@ -785,19 +870,25 @@ export default function Dashboard() {
   const renderFolderContent = (folder) => {
     return (
       <div className={styles.folderContent}>
-        <button 
+        <button
           className={styles.createBriefButton}
           onClick={() => {
             setSelectedFolder(folder);
             setIsBriefFormOpen(true);
           }}
         >
-          
           Create Brief
           <div className={styles.createBriefButtonIcon}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 5v14M5 12h14"/>
-          </svg>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
           </div>
         </button>
       </div>
@@ -810,21 +901,35 @@ export default function Dashboard() {
         <div className={styles.folderList}>
           {Object.entries(folderStructure).map(([key, folder]) => (
             <div key={key} className={styles.folderItem}>
-              <div 
-                className={styles.folderHeader} 
+              <div
+                className={styles.folderHeader}
                 onClick={() => toggleFolder(key)}
               >
                 <div className={styles.folderIcon}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                   </svg>
                 </div>
                 <span>{folder.name}</span>
-                <svg 
-                  className={`${styles.arrowIcon} ${expandedFolders[key] ? styles.expanded : ''}`} 
-                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                <svg
+                  className={`${styles.arrowIcon} ${
+                    expandedFolders[key] ? styles.expanded : ""
+                  }`}
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
                 >
-                  <path d="M6 9l6 6 6-6"/>
+                  <path d="M6 9l6 6 6-6" />
                 </svg>
               </div>
               {expandedFolders[key] && renderFolderContent(folder)}
@@ -842,13 +947,18 @@ export default function Dashboard() {
           <div className={styles.briefForm}>
             <h2>Create Brief for {selectedFolder.name}</h2>
             {error && <div className={styles.error}>{error}</div>}
-            
+
             <form onSubmit={handleBriefSubmit}>
               <div className={styles.formGroup}>
                 <label>Purpose</label>
                 <textarea
                   value={briefData.purpose}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, purpose: e.target.value }))}
+                  onChange={(e) =>
+                    setBriefData((prev) => ({
+                      ...prev,
+                      purpose: e.target.value,
+                    }))
+                  }
                   placeholder="What is the purpose of this brief?"
                   className={styles.textarea}
                   required
@@ -858,7 +968,12 @@ export default function Dashboard() {
                 <label>Main Message</label>
                 <textarea
                   value={briefData.main_message}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, main_message: e.target.value }))}
+                  onChange={(e) =>
+                    setBriefData((prev) => ({
+                      ...prev,
+                      main_message: e.target.value,
+                    }))
+                  }
                   placeholder="What is the main message you want to convey?"
                   className={styles.textarea}
                   required
@@ -868,7 +983,12 @@ export default function Dashboard() {
                 <label>Special Features (Optional)</label>
                 <textarea
                   value={briefData.special_features}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, special_features: e.target.value }))}
+                  onChange={(e) =>
+                    setBriefData((prev) => ({
+                      ...prev,
+                      special_features: e.target.value,
+                    }))
+                  }
                   placeholder="Any special features or unique aspects?"
                   className={styles.textarea}
                 />
@@ -877,7 +997,12 @@ export default function Dashboard() {
                 <label>Beneficiaries</label>
                 <textarea
                   value={briefData.beneficiaries}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, beneficiaries: e.target.value }))}
+                  onChange={(e) =>
+                    setBriefData((prev) => ({
+                      ...prev,
+                      beneficiaries: e.target.value,
+                    }))
+                  }
                   placeholder="Who will benefit from this?"
                   className={styles.textarea}
                   required
@@ -887,7 +1012,12 @@ export default function Dashboard() {
                 <label>Benefits</label>
                 <textarea
                   value={briefData.benefits}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, benefits: e.target.value }))}
+                  onChange={(e) =>
+                    setBriefData((prev) => ({
+                      ...prev,
+                      benefits: e.target.value,
+                    }))
+                  }
                   placeholder="What are the key benefits?"
                   className={styles.textarea}
                   required
@@ -897,7 +1027,12 @@ export default function Dashboard() {
                 <label>Call to Action</label>
                 <textarea
                   value={briefData.call_to_action}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, call_to_action: e.target.value }))}
+                  onChange={(e) =>
+                    setBriefData((prev) => ({
+                      ...prev,
+                      call_to_action: e.target.value,
+                    }))
+                  }
                   placeholder="What action do you want people to take?"
                   className={styles.textarea}
                   required
@@ -907,7 +1042,12 @@ export default function Dashboard() {
                 <label>Importance</label>
                 <textarea
                   value={briefData.importance}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, importance: e.target.value }))}
+                  onChange={(e) =>
+                    setBriefData((prev) => ({
+                      ...prev,
+                      importance: e.target.value,
+                    }))
+                  }
                   placeholder="Why is this important?"
                   className={styles.textarea}
                   required
@@ -917,37 +1057,42 @@ export default function Dashboard() {
                 <label>Additional Information (Optional)</label>
                 <textarea
                   value={briefData.additional_info}
-                  onChange={(e) => setBriefData(prev => ({ ...prev, additional_info: e.target.value }))}
+                  onChange={(e) =>
+                    setBriefData((prev) => ({
+                      ...prev,
+                      additional_info: e.target.value,
+                    }))
+                  }
                   placeholder="Any other relevant information?"
                   className={styles.textarea}
                 />
               </div>
               <div className={styles.buttonGroup}>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => {
                     setIsBriefFormOpen(false);
                     setBriefData({
-                      purpose: '',
-                      main_message: '',
-                      special_features: '',
-                      beneficiaries: '',
-                      benefits: '',
-                      call_to_action: '',
-                      importance: '',
-                      additional_info: ''
+                      purpose: "",
+                      main_message: "",
+                      special_features: "",
+                      beneficiaries: "",
+                      benefits: "",
+                      call_to_action: "",
+                      importance: "",
+                      additional_info: "",
                     });
                   }}
                   className={styles.cancelButton}
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   disabled={loading}
                   className={styles.submitButton}
                 >
-                  {loading ? 'Creating...' : 'Create Brief'}
+                  {loading ? "Creating..." : "Create Brief"}
                 </button>
               </div>
             </form>
@@ -967,7 +1112,7 @@ export default function Dashboard() {
           <div className={styles.audienceSegments}>
             <div className={styles.audienceHeader}>
               <h3>Target Audience Segments</h3>
-              <button 
+              <button
                 onClick={() => {
                   setAudiences([]);
                   setIsBriefFormOpen(true);
@@ -978,7 +1123,7 @@ export default function Dashboard() {
               </button>
             </div>
             <div className={styles.segmentsList}>
-              {audiences.map(audience => (
+              {audiences.map((audience) => (
                 <div key={audience.id} className={styles.segmentCard}>
                   <h4>{audience.name}</h4>
                   <p>{audience.description}</p>
@@ -994,16 +1139,17 @@ export default function Dashboard() {
   // Add this component for the edit popup
   const EditPopup = () => {
     const [editingMessageIndex, setEditingMessageIndex] = useState(null);
-    const [editInputValue, setEditInputValue] = useState('');
-    const [localEditedCoreMessage, setLocalEditedCoreMessage] = useState(editedCoreMessage);
-    const [localInputMessage, setLocalInputMessage] = useState('');
+    const [editInputValue, setEditInputValue] = useState("");
+    const [localEditedCoreMessage, setLocalEditedCoreMessage] =
+      useState(editedCoreMessage);
+    const [localInputMessage, setLocalInputMessage] = useState("");
     const editInputRef = useRef(null);
 
     // Initialize local state when popup opens
     useEffect(() => {
       if (isEditPopupOpen) {
         setLocalEditedCoreMessage(editedCoreMessage);
-        setLocalInputMessage('');
+        setLocalInputMessage("");
       }
     }, [isEditPopupOpen, editedCoreMessage]);
 
@@ -1022,60 +1168,73 @@ export default function Dashboard() {
       if (!localInputMessage.trim()) return;
 
       // Add user message to chat
-      setMessages(prev => [...prev, {
-        content: localInputMessage,
-        type: 'user'
-      }]);
-      setLocalInputMessage('');
+      setMessages((prev) => [
+        ...prev,
+        {
+          content: localInputMessage,
+          type: "user",
+        },
+      ]);
+      setLocalInputMessage("");
       setIsSending(true);
 
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) {
-          router.push('/');
+          router.push("/");
           return;
         }
 
         // First get the onboarding data
-        const onboardingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
+        const onboardingResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
-        });
+        );
 
         if (!onboardingResponse.ok) {
-          throw new Error('Failed to fetch onboarding data');
+          throw new Error("Failed to fetch onboarding data");
         }
 
         const { data } = await onboardingResponse.json();
-        const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+        const formData =
+          typeof data.data === "string" ? JSON.parse(data.data) : data.data;
 
         // Now make the chat request with the form data
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            formData,
-            currentMessage: isEditPopupOpen ? editedCoreMessage : coreMessage,
-            userPrompt: localInputMessage
-          })
-        });
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              formData,
+              currentMessage: isEditPopupOpen ? editedCoreMessage : coreMessage,
+              userPrompt: localInputMessage,
+            }),
+          }
+        );
 
         if (!response.ok) {
-          throw new Error('Failed to send message');
+          throw new Error("Failed to send message");
         }
 
         const responseData = await response.json();
-        
+
         if (responseData.success) {
           // Add AI response to chat
-          setMessages(prev => [...prev, {
-            content: responseData.data.chatResponse,
-            type: 'ai'
-          }]);
+          setMessages((prev) => [
+            ...prev,
+            {
+              content: responseData.data.chatResponse,
+              type: "ai",
+            },
+          ]);
 
           // Update both core message states to keep them in sync
           const newMessage = responseData.data.coreMessage;
@@ -1087,22 +1246,28 @@ export default function Dashboard() {
           setTimeout(() => setShowTypewriter(false), 1000);
 
           // Save the updated message to the database
-          await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ coreMessage: newMessage })
-          });
+          await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ coreMessage: newMessage }),
+            }
+          );
         }
       } catch (error) {
-        console.error('Error sending message:', error);
+        console.error("Error sending message:", error);
         // Show error message in chat
-        setMessages(prev => [...prev, {
-          content: 'Sorry, I encountered an error. Please try again.',
-          type: 'ai'
-        }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            content: "Sorry, I encountered an error. Please try again.",
+            type: "ai",
+          },
+        ]);
       } finally {
         setIsSending(false);
       }
@@ -1110,37 +1275,43 @@ export default function Dashboard() {
 
     const handleLocalEditSubmit = async (index) => {
       if (!editInputValue.trim()) return;
-      
+
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/edit-message`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            messageIndex: index,
-            newContent: editInputValue
-          })
-        });
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/edit-message`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              messageIndex: index,
+              newContent: editInputValue,
+            }),
+          }
+        );
 
         if (!response.ok) {
-          throw new Error('Failed to edit message');
+          throw new Error("Failed to edit message");
         }
 
         // Update messages array with edited message
-        setMessages(prevMessages => {
+        setMessages((prevMessages) => {
           const newMessages = [...prevMessages];
-          newMessages[index] = { ...newMessages[index], content: editInputValue };
+          newMessages[index] = {
+            ...newMessages[index],
+            content: editInputValue,
+          };
           return newMessages;
         });
 
         // Clear edit state
         setEditingMessageIndex(null);
-        setEditInputValue('');
+        setEditInputValue("");
       } catch (error) {
-        console.error('Error editing message:', error);
+        console.error("Error editing message:", error);
       }
     };
 
@@ -1151,26 +1322,29 @@ export default function Dashboard() {
 
     const handleCancelEditing = () => {
       setEditingMessageIndex(null);
-      setEditInputValue('');
+      setEditInputValue("");
     };
 
     const handleLocalSave = async () => {
       if (!localEditedCoreMessage.trim()) return;
-      
+
       try {
         setIsLoading(true);
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ coreMessage: localEditedCoreMessage })
-        });
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ coreMessage: localEditedCoreMessage }),
+          }
+        );
 
         if (!response.ok) {
-          throw new Error('Failed to update core message');
+          throw new Error("Failed to update core message");
         }
 
         setCoreMessage(localEditedCoreMessage);
@@ -1178,7 +1352,7 @@ export default function Dashboard() {
         setIsEditPopupOpen(false);
         setShowTypewriter(true);
       } catch (error) {
-        console.error('Error updating core message:', error);
+        console.error("Error updating core message:", error);
       } finally {
         setIsLoading(false);
       }
@@ -1192,16 +1366,26 @@ export default function Dashboard() {
           <div className={styles.editPopupLeft}>
             <div className={styles.editPopupHeader}>
               <h2>Message Assistant</h2>
-              <button 
+              <button
                 className={styles.editPopupCloseButton}
                 onClick={() => {
                   setIsEditPopupOpen(false);
-                  setLocalEditedCoreMessage('');
-                  setLocalInputMessage('');
+                  setLocalEditedCoreMessage("");
+                  setLocalInputMessage("");
                   handleCancelEditing();
                 }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
@@ -1210,15 +1394,34 @@ export default function Dashboard() {
             <div className={styles.chatInterface}>
               <div className={styles.chatMessages}>
                 {messages.map((message, index) => (
-                  <div key={`message-${index}`} className={`${styles.messageContent} ${message.type === 'user' ? styles.userMessage : styles.aiMessage}`}>
-                    {message.type === 'user' && editingMessageIndex !== index ? (
+                  <div
+                    key={`message-${index}`}
+                    className={`${styles.messageContent} ${
+                      message.type === "user"
+                        ? styles.userMessage
+                        : styles.aiMessage
+                    }`}
+                  >
+                    {message.type === "user" &&
+                    editingMessageIndex !== index ? (
                       <>
                         <button
                           className={styles.editButton}
-                          onClick={() => handleStartEditing(index, message.content)}
+                          onClick={() =>
+                            handleStartEditing(index, message.content)
+                          }
                           aria-label="Edit message"
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                           </svg>
@@ -1237,10 +1440,10 @@ export default function Dashboard() {
                             setEditInputValue(e.target.value);
                           }}
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
+                            if (e.key === "Enter") {
                               e.preventDefault();
                               handleLocalEditSubmit(index);
-                            } else if (e.key === 'Escape') {
+                            } else if (e.key === "Escape") {
                               e.preventDefault();
                               handleCancelEditing();
                             }
@@ -1252,7 +1455,16 @@ export default function Dashboard() {
                           disabled={!editInputValue.trim()}
                           aria-label="Send edited message"
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
                             <path d="M22 2L11 13" />
                             <path d="M22 2L15 22L11 13L2 9L22 2Z" />
                           </svg>
@@ -1271,7 +1483,7 @@ export default function Dashboard() {
                   value={localInputMessage}
                   onChange={handleLocalInputChange}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                       e.preventDefault();
                       handleLocalSendMessage();
                     }
@@ -1315,31 +1527,63 @@ export default function Dashboard() {
     <div className={styles.container}>
       {renderProjectPopup()}
       <EditPopup />
-      <aside className={`${styles.sidebar} ${isSidebarCollapsed ? styles.collapsed : ''}`}>
+      <aside
+        className={`${styles.sidebar} ${
+          isSidebarCollapsed ? styles.collapsed : ""
+        }`}
+      >
         <div className={styles.sidebarContent}>
           <div className={styles.sidebarHeader}>
             <div className={styles.logo}>
-              <img src="/Bold.png" alt="Logo" width={100} height={95} className={styles.logoImage} />
+              <img
+                src="/Bold.png"
+                alt="Logo"
+                width={100}
+                height={95}
+                className={styles.logoImage}
+              />
             </div>
           </div>
           <nav className={styles.nav}>
             <ul>
-              <li className={activeSection === 'greeting' ? styles.active : ''} onClick={() => setActiveSection('greeting')}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                  <polyline points="9 22 9 12 15 12 15 22"/>
+              <li
+                className={activeSection === "greeting" ? styles.active : ""}
+                onClick={() => setActiveSection("greeting")}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" />
                 </svg>
                 <span>Home</span>
               </li>
-              <li onClick={() => router.push('/library')}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-</svg>
+              <li onClick={() => router.push("/library")}>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
                 <span>Library</span>
               </li>
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <circle cx="12" cy="12" r="3"></circle>
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                 </svg>
@@ -1348,7 +1592,14 @@ export default function Dashboard() {
             </ul>
           </nav>
           <button onClick={handleLogout} className={styles.logoutButton}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
               <polyline points="16 17 21 12 16 7"></polyline>
               <line x1="21" y1="12" x2="9" y2="12"></line>
@@ -1357,55 +1608,74 @@ export default function Dashboard() {
           </button>
         </div>
       </aside>
-      <main className={`${styles.main} ${isSidebarCollapsed ? styles.collapsedMain : ''}`}>
-        <header className={`${styles.header} ${isSidebarCollapsed ? styles.collapsedHeader : ''}`}>
-        <div style={{display: 'flex', alignItems: 'center', justifyContent:"start"}}>
-        <button onClick={toggleSidebar} className={styles.toggleButton}>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="#1A1A1A" viewBox="0 0 30 30" width="30px" height="30px">
-                <path d="M 3 7 A 1.0001 1.0001 0 1 0 3 9 L 27 9 A 1.0001 1.0001 0 1 0 27 7 L 3 7 z M 3 14 A 1.0001 1.0001 0 1 0 3 16 L 27 16 A 1.0001 1.0001 0 1 0 27 14 L 3 14 z M 3 21 A 1.0001 1.0001 0 1 0 3 23 L 27 23 A 1.0001 1.0001 0 1 0 27 21 L 3 21 z"/>
+      <main
+        className={`${styles.main} ${
+          isSidebarCollapsed ? styles.collapsedMain : ""
+        }`}
+      >
+        <header
+          className={`${styles.header} ${
+            isSidebarCollapsed ? styles.collapsedHeader : ""
+          }`}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "start",
+            }}
+          >
+            <button onClick={toggleSidebar} className={styles.toggleButton}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="#1A1A1A"
+                viewBox="0 0 30 30"
+                width="30px"
+                height="30px"
+              >
+                <path d="M 3 7 A 1.0001 1.0001 0 1 0 3 9 L 27 9 A 1.0001 1.0001 0 1 0 27 7 L 3 7 z M 3 14 A 1.0001 1.0001 0 1 0 3 16 L 27 16 A 1.0001 1.0001 0 1 0 27 14 L 3 14 z M 3 21 A 1.0001 1.0001 0 1 0 3 23 L 27 23 A 1.0001 1.0001 0 1 0 27 21 L 3 21 z" />
               </svg>
-          </button>
+            </button>
           </div>
           <div className={styles.userProfile}>
-            <span className={styles.userName}>{user.name || 'Guest'}</span>
-            <div className={styles.avatar}>{user.initials || 'G'}</div>
+            <span className={styles.userName}>{user.name || "Guest"}</span>
+            <div className={styles.avatar}>{user.initials || "G"}</div>
           </div>
         </header>
         <div className={styles.sections}>
-        <div className={styles.greetingContainer}>
-              <button 
-                className={styles.createProjectButton}
-                onClick={() => setIsProjectPopupOpen(true)}
-              >
-                Create New Project
-              </button>
-            </div>
+          <div className={styles.greetingContainer}>
+            <button
+              className={styles.createProjectButton}
+              onClick={() => setIsProjectPopupOpen(true)}
+            >
+              Create New Project
+            </button>
+          </div>
           <section className={`${styles.section} ${styles.greetingSection}`}>
-            
-          {coreMessage && (
-            <div className={styles.coreMessageSection}>
-              <div className={styles.coreMessageContainer}>
-                <div className={styles.coreMessageHeader}>
-                  <h3>Your Core Marketing Message</h3>
-                  
-                  <button 
-                    onClick={() => fetchCoreMessage(true)}
-                    className={styles.refreshButton}
-                    disabled={isRefreshing}
-                  >
-                    <svg 
-                      width="20" 
-                      height="20" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2"
-                      className={isRefreshing ? styles.spinning : ''}
+            {coreMessage && (
+              <div className={styles.coreMessageSection}>
+                <div className={styles.coreMessageContainer}>
+                  <div className={styles.coreMessageHeader}>
+                    <h3>Your Core Marketing Message</h3>
+
+                    <button
+                      onClick={() => fetchCoreMessage(true)}
+                      className={styles.refreshButton}
+                      disabled={isRefreshing}
                     >
-                      <path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 3.4 0 6.3 2.1 7.4 5M22 12c0 4.4-3.6 8-8 8-3.4 0-6.3-2.1-7.4-5"/>
-                    </svg>
-                  </button>
-                </div>
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className={isRefreshing ? styles.spinning : ""}
+                      >
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 3.4 0 6.3 2.1 7.4 5M22 12c0 4.4-3.6 8-8 8-3.4 0-6.3-2.1-7.4-5" />
+                      </svg>
+                    </button>
+                  </div>
                   <div className={styles.messageContainer}>
                     {isRefreshing ? (
                       <MessageSkeleton />
@@ -1421,7 +1691,7 @@ export default function Dashboard() {
                             className={styles.cancelButton}
                             onClick={() => {
                               setIsEditingCoreMessage(false);
-                              setEditedCoreMessage('');
+                              setEditedCoreMessage("");
                             }}
                           >
                             Cancel
@@ -1429,7 +1699,10 @@ export default function Dashboard() {
                           <button
                             className={styles.saveButton}
                             onClick={handleEditCoreMessage}
-                            disabled={!editedCoreMessage.trim() || editedCoreMessage === coreMessage}
+                            disabled={
+                              !editedCoreMessage.trim() ||
+                              editedCoreMessage === coreMessage
+                            }
                           >
                             Save
                           </button>
@@ -1456,7 +1729,16 @@ export default function Dashboard() {
                           }}
                           aria-label="Edit core message"
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                           </svg>
@@ -1473,7 +1755,16 @@ export default function Dashboard() {
                           }}
                           aria-label="Edit core message"
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                           </svg>
@@ -1481,133 +1772,161 @@ export default function Dashboard() {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className={styles.messageOptions}>
-                    <button 
-                      className={styles.optionButton} 
-                      onClick={() => handleOptionClick('shorter')}
+                    <button
+                      className={styles.optionButton}
+                      onClick={() => handleOptionClick("shorter")}
                       disabled={isRefreshing}
                     >
                       Make it Shorter
                     </button>
-                    <button 
-                      className={styles.optionButton} 
-                      onClick={() => handleOptionClick('tone')}
+                    <button
+                      className={styles.optionButton}
+                      onClick={() => handleOptionClick("tone")}
                       disabled={isRefreshing}
                     >
                       Adjust Tone
                     </button>
-                    <button 
-                      className={styles.optionButton} 
-                      onClick={() => handleOptionClick('emphasis')}
+                    <button
+                      className={styles.optionButton}
+                      onClick={() => handleOptionClick("emphasis")}
                       disabled={isRefreshing}
                     >
                       Add Emphasis
                     </button>
-                    <button 
-                      className={styles.optionButton} 
-                      onClick={() => handleOptionClick('alternative')}
+                    <button
+                      className={styles.optionButton}
+                      onClick={() => handleOptionClick("alternative")}
                       disabled={isRefreshing}
                     >
                       Try Alternative
                     </button>
-                    <button 
-                      className={styles.optionButton} 
-                      onClick={() => handleOptionClick('fresh')}
+                    <button
+                      className={styles.optionButton}
+                      onClick={() => handleOptionClick("fresh")}
                       disabled={isRefreshing}
                     >
                       Fresh Perspective
                     </button>
                   </div>
 
-                <div className={styles.chatInterface}>
-                <div className={styles.chatMessages}>
-                  {messages.map((message, index) => (
-                    <div key={index} className={`${styles.messageContent} ${message.type === 'user' ? styles.userMessage : styles.aiMessage}`}>
-                      {message.type === 'user' && editingMessageIndex !== index ? (
-                        <>
-                          <button
-                            className={styles.editButton}
-                            onClick={() => {
-                              setEditingMessageIndex(index);
-                              setEditInputValue(message.content);
-                            }}
-                            aria-label="Edit message"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
-                          </button>
-                          <p>{message.content}</p>
-                        </>
-                      ) : editingMessageIndex === index ? (
-                        <div className={styles.editInputContainer}>
-                          <input
-                            type="text"
-                            className={styles.editInput}
-                            value={editInputValue}
-                            onChange={(e) => setEditInputValue(e.target.value)}
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleEditSubmit(index);
-                              }
-                            }}
-                            onBlur={() => {
-                              setTimeout(() => {
-                                setEditingMessageIndex(null);
-                                setEditInputValue('');
-                              }, 200);
-                            }}
-                            autoFocus
-                          />
-                          <button
-                            className={styles.editSendButton}
-                            onClick={() => handleEditSubmit(index)}
-                            disabled={!editInputValue.trim()}
-                            aria-label="Send edited message"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M22 2L11 13" />
-                              <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-                            </svg>
-                          </button>
+                  <div className={styles.chatInterface}>
+                    <div className={styles.chatMessages}>
+                      {messages.map((message, index) => (
+                        <div
+                          key={index}
+                          className={`${styles.messageContent} ${
+                            message.type === "user"
+                              ? styles.userMessage
+                              : styles.aiMessage
+                          }`}
+                        >
+                          {message.type === "user" &&
+                          editingMessageIndex !== index ? (
+                            <>
+                              <button
+                                className={styles.editButton}
+                                onClick={() => {
+                                  setEditingMessageIndex(index);
+                                  setEditInputValue(message.content);
+                                }}
+                                aria-label="Edit message"
+                              >
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                              </button>
+                              <p>{message.content}</p>
+                            </>
+                          ) : editingMessageIndex === index ? (
+                            <div className={styles.editInputContainer}>
+                              <input
+                                type="text"
+                                className={styles.editInput}
+                                value={editInputValue}
+                                onChange={(e) =>
+                                  setEditInputValue(e.target.value)
+                                }
+                                onKeyPress={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    handleEditSubmit(index);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  setTimeout(() => {
+                                    setEditingMessageIndex(null);
+                                    setEditInputValue("");
+                                  }, 200);
+                                }}
+                                autoFocus
+                              />
+                              <button
+                                className={styles.editSendButton}
+                                onClick={() => handleEditSubmit(index)}
+                                disabled={!editInputValue.trim()}
+                                aria-label="Send edited message"
+                              >
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M22 2L11 13" />
+                                  <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+                                </svg>
+                              </button>
+                            </div>
+                          ) : (
+                            <p>{message.content}</p>
+                          )}
                         </div>
-                      ) : (
-                        <p>{message.content}</p>
-                      )}
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div className={styles.inputContainer}>
-                  <input
-                    type="text"
-                    className={styles.messageInput}
-                    value={inputMessage}
-                    onChange={handleInputChange}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }
-                    }}
-                    placeholder="Type your message..."
-                    disabled={isRefreshing}
-                    autoFocus
-                  />
-                  <button
-                    className={styles.sendButton}
-                    onClick={handleSendMessage}
-                    disabled={!inputMessage.trim() || isRefreshing}
-                  >
-                    Send
-                  </button>
+                    <div className={styles.inputContainer}>
+                      <input
+                        type="text"
+                        className={styles.messageInput}
+                        value={inputMessage}
+                        onChange={handleInputChange}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
+                        placeholder="Type your message..."
+                        disabled={isRefreshing}
+                        autoFocus
+                      />
+                      <button
+                        className={styles.sendButton}
+                        onClick={handleSendMessage}
+                        disabled={!inputMessage.trim() || isRefreshing}
+                      >
+                        Send
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-              </div>
-            </div>
-          )}
+            )}
           </section>
         </div>
       </main>
