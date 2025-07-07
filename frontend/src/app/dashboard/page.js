@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Typewriter } from 'react-simple-typewriter';
 import styles from './styles.module.css';
@@ -490,7 +490,7 @@ export default function Dashboard() {
             },
             body: JSON.stringify({
                 formData,
-                currentMessage: isEditPopupOpen ? editedCoreMessage : coreMessage, // Use appropriate current message
+                currentMessage: isEditPopupOpen ? editedCoreMessage : coreMessage,
                 userPrompt: inputMessage
             })
         });
@@ -993,6 +993,197 @@ export default function Dashboard() {
 
   // Add this component for the edit popup
   const EditPopup = () => {
+    const [editingMessageIndex, setEditingMessageIndex] = useState(null);
+    const [editInputValue, setEditInputValue] = useState('');
+    const [localEditedCoreMessage, setLocalEditedCoreMessage] = useState(editedCoreMessage);
+    const [localInputMessage, setLocalInputMessage] = useState('');
+    const editInputRef = useRef(null);
+
+    // Initialize local state when popup opens
+    useEffect(() => {
+      if (isEditPopupOpen) {
+        setLocalEditedCoreMessage(editedCoreMessage);
+        setLocalInputMessage('');
+      }
+    }, [isEditPopupOpen, editedCoreMessage]);
+
+    // Focus management for edit input
+    useEffect(() => {
+      if (editingMessageIndex !== null && editInputRef.current) {
+        editInputRef.current.focus();
+      }
+    }, [editingMessageIndex]);
+
+    const handleLocalInputChange = (e) => {
+      setLocalInputMessage(e.target.value);
+    };
+
+    const handleLocalSendMessage = async () => {
+      if (!localInputMessage.trim()) return;
+
+      // Add user message to chat
+      setMessages(prev => [...prev, {
+        content: localInputMessage,
+        type: 'user'
+      }]);
+      setLocalInputMessage('');
+      setIsSending(true);
+
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          router.push('/');
+          return;
+        }
+
+        // First get the onboarding data
+        const onboardingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!onboardingResponse.ok) {
+          throw new Error('Failed to fetch onboarding data');
+        }
+
+        const { data } = await onboardingResponse.json();
+        const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+
+        // Now make the chat request with the form data
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            formData,
+            currentMessage: isEditPopupOpen ? editedCoreMessage : coreMessage,
+            userPrompt: localInputMessage
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send message');
+        }
+
+        const responseData = await response.json();
+        
+        if (responseData.success) {
+          // Add AI response to chat
+          setMessages(prev => [...prev, {
+            content: responseData.data.chatResponse,
+            type: 'ai'
+          }]);
+
+          // Update both core message states to keep them in sync
+          const newMessage = responseData.data.coreMessage;
+          setCoreMessage(newMessage);
+          setEditedCoreMessage(newMessage);
+
+          // Show typewriter effect for the update
+          setShowTypewriter(true);
+          setTimeout(() => setShowTypewriter(false), 1000);
+
+          // Save the updated message to the database
+          await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ coreMessage: newMessage })
+          });
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
+        // Show error message in chat
+        setMessages(prev => [...prev, {
+          content: 'Sorry, I encountered an error. Please try again.',
+          type: 'ai'
+        }]);
+      } finally {
+        setIsSending(false);
+      }
+    };
+
+    const handleLocalEditSubmit = async (index) => {
+      if (!editInputValue.trim()) return;
+      
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/edit-message`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            messageIndex: index,
+            newContent: editInputValue
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to edit message');
+        }
+
+        // Update messages array with edited message
+        setMessages(prevMessages => {
+          const newMessages = [...prevMessages];
+          newMessages[index] = { ...newMessages[index], content: editInputValue };
+          return newMessages;
+        });
+
+        // Clear edit state
+        setEditingMessageIndex(null);
+        setEditInputValue('');
+      } catch (error) {
+        console.error('Error editing message:', error);
+      }
+    };
+
+    const handleStartEditing = (index, content) => {
+      setEditingMessageIndex(index);
+      setEditInputValue(content);
+    };
+
+    const handleCancelEditing = () => {
+      setEditingMessageIndex(null);
+      setEditInputValue('');
+    };
+
+    const handleLocalSave = async () => {
+      if (!localEditedCoreMessage.trim()) return;
+      
+      try {
+        setIsLoading(true);
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ coreMessage: localEditedCoreMessage })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update core message');
+        }
+
+        setCoreMessage(localEditedCoreMessage);
+        setEditedCoreMessage(localEditedCoreMessage);
+        setIsEditPopupOpen(false);
+        setShowTypewriter(true);
+      } catch (error) {
+        console.error('Error updating core message:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     if (!isEditPopupOpen) return null;
 
     return (
@@ -1005,7 +1196,9 @@ export default function Dashboard() {
                 className={styles.editPopupCloseButton}
                 onClick={() => {
                   setIsEditPopupOpen(false);
-                  setEditedCoreMessage('');
+                  setLocalEditedCoreMessage('');
+                  setLocalInputMessage('');
+                  handleCancelEditing();
                 }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1017,15 +1210,12 @@ export default function Dashboard() {
             <div className={styles.chatInterface}>
               <div className={styles.chatMessages}>
                 {messages.map((message, index) => (
-                  <div key={index} className={`${styles.messageContent} ${message.type === 'user' ? styles.userMessage : styles.aiMessage}`}>
+                  <div key={`message-${index}`} className={`${styles.messageContent} ${message.type === 'user' ? styles.userMessage : styles.aiMessage}`}>
                     {message.type === 'user' && editingMessageIndex !== index ? (
                       <>
                         <button
                           className={styles.editButton}
-                          onClick={() => {
-                            setEditingMessageIndex(index);
-                            setEditInputValue(message.content);
-                          }}
+                          onClick={() => handleStartEditing(index, message.content)}
                           aria-label="Edit message"
                         >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1038,30 +1228,27 @@ export default function Dashboard() {
                     ) : editingMessageIndex === index ? (
                       <div className={styles.editInputContainer}>
                         <input
+                          ref={editInputRef}
                           type="text"
                           className={styles.editInput}
                           value={editInputValue}
                           onChange={(e) => {
-                            const value = e.target.value;
-                            setEditInputValue(value);
+                            e.preventDefault();
+                            setEditInputValue(e.target.value);
                           }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
-                              handleEditSubmit(index);
+                              handleLocalEditSubmit(index);
+                            } else if (e.key === 'Escape') {
+                              e.preventDefault();
+                              handleCancelEditing();
                             }
                           }}
-                          onBlur={() => {
-                            setTimeout(() => {
-                              setEditingMessageIndex(null);
-                              setEditInputValue('');
-                            }, 200);
-                          }}
-                          autoFocus
                         />
                         <button
                           className={styles.editSendButton}
-                          onClick={() => handleEditSubmit(index)}
+                          onClick={() => handleLocalEditSubmit(index)}
                           disabled={!editInputValue.trim()}
                           aria-label="Send edited message"
                         >
@@ -1081,22 +1268,21 @@ export default function Dashboard() {
                 <input
                   type="text"
                   className={styles.messageInput}
-                  value={inputMessage}
-                  onChange={handleInputChange}
+                  value={localInputMessage}
+                  onChange={handleLocalInputChange}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      handleSendMessage();
+                      handleLocalSendMessage();
                     }
                   }}
                   placeholder="Type your message..."
                   disabled={isRefreshing}
-                  autoFocus
                 />
                 <button
                   className={styles.sendButton}
-                  onClick={handleSendMessage}
-                  disabled={!inputMessage.trim() || isRefreshing}
+                  onClick={handleLocalSendMessage}
+                  disabled={!localInputMessage.trim() || isRefreshing}
                 >
                   Send
                 </button>
@@ -1106,15 +1292,15 @@ export default function Dashboard() {
           <div className={styles.editPopupRight}>
             <textarea
               className={styles.editCoreMessageInput}
-              value={editedCoreMessage}
-              onChange={(e) => setEditedCoreMessage(e.target.value)}
+              value={localEditedCoreMessage}
+              onChange={(e) => setLocalEditedCoreMessage(e.target.value)}
               placeholder="Enter your core message..."
             />
             <div className={styles.editCoreMessageActions}>
               <button
                 className={styles.saveButton}
-                onClick={handleEditCoreMessage}
-                disabled={!editedCoreMessage.trim()}
+                onClick={handleLocalSave}
+                disabled={!localEditedCoreMessage.trim()}
               >
                 Save Changes
               </button>
