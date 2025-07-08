@@ -1615,7 +1615,7 @@ export default function Dashboard() {
       >
         <header
           className={`${styles.header} ${
-            isSidebarCollapsed ? styles.collapsedHeader : ""
+            isSidebarCollapsed ? styles.collapsed : ""
           }`}
         >
           <div
