@@ -431,9 +431,11 @@ Generate a refined audience description with enhanced details and an alternative
                     role: "system",
                     content: `Based on the user's input, generate a list of 3–5 clearly defined target audiences who are likely to benefit from their product, service, or brand.
 
-Each audience should include:
-- A short name or label (e.g. "Solo coaches scaling their practice")
-- A 1–2 sentence summary describing who they are, what they care about, and why this offering is relevant to them.
+Each audience should be described in a clear, detailed paragraph that includes:
+- Who they are
+- What they care about
+- Why this offering is relevant to them
+- Their key pain points and desires
 
 Keep outputs diverse in sector, job type, or context (e.g. solopreneurs, mid-sized ops teams, buyers, community-driven users, etc.).
 
@@ -443,8 +445,7 @@ Return a JSON object with this structure:
 {
     "audiences": [
         {
-            "name": "Audience name/label",
-            "description": "1-2 sentence summary",
+            "segment": "Full descriptive paragraph about the audience",
             "insights": ["Key insight 1", "Key insight 2"],
             "messagingAngle": "How to position the offering for this audience",
             "tone": "Appropriate tone for this audience"
@@ -486,13 +487,10 @@ Problem it solves: ${problemItSolves}`
                 additionalInfo: ''
             });
 
-            // Create audiences
+            // Create audiences with plain text segments
             const audienceData = parsedResponse.audiences.map(audience => ({
                 briefId: briefResult,
-                segment: JSON.stringify({
-                    name: audience.name,
-                    description: audience.description
-                }),
+                segment: audience.segment, // Store segment directly as text
                 insights: JSON.stringify(audience.insights || []),
                 messagingAngle: audience.messagingAngle || '',
                 supportPoints: JSON.stringify([]),
@@ -509,22 +507,11 @@ Problem it solves: ${problemItSolves}`
             // Fetch the created brief and audiences for response
             const brief = await Brief.findById(briefResult);
             const audiences = await Audience.findByBriefId(briefResult);
-            
-            // Transform the audiences for frontend
-            const formattedAudiences = audiences.map(audience => ({
-                id: audience.id,
-                name: JSON.parse(audience.segment).name,
-                description: JSON.parse(audience.segment).description,
-                segment: audience.segment,
-                insights: audience.insights,
-                messagingAngle: audience.messagingAngle,
-                tone: audience.tone
-            }));
 
             return res.status(200).json({
                 success: true,
                 data: {
-                    audiences: formattedAudiences,
+                    audiences,
                     brief
                 }
             });
@@ -543,30 +530,38 @@ Problem it solves: ${problemItSolves}`
     async updateAudience(req, res) {
         try {
             const { id } = req.params;
-            const { name, description } = req.body;
+            const { segment } = req.body;
+
+            // Validate input
+            if (!segment || typeof segment !== 'string') {
+                return res.status(400).json({ 
+                    success: false,
+                    message: 'Invalid segment data' 
+                });
+            }
 
             // First find the audience to update
             const audience = await Audience.findById(id);
             if (!audience) {
                 return res.status(404).json({ 
-                    success: false, 
-                    error: 'Audience not found' 
+                    success: false,
+                    message: 'Audience not found' 
                 });
             }
 
-            // Update the segment data
+            // Update the segment data directly as string
             const [result] = await db.execute(
                 `UPDATE audiences 
                  SET segment = ?, 
                      updated_at = NOW() 
                  WHERE id = ?`,
-                [JSON.stringify({ name, description }), id]
+                [segment, id]
             );
 
             if (result.affectedRows === 0) {
                 return res.status(404).json({ 
-                    success: false, 
-                    error: 'Failed to update audience' 
+                    success: false,
+                    message: 'Failed to update audience' 
                 });
             }
 
@@ -574,14 +569,14 @@ Problem it solves: ${problemItSolves}`
             const updatedAudience = await Audience.findById(id);
             
             res.json({ 
-                success: true, 
+                success: true,
                 data: updatedAudience 
             });
         } catch (error) {
             console.error('Error updating audience:', error);
             res.status(500).json({ 
-                success: false, 
-                error: 'Internal server error' 
+                success: false,
+                message: 'Internal server error' 
             });
         }
     }

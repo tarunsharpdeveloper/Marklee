@@ -811,35 +811,35 @@ export default function Library() {
               {audiences.map((audience, index) => (
                 console.log(audience),
                 <div key={index} className={styles.segmentCard}>
-                  <div className={styles.segmentHeader}>
-                    <h4>{audience.name}</h4>
-                    <button
-                      className={styles.editAudienceButton}
-                      onClick={() => handleEditAudience(audience)}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    </button>
-                  </div>
-                  <p>{audience.description}</p>
-                  <div className={styles.audienceActions}>
-                    <button
-                      className={styles.viewDetailsButton}
-                      onClick={() => handleViewAudience(audience)}
-                    >
-                      view
-                    </button>
-                    <button className={styles.generateDocumentButton} onClick={() => {
-                      setSelectedAudienceId(audience.id);
-                      setSelectedAssetType(audience.name);
-                      setIsAssetPopupOpen(true);
-                    }}>Generate <Image
-                    src="/GenerateDoc.png"
-                    alt="Marklee Logo"
-                    width={20}
-                    height={20}
-                    priority
-                  /></button>
-                  </div>
+                    <div className={styles.segmentHeader}>
+                        {/* <h4>{audience.segment}</h4> */}
+                        <button
+                            className={styles.editAudienceButton}
+                            onClick={() => handleEditAudience(audience)}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                    </div>
+                    <p>{audience.segment}</p>
+                    <div className={styles.audienceActions}>
+                        <button
+                            className={styles.viewDetailsButton}
+                            onClick={() => handleViewAudience(audience)}
+                        >
+                            view
+                        </button>
+                        <button className={styles.generateDocumentButton} onClick={() => {
+                            setSelectedAudienceId(audience.id);
+                            setSelectedAssetType(audience.segment);
+                            setIsAssetPopupOpen(true);
+                        }}>Generate <Image
+                            src="/GenerateDoc.png"
+                            alt="Marklee Logo"
+                            width={20}
+                            height={20}
+                            priority
+                        /></button>
+                    </div>
                 </div>
               ))}
             </div>
@@ -1349,14 +1349,7 @@ export default function Library() {
 
     useEffect(() => {
         if (editingAudience) {
-            try {
-                const segment = JSON.parse(editingAudience.segment);
-                setLocalName(segment.name || '');
-                setLocalDesc(segment.description || '');
-            } catch (e) {
-                setLocalName(editingAudience.name || '');
-                setLocalDesc(editingAudience.description || '');
-            }
+            setLocalDesc(editingAudience.segment || '');
         }
     }, [editingAudience]);
 
@@ -1405,8 +1398,7 @@ export default function Library() {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    name: localName,
-                    description: localDesc
+                    segment: localDesc
                 })
             });
 
@@ -1414,12 +1406,11 @@ export default function Library() {
                 throw new Error('Failed to update audience');
             }
 
-            // Update the audiences list immediately with new values
+            // Update the audiences list
             setAudiences(audiences.map(a => 
                 a.id === editingAudience.id ? {
                     ...a,
-                    name: localName,
-                    description: localDesc
+                    segment: localDesc
                 } : a
             ));
 
@@ -1511,19 +1502,9 @@ export default function Library() {
                 </div>
                 <div className={styles.editPopupRight}>
                     <div className={styles.formGroup}>
-                        <label>Name</label>
-                        <input
-                            type="text"
-                            className={styles.input}
-                            value={localName}
-                            onChange={(e) => setLocalName(e.target.value)}
-                            placeholder="Enter audience name..."
-                        />
-                    </div>
-                    <div className={styles.formGroup}>
-                        <label>Description</label>
+                        {/* <h4>Target Audience</h4> */}
                         <textarea
-                            className={styles.textarea}
+                            className={styles.editCoreMessageInput}
                             value={localDesc}
                             onChange={(e) => setLocalDesc(e.target.value)}
                             placeholder="Enter audience description..."
