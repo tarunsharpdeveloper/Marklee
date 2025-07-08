@@ -16,4 +16,7 @@ router.post('/generate-with-prompt', marketingController.generateMarketingConten
 router.post('/generate-from-audience', marketingController.generateFromAudience);
 router.post('/generate-suggested-audiences', marketingController.generateSuggestedAudiences);
 
+// Add audience update route
+router.put('/audience/:id', marketingController.updateAudience);
+
 export default router; 

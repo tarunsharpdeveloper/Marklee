@@ -3,6 +3,7 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import AiPrompt from '../models/AiPrompt.js';
 import Brief from '../models/Brief.js';
 import Audience from '../models/Audience.js';
+import { pool as db } from '../config/database.js';
 
 const chatModel = new ChatOpenAI({
     modelName: 'gpt-4o-mini',
@@ -127,7 +128,7 @@ class MarketingController {
           
           Return only the **revised Core Message** (max 3 sentences). Make sure it is clear, compelling, strategic, and marketing-ready.
           
-          After showing the updated Core Message, invite the user to refine it further by asking if they’d like to:
+          After showing the updated Core Message, invite the user to refine it further by asking if they'd like to:
           1. Make it shorter or punchier  
           2. Adjust the tone (e.g. more friendly, confident, playful, professional, etc.)  
           3. Emphasize something more (e.g. the benefit, the audience, the difference)  
@@ -534,6 +535,53 @@ Problem it solves: ${problemItSolves}`
                 success: false,
                 message: 'Error generating suggested audiences',
                 error: error.message
+            });
+        }
+    }
+
+    // Update audience
+    async updateAudience(req, res) {
+        try {
+            const { id } = req.params;
+            const { name, description } = req.body;
+
+            // First find the audience to update
+            const audience = await Audience.findById(id);
+            if (!audience) {
+                return res.status(404).json({ 
+                    success: false, 
+                    error: 'Audience not found' 
+                });
+            }
+
+            // Update the segment data
+            const [result] = await db.execute(
+                `UPDATE audiences 
+                 SET segment = ?, 
+                     updated_at = NOW() 
+                 WHERE id = ?`,
+                [JSON.stringify({ name, description }), id]
+            );
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ 
+                    success: false, 
+                    error: 'Failed to update audience' 
+                });
+            }
+
+            // Get the updated audience
+            const updatedAudience = await Audience.findById(id);
+            
+            res.json({ 
+                success: true, 
+                data: updatedAudience 
+            });
+        } catch (error) {
+            console.error('Error updating audience:', error);
+            res.status(500).json({ 
+                success: false, 
+                error: 'Internal server error' 
             });
         }
     }
