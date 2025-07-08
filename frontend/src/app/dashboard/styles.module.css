@@ -2763,6 +2763,13 @@
     padding: 1rem;
     font-size: 1rem;
   }
+  .messageContainer p{
+    padding: 1rem;
+  }
+  .header {
+    width: calc(100% - 52px);
+    margin-left: 0;
+}
 }
 
 /* Animation */
