@@ -62,6 +62,10 @@ export default function Library() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isEditAudiencePopupOpen, setIsEditAudiencePopupOpen] = useState(false);
+  const [editingAudience, setEditingAudience] = useState(null);
+  const [localAudienceName, setLocalAudienceName] = useState("");
+  const [localAudienceDesc, setLocalAudienceDesc] = useState("");
 
   useEffect(() => {
     fetchProjects();
@@ -117,6 +121,23 @@ export default function Library() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [isBriefFormOpen, audiences.length]);
+
+  // Add this effect to initialize local state when popup opens
+  useEffect(() => {
+    if (isEditAudiencePopupOpen && editingAudience) {
+        let currentSegment = {};
+        try {
+            currentSegment = JSON.parse(editingAudience.segment);
+        } catch (e) {
+            currentSegment = {
+                name: editingAudience.name || '',
+                description: editingAudience.description || ''
+            };
+        }
+        setLocalAudienceName(currentSegment.name);
+        setLocalAudienceDesc(currentSegment.description);
+    }
+  }, [isEditAudiencePopupOpen, editingAudience]);
 
   const fetchProjects = async () => {
     try {
@@ -790,27 +811,35 @@ export default function Library() {
               {audiences.map((audience, index) => (
                 console.log(audience),
                 <div key={index} className={styles.segmentCard}>
-                  <h4>{audience.name}</h4>
-                  <p>{audience.description}</p>
-                  <div className={styles.audienceActions}>
-                  <button
-                    className={styles.viewDetailsButton}
-                    onClick={() => handleViewAudience(audience)}
-                  >
-                    view
-                  </button>
-                  <button className={styles.generateDocumentButton} onClick={() => {
-                    setSelectedAudienceId(audience.id);
-                    setSelectedAssetType(audience.name);
-                    setIsAssetPopupOpen(true);
-                  }}>Generate <Image
-                  src="/GenerateDoc.png"
-                  alt="Marklee Logo"
-                  width={20}
-                  height={20}
-                  priority
-                /></button>
-                  </div>
+                    <div className={styles.segmentHeader}>
+                        {/* <h4>{audience.segment}</h4> */}
+                        <button
+                            className={styles.editAudienceButton}
+                            onClick={() => handleEditAudience(audience)}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                    </div>
+                    <p>{audience.segment}</p>
+                    <div className={styles.audienceActions}>
+                        <button
+                            className={styles.viewDetailsButton}
+                            onClick={() => handleViewAudience(audience)}
+                        >
+                            view
+                        </button>
+                        <button className={styles.generateDocumentButton} onClick={() => {
+                            setSelectedAudienceId(audience.id);
+                            setSelectedAssetType(audience.segment);
+                            setIsAssetPopupOpen(true);
+                        }}>Generate <Image
+                            src="/GenerateDoc.png"
+                            alt="Marklee Logo"
+                            width={20}
+                            height={20}
+                            priority
+                        /></button>
+                    </div>
                 </div>
               ))}
             </div>
@@ -1306,6 +1335,196 @@ export default function Library() {
     }
   };
 
+  const handleEditAudience = (audience) => {
+    setEditingAudience(audience);
+    setIsEditAudiencePopupOpen(true);
+  };
+
+  const EditAudiencePopup = () => {
+    const [localName, setLocalName] = useState("");
+    const [localDesc, setLocalDesc] = useState("");
+    const [localInputMessage, setLocalInputMessage] = useState("");
+    const [messages, setMessages] = useState([]);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    useEffect(() => {
+        if (editingAudience) {
+            setLocalDesc(editingAudience.segment || '');
+        }
+    }, [editingAudience]);
+
+    const handleLocalSendMessage = async () => {
+        if (!localInputMessage.trim()) return;
+
+        setMessages(prev => [...prev, { content: localInputMessage, type: 'user' }]);
+        setLocalInputMessage('');
+        setIsRefreshing(true);
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                router.push('/');
+                return;
+            }
+
+            // Add AI response
+            setMessages(prev => [...prev, {
+                content: "I'll help you refine your audience details.",
+                type: 'ai'
+            }]);
+        } catch (error) {
+            console.error('Error sending message:', error);
+            setMessages(prev => [...prev, {
+                content: "Sorry, I encountered an error. Please try again.",
+                type: 'ai'
+            }]);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    const handleSave = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                router.push('/');
+                return;
+            }
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/audience/${editingAudience.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    segment: localDesc
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update audience');
+            }
+
+            // Update the audiences list
+            setAudiences(audiences.map(a => 
+                a.id === editingAudience.id ? {
+                    ...a,
+                    segment: localDesc
+                } : a
+            ));
+
+            setIsEditAudiencePopupOpen(false);
+            setEditingAudience(null);
+        } catch (error) {
+            console.error('Error updating audience:', error);
+            setError(error.message);
+        }
+    };
+
+    if (!isEditAudiencePopupOpen || !editingAudience) return null;
+
+    return (
+        <div className={styles.editPopupOverlay}>
+            <div className={styles.editPopupContent}>
+                <div className={styles.editPopupLeft}>
+                    <div className={styles.editPopupHeader}>
+                        <h2>Message Assistant</h2>
+                        <button
+                            className={styles.editPopupCloseButton}
+                            onClick={() => {
+                                setIsEditAudiencePopupOpen(false);
+                                setEditingAudience(null);
+                            }}
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div className={styles.chatMessages}>
+                        {messages.map((message, index) => (
+                            <div
+                                key={index}
+                                className={`${styles.messageContent} ${
+                                    message.type === "user"
+                                        ? styles.userMessage
+                                        : styles.aiMessage
+                                }`}
+                            >
+                                <p>{message.content}</p>
+                            </div>
+                        ))}
+                        {isRefreshing && (
+                            <div className={styles.aiMessage}>
+                                <div className={styles.loadingDots}>
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <div className={styles.inputContainer}>
+                        <input
+                            type="text"
+                            className={styles.messageInput}
+                            value={localInputMessage}
+                            onChange={(e) => setLocalInputMessage(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    handleLocalSendMessage();
+                                }
+                            }}
+                            placeholder="Type your message..."
+                            disabled={isRefreshing}
+                        />
+                        <button
+                            className={styles.sendButton}
+                            onClick={handleLocalSendMessage}
+                            disabled={!localInputMessage.trim() || isRefreshing}
+                        >
+                            Send
+                        </button>
+                    </div>
+                </div>
+                <div className={styles.editPopupRight}>
+                    <div className={styles.formGroup}>
+                        {/* <h4>Target Audience</h4> */}
+                        <textarea
+                            className={styles.editCoreMessageInput}
+                            value={localDesc}
+                            onChange={(e) => setLocalDesc(e.target.value)}
+                            placeholder="Enter audience description..."
+                            rows={4}
+                        />
+                    </div>
+                    <div className={styles.editCoreMessageActions}>
+                        <button
+                            className={styles.saveButton}
+                            onClick={handleSave}
+                        >
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+  };
+
   return (
     <div className={styles.sections}>
       <section className={`${styles.section} ${styles.librarySection}`}>
@@ -1357,6 +1576,7 @@ export default function Library() {
           </div>
         </>
       )}
+      <EditAudiencePopup />
     </div>
   );
 } 

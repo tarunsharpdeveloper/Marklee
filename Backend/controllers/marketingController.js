@@ -3,6 +3,7 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import AiPrompt from '../models/AiPrompt.js';
 import Brief from '../models/Brief.js';
 import Audience from '../models/Audience.js';
+import { pool as db } from '../config/database.js';
 
 const chatModel = new ChatOpenAI({
     modelName: 'gpt-4o-mini',
@@ -41,7 +42,7 @@ class MarketingController {
             const messages = [
                 {
                     role: "system",
-                    content: "You are a helpful AI that generates structured form field data for marketing information gathering. Your response must be a valid JSON object, without any markdown formatting, explanations, or extra text. Follow the exact structure provided."
+                    content: "Generate a marketing form structure quickly. Return a JSON object only, no explanations needed."
                 },
                 {
                     role: "user",
@@ -49,7 +50,11 @@ class MarketingController {
                 }
             ];
 
-            const response = await chatModel.invoke(messages);
+            // Use lower temperature for faster, more focused response
+            const response = await chatModel.invoke(messages, {
+                temperature: 0.3
+            });
+            
             const formFields = cleanJsonResponse(response);
 
             // Mark all fields as required
@@ -127,7 +132,7 @@ class MarketingController {
           
           Return only the **revised Core Message** (max 3 sentences). Make sure it is clear, compelling, strategic, and marketing-ready.
           
-          After showing the updated Core Message, invite the user to refine it further by asking if they’d like to:
+          After showing the updated Core Message, invite the user to refine it further by asking if they'd like to:
           1. Make it shorter or punchier  
           2. Adjust the tone (e.g. more friendly, confident, playful, professional, etc.)  
           3. Emphasize something more (e.g. the benefit, the audience, the difference)  
@@ -430,9 +435,11 @@ Generate a refined audience description with enhanced details and an alternative
                     role: "system",
                     content: `Based on the user's input, generate a list of 3–5 clearly defined target audiences who are likely to benefit from their product, service, or brand.
 
-Each audience should include:
-- A short name or label (e.g. "Solo coaches scaling their practice")
-- A 1–2 sentence summary describing who they are, what they care about, and why this offering is relevant to them.
+Each audience should be described in a clear, detailed paragraph that includes:
+- Who they are
+- What they care about
+- Why this offering is relevant to them
+- Their key pain points and desires
 
 Keep outputs diverse in sector, job type, or context (e.g. solopreneurs, mid-sized ops teams, buyers, community-driven users, etc.).
 
@@ -442,8 +449,7 @@ Return a JSON object with this structure:
 {
     "audiences": [
         {
-            "name": "Audience name/label",
-            "description": "1-2 sentence summary",
+            "segment": "Full descriptive paragraph about the audience",
             "insights": ["Key insight 1", "Key insight 2"],
             "messagingAngle": "How to position the offering for this audience",
             "tone": "Appropriate tone for this audience"
@@ -485,13 +491,10 @@ Problem it solves: ${problemItSolves}`
                 additionalInfo: ''
             });
 
-            // Create audiences
+            // Create audiences with plain text segments
             const audienceData = parsedResponse.audiences.map(audience => ({
                 briefId: briefResult,
-                segment: JSON.stringify({
-                    name: audience.name,
-                    description: audience.description
-                }),
+                segment: audience.segment, // Store segment directly as text
                 insights: JSON.stringify(audience.insights || []),
                 messagingAngle: audience.messagingAngle || '',
                 supportPoints: JSON.stringify([]),
@@ -508,22 +511,11 @@ Problem it solves: ${problemItSolves}`
             // Fetch the created brief and audiences for response
             const brief = await Brief.findById(briefResult);
             const audiences = await Audience.findByBriefId(briefResult);
-            
-            // Transform the audiences for frontend
-            const formattedAudiences = audiences.map(audience => ({
-                id: audience.id,
-                name: JSON.parse(audience.segment).name,
-                description: JSON.parse(audience.segment).description,
-                segment: audience.segment,
-                insights: audience.insights,
-                messagingAngle: audience.messagingAngle,
-                tone: audience.tone
-            }));
 
             return res.status(200).json({
                 success: true,
                 data: {
-                    audiences: formattedAudiences,
+                    audiences,
                     brief
                 }
             });
@@ -534,6 +526,61 @@ Problem it solves: ${problemItSolves}`
                 success: false,
                 message: 'Error generating suggested audiences',
                 error: error.message
+            });
+        }
+    }
+
+    // Update audience
+    async updateAudience(req, res) {
+        try {
+            const { id } = req.params;
+            const { segment } = req.body;
+
+            // Validate input
+            if (!segment || typeof segment !== 'string') {
+                return res.status(400).json({ 
+                    success: false,
+                    message: 'Invalid segment data' 
+                });
+            }
+
+            // First find the audience to update
+            const audience = await Audience.findById(id);
+            if (!audience) {
+                return res.status(404).json({ 
+                    success: false,
+                    message: 'Audience not found' 
+                });
+            }
+
+            // Update the segment data directly as string
+            const [result] = await db.execute(
+                `UPDATE audiences 
+                 SET segment = ?, 
+                     updated_at = NOW() 
+                 WHERE id = ?`,
+                [segment, id]
+            );
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ 
+                    success: false,
+                    message: 'Failed to update audience' 
+                });
+            }
+
+            // Get the updated audience
+            const updatedAudience = await Audience.findById(id);
+            
+            res.json({ 
+                success: true,
+                data: updatedAudience 
+            });
+        } catch (error) {
+            console.error('Error updating audience:', error);
+            res.status(500).json({ 
+                success: false,
+                message: 'Internal server error' 
             });
         }
     }
