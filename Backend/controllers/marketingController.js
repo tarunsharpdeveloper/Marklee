@@ -84,10 +84,12 @@ class MarketingController {
         const isRefresh = req.query.refresh === 'true';
         const isModification = formData.currentMessage && formData.modificationRequest;
     
+        // Update required fields to match frontend
         const requiredFields = [
-          'description', 'industry', 'nicheCategory', 'targetMarket', 'coreAudience',
-          'outcome', 'problemSolved', 'websiteUrl', 'competitors', 'differentiators',
-          'keyFeatures', 'uniqueOffering', 'additionalInfo'
+          'description',
+          'productSummary',
+          'coreAudience',
+          'outcome'
         ];
     
         const missingFields = requiredFields.filter(
@@ -124,24 +126,16 @@ class MarketingController {
           
           Use these supporting details to ensure accuracy:
           - Description: ${formData.description}
-          - Industry: ${formData.industry}
-          - Target Market: ${formData.targetMarket}
+          - Product Summary: ${formData.productSummary}
           - Core Audience: ${formData.coreAudience}
-          - Key Features: ${formData.keyFeatures}
-          - Unique Offering: ${formData.uniqueOffering}
+          - Outcome: ${formData.outcome}
+          ${formData.industry ? `- Industry: ${formData.industry}` : ''}
+          ${formData.targetMarket ? `- Target Market: ${formData.targetMarket}` : ''}
+          ${formData.keyFeatures ? `- Key Features: ${formData.keyFeatures}` : ''}
+          ${formData.uniqueOffering ? `- Unique Offering: ${formData.uniqueOffering}` : ''}
           
-          Return only the **revised Core Message** (max 3 sentences). Make sure it is clear, compelling, strategic, and marketing-ready.
-          
-          After showing the updated Core Message, invite the user to refine it further by asking if they'd like to:
-          1. Make it shorter or punchier  
-          2. Adjust the tone (e.g. more friendly, confident, playful, professional, etc.)  
-          3. Emphasize something more (e.g. the benefit, the audience, the difference)  
-          4. Try alternative angles or versions  
-          5. Start fresh with new info
-          
-          Be collaborative and encouraging. Each time they give feedback, rewrite the Core Message accordingly and check if it's getting closer to what they want. Always keep it tight and on point.`;
-          }
-           else if (isRefresh) {
+          Return only the **revised Core Message** (max 3 sentences). Make sure it is clear, compelling, strategic, and marketing-ready.`;
+        } else if (isRefresh) {
           prompt = `Create a new and distinct version of the core message (~100 words), using the same inputs. Present the offering from a different angle or highlight a different major benefit, but still follow this guidance:
 
 ${basePrompt}`;
@@ -158,20 +152,24 @@ ${basePrompt}`;
             role: "user",
             content: `${prompt}
 
-    Input Data:
+    Required Input Data:
     - Description: ${formData.description}
-    - Industry: ${formData.industry}
-    - Niche Category: ${formData.nicheCategory}
-    - Target Market: ${formData.targetMarket}
+    - Product Summary: ${formData.productSummary}
     - Core Audience: ${formData.coreAudience}
     - Outcome: ${formData.outcome}
-    - Problem Solved: ${formData.problemSolved}
-    - Website URL: ${formData.websiteUrl}
-    - Competitors: ${formData.competitors}
-    - Differentiators: ${formData.differentiators}
-    - Key Features: ${formData.keyFeatures}
-    - Unique Offering: ${formData.uniqueOffering}
-    - Additional Info: ${formData.additionalInfo}
+
+    Additional Information (if provided):
+    ${formData.industry ? `- Industry: ${formData.industry}` : ''}
+    ${formData.nicheCategory ? `- Niche Category: ${formData.nicheCategory}` : ''}
+    ${formData.targetMarket ? `- Target Market: ${formData.targetMarket}` : ''}
+    ${formData.problemSolved ? `- Problem Solved: ${formData.problemSolved}` : ''}
+    ${formData.websiteUrl ? `- Website URL: ${formData.websiteUrl}` : ''}
+    ${formData.competitors ? `- Competitors: ${formData.competitors}` : ''}
+    ${formData.differentiators ? `- Differentiators: ${formData.differentiators}` : ''}
+    ${formData.keyFeatures ? `- Key Features: ${formData.keyFeatures}` : ''}
+    ${formData.uniqueOffering ? `- Unique Offering: ${formData.uniqueOffering}` : ''}
+    ${formData.additionalInfo ? `- Additional Info: ${formData.additionalInfo}` : ''}
+
     Avoid using emojis or decorative symbols
     Return only a JSON object in this format:
     {
@@ -197,16 +195,14 @@ ${basePrompt}`;
     }`
           }
         ];
-    
+
         const response = await chatModel.invoke(messages);
         const marketingContent = cleanJsonResponse(response);
     
         res.status(200).json({
           success: true,
-          message: 'Marketing content generated successfully',
           data: marketingContent
         });
-    
       } catch (error) {
         console.error('Error generating marketing content:', error);
         res.status(500).json({

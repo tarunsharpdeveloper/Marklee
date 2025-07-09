@@ -16,6 +16,7 @@ const MessageSkeleton = () => (
 
 export default function Dashboard() {
   const router = useRouter();
+  const [isSavePopupOpen, setSavePopupOpen] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState({
     marketing: false,
     content: false,
@@ -1668,10 +1669,67 @@ export default function Dashboard() {
     );
   };
 
+  const handleSaveAndContinue = () => {
+    setSavePopupOpen(true);
+  };
+
   return (
     <div className={styles.container}>
       {renderProjectPopup()}
       <EditPopup />
+      {isSavePopupOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h2>Save and Continue</h2>
+              <button 
+                className={styles.closeButton}
+                onClick={() => setSavePopupOpen(false)}
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <h3>Great! Let's now pinpoint who you're talking to.</h3>
+              <div className={styles.modalList}>
+                <p>You can:</p>
+                <ul>
+                  <li>Create your own audience profiles</li>
+                  <li>Get AI suggestions based on the information you've shared and the Core Message we've created together</li>
+                  <li>Edit and refine any audience in a chat window</li>
+                  <li>Refresh suggestions to see new options</li>
+                  <li>Save the ones that fit</li>
+                  <li>Come back and adjust anytime</li>
+                </ul>
+                <p>Ready to go?</p>
+              </div>
+              <div className={styles.modalActions}>
+                <button 
+                  className={styles.generateButton}
+                  onClick={() => {
+                    setSavePopupOpen(false);
+                    router.push('/library');
+                  }}
+                >
+                  Let's go!
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <aside
         className={`${styles.sidebar} ${
           isSidebarCollapsed ? styles.collapsed : ""
@@ -1788,14 +1846,14 @@ export default function Dashboard() {
           </div>
         </header>
         <div className={styles.sections}>
-          <div className={styles.greetingContainer}>
+          {/* <div className={styles.greetingContainer}>
             <button
               className={styles.createProjectButton}
               onClick={() => setIsProjectPopupOpen(true)}
             >
               Create New Project
             </button>
-          </div>
+          </div> */}
           <section className={`${styles.section} ${styles.greetingSection}`}>
             {coreMessage && (
               <div className={styles.coreMessageSection}>
@@ -1917,6 +1975,23 @@ export default function Dashboard() {
                       </div>
                     )}
                                       </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                  <button
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#282ab3',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '0.375rem',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500'
+                    }}
+                    onClick={handleSaveAndContinue}
+                  >
+                    Save & Continue
+                  </button>
                 </div>
               </div>
             )}

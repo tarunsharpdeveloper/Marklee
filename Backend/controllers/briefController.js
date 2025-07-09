@@ -36,7 +36,10 @@ class BriefController {
                     message: 'Project already exists'
                 });
             }
-            const projectId = await Project.create(req.body);
+            const projectId = await Project.create({
+                projectName: req.body.projectName.trim(),
+                userId: req.user.id
+            });
             const project = await Project.findById(projectId);
             res.status(201).json({
                 success: true,
