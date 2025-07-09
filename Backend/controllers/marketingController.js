@@ -42,7 +42,7 @@ class MarketingController {
             const messages = [
                 {
                     role: "system",
-                    content: "You are a helpful AI that generates structured form field data for marketing information gathering. Your response must be a valid JSON object, without any markdown formatting, explanations, or extra text. Follow the exact structure provided."
+                    content: "Generate a marketing form structure quickly. Return a JSON object only, no explanations needed."
                 },
                 {
                     role: "user",
@@ -50,7 +50,11 @@ class MarketingController {
                 }
             ];
 
-            const response = await chatModel.invoke(messages);
+            // Use lower temperature for faster, more focused response
+            const response = await chatModel.invoke(messages, {
+                temperature: 0.3
+            });
+            
             const formFields = cleanJsonResponse(response);
 
             // Mark all fields as required
