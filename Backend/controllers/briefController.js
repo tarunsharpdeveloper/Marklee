@@ -459,6 +459,32 @@ class BriefController {
             handleError(res, error, 'Failed to fetch audience by brief');
         }
     }
+
+    // Delete selected audiences
+    async deleteAudiences(req, res) {
+        try {
+            const { audienceIds } = req.body;
+            const briefId = req.params.id;
+
+            // Validate input
+            if (!Array.isArray(audienceIds) || audienceIds.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Please provide at least one audience ID to delete'
+                });
+            }
+
+            // Delete audiences from database
+            await Audience.deleteMany(briefId, audienceIds);
+
+            res.status(200).json({
+                success: true,
+                message: 'Audiences deleted successfully'
+            });
+        } catch (error) {
+            handleError(res, error, 'Failed to delete audiences');
+        }
+    }
 };
 
 export default new BriefController(); 

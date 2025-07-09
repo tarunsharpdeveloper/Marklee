@@ -81,6 +81,14 @@ class Audience {
             throw error;
         }
     }
+
+    static async deleteMany(briefId, audienceIds) {
+        const placeholders = audienceIds.map(() => '?').join(',');
+        const query = `DELETE FROM audiences WHERE brief_id = ? AND id IN (${placeholders})`;
+        
+        await db.execute(query, [briefId, ...audienceIds]);
+        return true;
+    }
 }
 
 export default Audience; 

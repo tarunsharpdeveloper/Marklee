@@ -68,6 +68,7 @@ export default function Library() {
   const [localAudienceDesc, setLocalAudienceDesc] = useState("");
   const [checkedAudiences, setCheckedAudiences] = useState({});
   const [isSavingAudiences, setIsSavingAudiences] = useState(false);
+  const [savedAudiences, setSavedAudiences] = useState({});  // briefId -> saved audiences map
 
   useEffect(() => {
     fetchProjects();
@@ -438,8 +439,19 @@ export default function Library() {
               console.log(brief),
               <div key={brief.id || index} className={styles.briefCard}>
                 <div className={styles.briefHeader} onClick={() => handleBriefClick(brief.id)}>
-                  <h4>{brief.title || 'Brief'}</h4>
+                  <h4>Target Audience</h4>
                 </div>
+                {/* Show saved audiences for this brief */}
+                {/* {savedAudiences[brief.id] && savedAudiences[brief.id].length > 0 && (
+                  <div className={styles.savedAudiences}>
+                    <h5>Target Audiences</h5>
+                    <ul>
+                      {savedAudiences[brief.id].map((audience, idx) => (
+                        <li key={idx}>Target audience {idx + 1}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )} */}
               </div>
             ))}
           </div>
@@ -478,15 +490,15 @@ export default function Library() {
               try {
                 const insightsData = JSON.parse(audience.insights);
                 if (Array.isArray(insightsData)) {
-                    description = insightsData.join(' ');
+                  description = insightsData.join(' ');
                 } else if (typeof insightsData === 'object' && insightsData !== null) {
-                    description = getAllValues(insightsData).join(' ').replace(/<br\s*\/?>/gi, ' ');
+                  description = getAllValues(insightsData).join(' ').replace(/<br\s*\/?>/gi, ' ');
                 } else {
-                    description = String(insightsData);
+                  description = String(insightsData);
                 }
                 description = description.substring(0, 150) + (description.length > 150 ? '...' : '');
               } catch (e) {
-                  description = 'No description available.';
+                description = 'No description available.';
               }
             }
           } catch (e) {
@@ -495,7 +507,14 @@ export default function Library() {
           }
           return { ...audience, name, description };
         });
-        setAudiences(formattedAudiences);
+
+        // If there are saved audiences for this brief, show only those
+        if (savedAudiences[briefId] && savedAudiences[briefId].length > 0) {
+          setAudiences(savedAudiences[briefId]);
+        } else {
+          // Otherwise show all available audiences
+          setAudiences(formattedAudiences);
+        }
       }
 
       // Show the brief form section to display the audiences
@@ -1573,35 +1592,48 @@ export default function Library() {
       setIsSavingAudiences(true);
       const token = localStorage.getItem('token');
       
-      // Get the selected audience IDs
-      const selectedAudienceIds = Object.entries(checkedAudiences)
-        .filter(([_, isChecked]) => isChecked)
-        .map(([id]) => id);
+      // Get the selected and unselected audience objects
+      const selectedAudienceObjects = audiences.filter(audience => 
+        checkedAudiences[audience.id]
+      );
+      
+      const unselectedAudienceIds = audiences
+        .filter(audience => !checkedAudiences[audience.id])
+        .map(audience => audience.id);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/brief/${currentBriefId}/save-audiences`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          audienceIds: selectedAudienceIds
-        })
-      });
+      // Delete unselected audiences from the database
+      if (unselectedAudienceIds.length > 0) {
+        const deleteResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/brief/${currentBriefId}/audience/delete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            audienceIds: unselectedAudienceIds
+          })
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to save selected audiences');
+        if (!deleteResponse.ok) {
+          throw new Error('Failed to delete unselected audiences');
+        }
       }
+
+      // Update saved audiences in local state
+      setSavedAudiences(prev => ({
+        ...prev,
+        [currentBriefId]: selectedAudienceObjects
+      }));
+
+      // Update audiences state to only show selected ones
+      setAudiences(selectedAudienceObjects);
 
       // Clear checkboxes after successful save
       setCheckedAudiences({});
       
-      // Show success message or handle UI updates
-      // You can add a toast/notification here if needed
-
     } catch (error) {
-      console.error('Error saving audiences:', error);
-      setError('Failed to save selected audiences');
+      console.error('Error saving/deleting audiences:', error);
+      setError('Failed to save changes to audiences');
     } finally {
       setIsSavingAudiences(false);
     }
