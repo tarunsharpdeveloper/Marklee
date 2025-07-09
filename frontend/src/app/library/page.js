@@ -66,11 +66,38 @@ export default function Library() {
   const [editingAudience, setEditingAudience] = useState(null);
   const [localAudienceName, setLocalAudienceName] = useState("");
   const [localAudienceDesc, setLocalAudienceDesc] = useState("");
+  const [checkedAudiences, setCheckedAudiences] = useState({});
+  const [isSavingAudiences, setIsSavingAudiences] = useState(false);
 
   useEffect(() => {
     fetchProjects();
     fetchBriefQuestions();
   }, []);
+
+  // Add new useEffect to automatically open brief form
+  useEffect(() => {
+    if (projects.length > 0) {
+      // Get the first project
+      const firstProject = projects[0];
+      const projectKey = firstProject.name.toLowerCase().replace(/\s+/g, '_');
+      
+      // Set the selected folder to the first project
+      setSelectedFolder({
+        id: firstProject.id,
+        name: firstProject.name,
+        status: firstProject.status
+      });
+
+      // Open the brief form
+      setIsBriefFormOpen(true);
+
+      // Expand the first folder
+      setExpandedFolders(prev => ({
+        ...prev,
+        [projectKey]: true
+      }));
+    }
+  }, [projects]);
 
   // Add resize listener for responsive behavior
   useEffect(() => {
@@ -392,7 +419,7 @@ export default function Library() {
   const renderFolderContent = (folder) => {
     return (
       <div className={styles.folderContent}>
-        <button 
+        {/* <button 
           className={styles.createBriefButton}
           onClick={() => handleCreateBrief(folder)}
         >
@@ -402,7 +429,7 @@ export default function Library() {
               <path d="M12 5v14M5 12h14"/>
             </svg>
           </div>
-        </button>
+        </button> */}
 
         {/* Display Briefs */}
         {folder.briefs && folder.briefs.length > 0 && (
@@ -774,18 +801,30 @@ export default function Library() {
               </button>
             <div className={styles.audienceHeader}>
               <h3>Target Audience Segments</h3>
+              <button 
+                className={styles.saveAudiencesButton}
+                onClick={handleSaveSelectedAudiences}
+                disabled={isSavingAudiences || !Object.values(checkedAudiences).some(isChecked => isChecked)}
+              >
+                {isSavingAudiences ? 'Saving...' : 'Save'}
+              </button>
             </div>
             <div className={styles.segmentsList}>
               {audiences.map((audience, index) => (
                 console.log(audience),
                 <div key={index} className={styles.segmentCard}>
                     <div className={styles.segmentHeader}>
+                        <input 
+                            type="checkbox"
+                            checked={checkedAudiences[audience.id] || false}
+                            onChange={() => handleCheckAudience(audience.id)}
+                        />
                         {/* <h4>{audience.segment}</h4> */}
                         <button
                             className={styles.editAudienceButton}
                             onClick={() => handleEditAudience(audience)}
                         >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            <svg width="18" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
                     </div>
                     <p>{audience.segment}</p>
@@ -796,7 +835,7 @@ export default function Library() {
                         >
                             view
                         </button>
-                        <button className={styles.generateDocumentButton} onClick={() => {
+                        {/* <button className={styles.generateDocumentButton} onClick={() => {
                             setSelectedAudienceId(audience.id);
                             setSelectedAssetType(audience.segment);
                             setIsAssetPopupOpen(true);
@@ -806,7 +845,7 @@ export default function Library() {
                             width={20}
                             height={20}
                             priority
-                        /></button>
+                        /></button> */}
                     </div>
                 </div>
               ))}
@@ -1520,6 +1559,52 @@ export default function Library() {
             </div>
         </div>
     );
+  };
+
+  const handleCheckAudience = (audienceId) => {
+    setCheckedAudiences(prev => ({
+      ...prev,
+      [audienceId]: !prev[audienceId]
+    }));
+  };
+
+  const handleSaveSelectedAudiences = async () => {
+    try {
+      setIsSavingAudiences(true);
+      const token = localStorage.getItem('token');
+      
+      // Get the selected audience IDs
+      const selectedAudienceIds = Object.entries(checkedAudiences)
+        .filter(([_, isChecked]) => isChecked)
+        .map(([id]) => id);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/brief/${currentBriefId}/save-audiences`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          audienceIds: selectedAudienceIds
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save selected audiences');
+      }
+
+      // Clear checkboxes after successful save
+      setCheckedAudiences({});
+      
+      // Show success message or handle UI updates
+      // You can add a toast/notification here if needed
+
+    } catch (error) {
+      console.error('Error saving audiences:', error);
+      setError('Failed to save selected audiences');
+    } finally {
+      setIsSavingAudiences(false);
+    }
   };
 
   return (
