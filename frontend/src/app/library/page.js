@@ -521,7 +521,6 @@ export default function Library() {
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
               </svg>
             </button>
-            {/* <h2>Create Brief for {selectedFolder.name}</h2> */}
             {error && <div className={styles.error}>{error}</div>}
             
             {loading ? (
@@ -569,95 +568,64 @@ export default function Library() {
                             name="audienceType"
                             value="suggest"
                             checked={briefData.audienceType === 'suggest'}
-                            onChange={(e) => setBriefData({ 
-                              audienceType: e.target.value,
-                              description: '',
-                              whoItHelps: '',
-                              problemItSolves: ''
-                            })}
+                            onChange={(e) => {
+                              setBriefData({ 
+                                audienceType: e.target.value
+                              });
+                              // Automatically submit for audience suggestions
+                              setTimeout(() => handleBriefSubmit(new Event('submit')), 0);
+                            }}
                             id="suggest"
                           />
                           <label htmlFor="suggest" className={styles.radioLabel}>Suggest audiences for me</label>
                         </div>
                       </div>
                       {briefData.audienceType === 'know' && (
-                      <div className={styles.questionsContainer}>
-                        <div className={styles.formGroup}>
-                          <h4>Label / Persona name</h4>
-                          <textarea
-                            value={briefData.labelName || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, labelName: e.target.value }))}
-                            className={styles.textarea}
-                          />
-                        </div>
-                        <div className={styles.formGroup}>
-                          <h4>Who they are (role, life stage, market segment)?</h4>
-                          <textarea
-                            value={briefData.whoTheyAre || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, whoTheyAre: e.target.value }))}
-                            className={styles.textarea}
-                          />
-                    </div>
-                        <div className={styles.formGroup}>
-                          <h4>What they want (main goal or desired outcome)?</h4>
-                          <textarea
-                            value={briefData.whatTheyWant || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, whatTheyWant: e.target.value }))}
-                            className={styles.textarea}
-                          />
-                        </div>
-                        <div className={styles.formGroup}>
-                          <h4>What they struggle with (main pain point or problem)?</h4>
-                          <textarea
-                            value={briefData.whatTheyStruggle || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, whatTheyStruggle: e.target.value }))}
-                            className={styles.textarea}
-                          />
-                        </div>
-                        <div className={styles.formGroup}>
+                        <div className={styles.questionsContainer}>
+                          <div className={styles.formGroup}>
+                            <h4>Label / Persona name</h4>
+                            <textarea
+                              value={briefData.labelName || ''}
+                              onChange={(e) => setBriefData(prev => ({ ...prev, labelName: e.target.value }))}
+                              className={styles.textarea}
+                            />
+                          </div>
+                          <div className={styles.formGroup}>
+                            <h4>Who they are (role, life stage, market segment)?</h4>
+                            <textarea
+                              value={briefData.whoTheyAre || ''}
+                              onChange={(e) => setBriefData(prev => ({ ...prev, whoTheyAre: e.target.value }))}
+                              className={styles.textarea}
+                            />
+                          </div>
+                          <div className={styles.formGroup}>
+                            <h4>What they want (main goal or desired outcome)?</h4>
+                            <textarea
+                              value={briefData.whatTheyWant || ''}
+                              onChange={(e) => setBriefData(prev => ({ ...prev, whatTheyWant: e.target.value }))}
+                              className={styles.textarea}
+                            />
+                          </div>
+                          <div className={styles.formGroup}>
+                            <h4>What they struggle with (main pain point or problem)?</h4>
+                            <textarea
+                              value={briefData.whatTheyStruggle || ''}
+                              onChange={(e) => setBriefData(prev => ({ ...prev, whatTheyStruggle: e.target.value }))}
+                              className={styles.textarea}
+                            />
+                          </div>
+                          <div className={styles.formGroup}>
                             <h4>(Optional) Age, channels, purchasing power, etc.</h4>
-                          <textarea
-                            value={briefData.additionalInfo || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, additionalInfo: e.target.value }))}
-                            className={styles.textarea}
-                          />
+                            <textarea
+                              value={briefData.additionalInfo || ''}
+                              onChange={(e) => setBriefData(prev => ({ ...prev, additionalInfo: e.target.value }))}
+                              className={styles.textarea}
+                            />
+                          </div>
+                          <button className={styles.submitButton} type="submit">Generate</button>
                         </div>
-                        <button className={styles.submitButton} type="submit" onClick={handleBriefSubmit}>Generate</button>
-                      </div>
-                    )}
-
-                    {briefData.audienceType === 'suggest' && (
-                      <div className={styles.questionsContainer}>
-                        <div className={styles.formGroup}>
-                          <h4>what it is and what it does?</h4>
-                          <textarea
-                            value={briefData.description || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, description: e.target.value }))}
-                            className={styles.textarea}
-                          />
-                        </div>
-                        <div className={styles.formGroup}>
-                          <h4>Who it helps?</h4>
-                          <textarea
-                            value={briefData.whoItHelps || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, whoItHelps: e.target.value }))}
-                            className={styles.textarea}
-                          />
-                        </div>
-                        <div className={styles.formGroup}>
-                          <h4>Problem it solves?</h4>
-                          <textarea
-                            value={briefData.problemItSolves || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, problemItSolves: e.target.value }))}
-                            className={styles.textarea}
-                          />
-                        </div>
-                        <button className={styles.submitButton} type="submit" onClick={handleBriefSubmit}>Generate</button>
-                      </div>
-                    )}
+                      )}
                     </div>
-
-                  
                   </>
                 )}
               </form>
@@ -960,19 +928,48 @@ export default function Library() {
           throw new Error('No folder selected. Please select a folder first.');
         }
 
+        // Get the onboarding data first
+        const onboardingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!onboardingResponse.ok) {
+          throw new Error('Failed to fetch onboarding data');
+        }
+
+        const onboardingData = await onboardingResponse.json();
+        if (!onboardingData.data || !onboardingData.data.data) {
+          throw new Error('No Discovery Questionnaire data found. Please complete the questionnaire first.');
+        }
+
+        const formData = typeof onboardingData.data.data === 'string' 
+          ? JSON.parse(onboardingData.data.data) 
+          : onboardingData.data.data;
+
+        // Map Discovery Questionnaire data to required fields
+        const mappedData = {
+          description: formData.productSummary || formData.description || '',
+          whoItHelps: formData.coreAudience || formData.targetMarket || '',
+          problemItSolves: formData.outcome || formData.problemSolved || '',
+          projectId: selectedFolder.id,
+          projectName: selectedFolder.name
+        };
+
+        // Validate required fields
+        if (!mappedData.description || !mappedData.whoItHelps || !mappedData.problemItSolves) {
+          throw new Error('Insufficient data in Discovery Questionnaire. Please make sure you have filled out the product summary, core audience, and outcome sections.');
+        }
+
+        // Use the mapped data to generate audiences
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-suggested-audiences`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({
-            description: briefData.description,
-            whoItHelps: briefData.whoItHelps,
-            problemItSolves: briefData.problemItSolves,
-            projectId: selectedFolder.id,
-            projectName: selectedFolder.name
-          })
+          body: JSON.stringify(mappedData)
         });
 
         if (!response.ok) {
@@ -991,12 +988,12 @@ export default function Library() {
             
             // Update folder structure with new brief and audiences
             const folderKey = selectedFolder.name.toLowerCase().replace(/\s+/g, '_');
-        setFolderStructure(prev => {
+            setFolderStructure(prev => {
               const currentFolder = prev[folderKey] || {};
               const currentBriefs = currentFolder.briefs || [];
               
-          return {
-            ...prev,
+              return {
+                ...prev,
                 [folderKey]: {
                   ...currentFolder,
                   briefs: [
@@ -1006,9 +1003,9 @@ export default function Library() {
                       audiences: data.data.audiences
                     }
                   ]
-            }
-          };
-        });
+                }
+              };
+            });
           }
         }
       }

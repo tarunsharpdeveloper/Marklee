@@ -285,7 +285,7 @@ export default function MarketingPage() {
                   <div key={index} className={styles.inputGroup}>
                     <label htmlFor={field.nameKey}>
                       {field.title}
-                      {isRequired && <span className={styles.required}>*</span>}
+                      {isRequired && <span className={styles.requiredIndicator}>*</span>}
                     </label>
                     {(field.nameKey === 'description' ||
                       field.nameKey === 'targetMarket' ||
