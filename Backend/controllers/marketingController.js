@@ -217,7 +217,7 @@ ${basePrompt}`;
 
     async generateMarketingContentWithPrompt(req, res) {
         try {
-            const { formData, currentMessage, userPrompt } = req.body;
+            const { formData, currentMessage, userPrompt, isAudienceEdit } = req.body;
 
             // Validate required fields
             if (!formData || !currentMessage || !userPrompt) {
@@ -231,7 +231,21 @@ ${basePrompt}`;
             const messages = [
                 {
                     role: "system",
-                    content: `You are a helpful marketing assistant. The user has a marketing message and wants to improve it. Generate ONE engaging follow-up question in a conversational ChatGPT style.
+                    content: isAudienceEdit ? 
+                    `You are a helpful marketing assistant specializing in audience analysis. Help the user refine their audience description.
+
+Current audience description: "${currentMessage}"
+User's request: "${userPrompt}"
+Audience context: ${JSON.stringify(formData, null, 2)}
+
+Provide a helpful response that:
+1. Addresses the user's specific request
+2. Suggests improvements to the audience description
+3. Maintains a conversational, helpful tone
+4. Focuses on making the audience description more precise and actionable
+
+Return ONLY your response, without any formatting or additional text.` :
+                    `You are a helpful marketing assistant. The user has a marketing message and wants to improve it. Generate ONE engaging follow-up question in a conversational ChatGPT style.
 
 Current message: "${currentMessage}"
 User's request: "${userPrompt}"
@@ -258,7 +272,22 @@ Return ONLY the question, without any other text or explanations.`
             const updateMessages = [
                 {
                     role: "system",
-                    content: `Update this marketing message based on the user's request:
+                    content: isAudienceEdit ?
+                    `Update this audience description based on the user's request:
+                    
+Current description: "${currentMessage}"
+User's request: "${userPrompt}"
+Audience context: ${JSON.stringify(formData, null, 2)}
+
+Return only the updated audience description, focusing on:
+1. Clear identification of who the audience is
+2. Their key characteristics and behaviors
+3. Pain points and desires
+4. Relevant demographic or firmographic details
+5. Any unique insights that make this audience distinct
+
+Keep the description concise but comprehensive. No explanations or additional text.` :
+                    `Update this marketing message based on the user's request:
                     
 Current message: "${currentMessage}"
 User's request: "${userPrompt}"

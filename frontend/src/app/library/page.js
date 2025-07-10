@@ -1,10 +1,264 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../dashboard/styles.module.css';
 import Image from 'next/image';
 import { Typewriter } from 'react-simple-typewriter';
+
+const MemoizedEditAudiencePopup = memo(({ 
+    isOpen, 
+    audience, 
+    briefData,
+    onClose, 
+    onSave 
+}) => {
+    const [localInputMessage, setLocalInputMessage] = useState("");
+    const [messages, setMessages] = useState([]);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [localSegment, setLocalSegment] = useState(audience?.segment || "");
+    const textareaRef = useRef(null);
+    const router = useRouter();
+    const timeoutRef = useRef(null);
+
+    // Initialize textarea value once
+    useEffect(() => {
+        if (audience?.segment) {
+            setLocalSegment(audience.segment);
+        }
+    }, []); // Empty dependency array - only run once
+
+    const handleTextAreaChange = (e) => {
+        const newValue = e.target.value;
+        setLocalSegment(newValue);
+    };
+
+    const handleLocalSendMessage = async () => {
+        if (!localInputMessage.trim()) return;
+
+        setMessages(prev => [...prev, { content: localInputMessage, type: 'user' }]);
+        setLocalInputMessage('');
+        setIsRefreshing(true);
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                router.push('/');
+                return;
+            }
+
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        formData: {
+                            labelName: briefData.labelName,
+                            whoTheyAre: briefData.whoTheyAre,
+                            whatTheyWant: briefData.whatTheyWant,
+                            whatTheyStruggle: briefData.whatTheyStruggle,
+                            additionalInfo: briefData.additionalInfo
+                        },
+                        currentMessage: localSegment,
+                        userPrompt: localInputMessage,
+                        isAudienceEdit: true
+                    }),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to send message');
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                setMessages(prev => [...prev, {
+                    content: data.data.chatResponse,
+                    type: 'ai'
+                }]);
+                
+                // Clear any pending timeout
+                if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current);
+                }
+                
+                // Set new value with a small delay
+                timeoutRef.current = setTimeout(() => {
+                    setLocalSegment(data.data.coreMessage);
+                }, 100);
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            setMessages(prev => [...prev, {
+                content: "Sorry, I encountered an error. Please try again.",
+                type: 'ai'
+            }]);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    const handleSave = async () => {
+        if (!audience?.id) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                router.push('/');
+                return;
+            }
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/audience/${audience.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    segment: localSegment
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update audience');
+            }
+
+            // Call the parent's onSave with the updated audience
+            onSave({
+                ...audience,
+                segment: localSegment
+            });
+        } catch (error) {
+            console.error('Error updating audience:', error);
+        }
+    };
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
+
+    if (!isOpen || !audience) return null;
+
+    return (
+        <div className={styles.editPopupOverlay}>
+            <div className={styles.editPopupContent}>
+                <div className={styles.editPopupLeft}>
+                    <div className={styles.editPopupHeader}>
+                        <h2>Message Assistant</h2>
+                        <button
+                            className={styles.editPopupCloseButton}
+                            onClick={onClose}
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div className={styles.chatMessages}>
+                        {messages.map((message, index) => (
+                            <div
+                                key={index}
+                                className={`${styles.messageContent} ${
+                                    message.type === "user"
+                                        ? styles.userMessage
+                                        : styles.aiMessage
+                                }`}
+                            >
+                                <p>{message.content}</p>
+                            </div>
+                        ))}
+                        {isRefreshing && (
+                            <div className={styles.aiMessage}>
+                                <div className={styles.loadingDots}>
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <div className={styles.inputContainer}>
+                        <input
+                            type="text"
+                            className={styles.messageInput}
+                            value={localInputMessage}
+                            onChange={(e) => setLocalInputMessage(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    handleLocalSendMessage();
+                                }
+                            }}
+                            placeholder="Type your message..."
+                        />
+                        <button
+                            className={styles.sendButton}
+                            onClick={handleLocalSendMessage}
+                            disabled={isRefreshing}
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div className={styles.editPopupRight}>
+                    <div className={styles.editPopupHeader}>
+                        <h2>Edit Audience</h2>
+                    </div>
+                    <div className={styles.formGroup}>
+                        <textarea
+                            className={styles.editCoreMessageInput}
+                            value={localSegment}
+                            onChange={handleTextAreaChange}
+                            placeholder="Type your audience description here..."
+                        />
+                        <div className={styles.editCoreMessageActions}>
+                            <button
+                                className={styles.saveButton}
+                                onClick={handleSave}
+                            >
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+});
 
 export default function Library() {
   const router = useRouter();
@@ -64,8 +318,6 @@ export default function Library() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isEditAudiencePopupOpen, setIsEditAudiencePopupOpen] = useState(false);
   const [editingAudience, setEditingAudience] = useState(null);
-  const [localAudienceName, setLocalAudienceName] = useState("");
-  const [localAudienceDesc, setLocalAudienceDesc] = useState("");
   const [checkedAudiences, setCheckedAudiences] = useState({});
   const [isSavingAudiences, setIsSavingAudiences] = useState(false);
   const [savedAudiences, setSavedAudiences] = useState({});  // briefId -> saved audiences map
@@ -117,6 +369,7 @@ export default function Library() {
   // Handle mobile view transitions
   useEffect(() => {
     if (isMobileView) {
+      console.log(isMobileView);
       if (isBriefFormOpen) {
         setShowFolderSection(false);
         setShowQASection(true);
@@ -149,23 +402,6 @@ export default function Library() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [isBriefFormOpen, audiences.length]);
-
-  // Add this effect to initialize local state when popup opens
-  useEffect(() => {
-    if (isEditAudiencePopupOpen && editingAudience) {
-        let currentSegment = {};
-        try {
-            currentSegment = JSON.parse(editingAudience.segment);
-        } catch (e) {
-            currentSegment = {
-                name: editingAudience.name || '',
-                description: editingAudience.description || ''
-            };
-        }
-        setLocalAudienceName(currentSegment.name);
-        setLocalAudienceDesc(currentSegment.description);
-    }
-  }, [isEditAudiencePopupOpen, editingAudience]);
 
   const fetchProjects = async () => {
     try {
@@ -820,24 +1056,28 @@ export default function Library() {
               </button>
             <div className={styles.audienceHeader}>
               <h3>Target Audience Segments</h3>
-              <button 
-                className={styles.saveAudiencesButton}
-                onClick={handleSaveSelectedAudiences}
-                disabled={isSavingAudiences || !Object.values(checkedAudiences).some(isChecked => isChecked)}
-              >
-                {isSavingAudiences ? 'Saving...' : 'Save'}
-              </button>
+              {!savedAudiences[currentBriefId] && (
+                <button 
+                  className={styles.saveAudiencesButton}
+                  onClick={handleSaveSelectedAudiences}
+                  disabled={isSavingAudiences || !Object.values(checkedAudiences).some(isChecked => isChecked)}
+                >
+                  {isSavingAudiences ? 'Saving...' : 'Save'}
+                </button>
+              )}
             </div>
             <div className={styles.segmentsList}>
               {audiences.map((audience, index) => (
                 console.log(audience),
                 <div key={index} className={styles.segmentCard}>
                     <div className={styles.segmentHeader}>
-                        <input 
+                        {!savedAudiences[currentBriefId] && (
+                          <input 
                             type="checkbox"
                             checked={checkedAudiences[audience.id] || false}
                             onChange={() => handleCheckAudience(audience.id)}
-                        />
+                          />
+                        )}
                         {/* <h4>{audience.segment}</h4> */}
                         <button
                             className={styles.editAudienceButton}
@@ -1395,189 +1635,18 @@ export default function Library() {
     setIsEditAudiencePopupOpen(true);
   };
 
-  const EditAudiencePopup = () => {
-    const [localName, setLocalName] = useState("");
-    const [localDesc, setLocalDesc] = useState("");
-    const [localInputMessage, setLocalInputMessage] = useState("");
-    const [messages, setMessages] = useState([]);
-    const [isRefreshing, setIsRefreshing] = useState(false);
+  const handleCloseEditPopup = () => {
+    setIsEditAudiencePopupOpen(false);
+    setEditingAudience(null);
+  };
 
-    useEffect(() => {
-        if (editingAudience) {
-            setLocalDesc(editingAudience.segment || '');
-        }
-    }, [editingAudience]);
-
-    const handleLocalSendMessage = async () => {
-        if (!localInputMessage.trim()) return;
-
-        setMessages(prev => [...prev, { content: localInputMessage, type: 'user' }]);
-        setLocalInputMessage('');
-        setIsRefreshing(true);
-
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                router.push('/');
-                return;
-            }
-
-            // Add AI response
-            setMessages(prev => [...prev, {
-                content: "I'll help you refine your audience details.",
-                type: 'ai'
-            }]);
-        } catch (error) {
-            console.error('Error sending message:', error);
-            setMessages(prev => [...prev, {
-                content: "Sorry, I encountered an error. Please try again.",
-                type: 'ai'
-            }]);
-        } finally {
-            setIsRefreshing(false);
-        }
-    };
-
-    const handleSave = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                router.push('/');
-                return;
-            }
-
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/audience/${editingAudience.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    segment: localDesc
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to update audience');
-            }
-
-            // Update the audiences list
-            setAudiences(audiences.map(a => 
-                a.id === editingAudience.id ? {
-                    ...a,
-                    segment: localDesc
-                } : a
-            ));
-
-            setIsEditAudiencePopupOpen(false);
-            setEditingAudience(null);
-        } catch (error) {
-            console.error('Error updating audience:', error);
-            setError(error.message);
-        }
-    };
-
-    if (!isEditAudiencePopupOpen || !editingAudience) return null;
-
-    return (
-        <div className={styles.editPopupOverlay}>
-            <div className={styles.editPopupContent}>
-                <div className={styles.editPopupLeft}>
-                    <div className={styles.editPopupHeader}>
-                        <h2>Message Assistant</h2>
-                        <button
-                            className={styles.editPopupCloseButton}
-                            onClick={() => {
-                                setIsEditAudiencePopupOpen(false);
-                                setEditingAudience(null);
-                            }}
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                        </button>
-                    </div>
-                    <div className={styles.chatMessages}>
-                        {messages.map((message, index) => (
-                            <div
-                                key={index}
-                                className={`${styles.messageContent} ${
-                                    message.type === "user"
-                                        ? styles.userMessage
-                                        : styles.aiMessage
-                                }`}
-                            >
-                                <p>{message.content}</p>
-                            </div>
-                        ))}
-                        {isRefreshing && (
-                            <div className={styles.aiMessage}>
-                                <div className={styles.loadingDots}>
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    <div className={styles.inputContainer}>
-                        <input
-                            type="text"
-                            className={styles.messageInput}
-                            value={localInputMessage}
-                            onChange={(e) => setLocalInputMessage(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    handleLocalSendMessage();
-                                }
-                            }}
-                            placeholder="Type your message..."
-                            disabled={isRefreshing}
-                        />
-                        <button
-                            className={styles.sendButton}
-                            onClick={handleLocalSendMessage}
-                            disabled={!localInputMessage.trim() || isRefreshing}
-                        >
-                            Send
-                        </button>
-                    </div>
-                </div>
-                <div className={styles.editPopupRight}>
-                    <div className={styles.formGroup}>
-                        {/* <h4>Target Audience</h4> */}
-                        <textarea
-                            className={styles.editCoreMessageInput}
-                            value={localDesc}
-                            onChange={(e) => setLocalDesc(e.target.value)}
-                            placeholder="Enter audience description..."
-                            rows={4}
-                        />
-                    </div>
-                    <div className={styles.editCoreMessageActions}>
-                        <button
-                            className={styles.saveButton}
-                            onClick={handleSave}
-                        >
-                            Save Changes
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+  const handleSaveEditedAudience = (updatedAudience) => {
+    // Update the audiences list
+    setAudiences(audiences.map(a => 
+      a.id === updatedAudience.id ? updatedAudience : a
+    ));
+    setIsEditAudiencePopupOpen(false);
+    setEditingAudience(null);
   };
 
   const handleCheckAudience = (audienceId) => {
@@ -1690,7 +1759,15 @@ export default function Library() {
           </div>
         </>
       )}
-      <EditAudiencePopup />
+      {isEditAudiencePopupOpen && (
+          <MemoizedEditAudiencePopup
+              isOpen={isEditAudiencePopupOpen}
+              audience={editingAudience}
+              briefData={briefData}
+              onClose={handleCloseEditPopup}
+              onSave={handleSaveEditedAudience}
+          />
+      )}
     </div>
   );
 } 
