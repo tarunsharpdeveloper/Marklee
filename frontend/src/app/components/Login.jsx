@@ -49,16 +49,22 @@ export const Login = ({ isOpen, onClose }) => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       
+      // Also set in cookies for middleware
+      document.cookie = `user=${JSON.stringify(data.user)}; path=/`;
+      document.cookie = `token=${data.token}; path=/`;
+      
       setSuccessMessage('Logged in successfully!');
       
-      // Close modal and navigate based on role and isUserMetaData
+      // Close modal and navigate based on role
       setTimeout(() => {
         onClose();
         if (data.user.role === 'admin') {
+          // Admin users can only access admin routes
           router.push('/usermanagement');
         } else {
-          // If user has completed onboarding, go to dashboard, otherwise go to pre-homepage
-          router.push(data.isUserMetaData ? '/dashboard' : '/marketing');
+          // Regular users can't access admin routes
+          // If no metadata, go to pre-homepage, otherwise dashboard
+          router.push(data.isUserMetaData ? '/dashboard' : '/pre-homepage');
         }
       }, 2000);
 

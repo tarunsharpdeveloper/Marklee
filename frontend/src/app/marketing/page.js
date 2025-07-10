@@ -90,39 +90,6 @@ export default function MarketingPage() {
     
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      
-      // If this is the company name field and it has a value
-      if (name === 'description' && value.trim()) {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        try {
-          // Try to create a project with the company name
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/project`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              projectName: value.trim()
-            })
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            console.log('Created project:', data);
-            // Store the project ID for later use
-            localStorage.setItem('currentProjectId', data.data.id);
-          } else {
-            // If project creation fails, we'll try again during form submission
-            console.log('Project will be created during form submission');
-          }
-        } catch (error) {
-          // If project creation fails, we'll try again during form submission
-          console.log('Project will be created during form submission:', error);
-        }
-      }
     } catch (error) {
       console.error('Error saving answers:', error);
     }
@@ -161,32 +128,27 @@ export default function MarketingPage() {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No authentication token found');
 
-      // Get or create project ID
-      let projectId = localStorage.getItem('currentProjectId');
-      
-      if (!projectId) {
-        // Create a project with the company name
-        const projectResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/project`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            projectName: formAnswers.description.trim()
-          })
-        });
+      // Create a project with the company name
+      const projectResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/project`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          projectName: formAnswers.description.trim()
+        })
+      });
 
-        if (!projectResponse.ok) {
-          throw new Error('Failed to create project');
-        }
-
-        const projectData = await projectResponse.json();
-        projectId = projectData.data.id;
-        localStorage.setItem('currentProjectId', projectId);
+      if (!projectResponse.ok) {
+        throw new Error('Failed to create project');
       }
 
-      // Generate marketing content first to get the core message
+      const projectData = await projectResponse.json();
+      const projectId = projectData.data.id;
+      localStorage.setItem('currentProjectId', projectId);
+
+      // Generate marketing content
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate`, {
         method: 'POST',
         headers: {
@@ -196,7 +158,7 @@ export default function MarketingPage() {
         body: JSON.stringify({
           ...formAnswers,
           projectId,
-          projectName: formAnswers.description // Use the company name as project name
+          projectName: formAnswers.description
         })
       });
 
