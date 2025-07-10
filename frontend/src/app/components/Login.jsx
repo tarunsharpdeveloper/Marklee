@@ -91,8 +91,8 @@ export const Login = ({ isOpen, onClose }) => {
   }
 
   return (
-    <div className={styles.login_overlay} onClick={onClose}>
-      <div className={styles.login_modal} onClick={e => e.stopPropagation()}>
+    <div className={styles.login_overlay} onMouseDown={onClose}>
+     <div className={styles.login_modal} onMouseDown={(e) => e.stopPropagation()}>
         <div className={styles.login_modal_content}>
           <button className={styles.close_button} onClick={onClose}></button>
           
