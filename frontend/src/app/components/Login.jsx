@@ -64,7 +64,7 @@ export const Login = ({ isOpen, onClose }) => {
         } else {
           // Regular users can't access admin routes
           // If no metadata, go to pre-homepage, otherwise dashboard
-          router.push(data.isUserMetaData ? '/dashboard' : '/pre-homepage');
+          router.push(data.isUserMetaData ? '/dashboard' : '/marketing');
         }
       }, 2000);
 
