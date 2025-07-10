@@ -120,15 +120,16 @@ export const Signup = ({ isOpen, onClose, onBack }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        onClick={onClose}
+        onMouseDown={onClose}
       >
         <motion.div 
           className={styles.signup_modal}
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          onClick={e => e.stopPropagation()}
+          onMouseDown={e => e.stopPropagation()}
         >
+          
           <div className={styles.signup_modal_content}>
             <button className={styles.close_button} onClick={onClose}></button>
             
