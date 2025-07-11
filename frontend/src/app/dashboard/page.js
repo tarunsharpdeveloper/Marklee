@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, memo } from "react";
+import { useState, useEffect, useRef, memo, useMemo,useCallback} from "react";
 import { useRouter } from "next/navigation";
 import { Typewriter } from "react-simple-typewriter";
+import Image from 'next/image';
 import styles from "./styles.module.css";
 
 const MessageSkeleton = () => (
@@ -643,9 +644,7 @@ export default function Dashboard() {
 
   // Add loading state
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState("");
-
-  const loadingMessages = [
+  const loadingMessages = useMemo(() => [
     "Thinking about the best approach...",
     "Analyzing your request in detail...",
     "Consulting my AI colleagues...",
@@ -656,7 +655,7 @@ export default function Dashboard() {
     "Just a few more calculations...",
     "Cross-checking for accuracy...",
     "Preparing your tailored answer...",
-  ];
+  ], []);
 
   useEffect(() => {
     let messageIndex = 0;
@@ -674,7 +673,7 @@ export default function Dashboard() {
         clearInterval(intervalId);
       }
     };
-  }, [isLoading]);
+  }, [isLoading, loadingMessages]);
 
   const [isEditingCoreMessage, setIsEditingCoreMessage] = useState(false);
   const [editedCoreMessage, setEditedCoreMessage] = useState("");
@@ -825,26 +824,9 @@ export default function Dashboard() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
 
-  useEffect(() => {
-    // Get user data from localStorage
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      const initials = parsedUser.name
-        .split(" ")
-        .map((word) => word[0])
-        .join("")
-        .toUpperCase();
-      setUser({ ...parsedUser, initials });
-
-      // Fetch projects when user data is available
-      fetchProjects();
-    }
-  }, []);
-
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
 
@@ -885,7 +867,23 @@ export default function Dashboard() {
     } catch (error) {
       console.error("Error fetching projects:", error);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      const parsedUser = JSON.parse(userData);
+      const initials = parsedUser.name
+        .split(" ")
+        .map((word) => word[0])
+        .join("")
+        .toUpperCase();
+      setUser({ ...parsedUser, initials });
+
+      // Fetch projects when user data is available
+      fetchProjects();
+    }
+  }, [fetchProjects]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -1764,12 +1762,12 @@ export default function Dashboard() {
               </button>
             </div>
             <div className={styles.modalBody}>
-              <h3>Great! Let's now pinpoint who you're talking to.</h3>
+              <h3>Great! Let&apos;s now pinpoint who you&apos;re talking to.</h3>
               <div className={styles.modalList}>
                 <p>You can:</p>
                 <ul>
                   <li>Create your own audience profiles</li>
-                  <li>Get AI suggestions based on the information you've shared and the Core Message we've created together</li>
+                  <li>Get AI suggestions based on the information you&apos;ve shared and the Core Message we&apos;ve created together</li>
                   <li>Edit and refine any audience in a chat window</li>
                   <li>Refresh suggestions to see new options</li>
                   <li>Save the ones that fit</li>
@@ -1785,7 +1783,7 @@ export default function Dashboard() {
                     router.push('/library');
                   }}
                 >
-                  Let's go!
+                  Let&apos;s go!
                 </button>
               </div>
             </div>
@@ -1800,12 +1798,13 @@ export default function Dashboard() {
         <div className={styles.sidebarContent}>
           <div className={styles.sidebarHeader}>
             <div className={styles.logo}>
-              <img
+              <Image
                 src="/Bold.png"
                 alt="Logo"
                 width={100}
                 height={95}
                 className={styles.logoImage}
+                priority
               />
             </div>
           </div>

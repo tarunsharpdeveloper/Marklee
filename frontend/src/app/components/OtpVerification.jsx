@@ -33,18 +33,28 @@ export const OtpVerification = ({ isOpen, email, onVerificationSuccess, onClose 
         throw new Error(data.message || 'Verification failed');
       }
 
-      // Store the token and user data if provided
+      // Store the token and user data
       if (data.token) {
         localStorage.setItem('token', data.token);
+        // Set token in cookie
+        document.cookie = `token=${data.token}; path=/`;
       }
       if (data.user) {
-        localStorage.setItem('user', JSON.stringify(data.user));
+        // Ensure we're not storing role information that might affect routing
+        const userWithoutRole = {
+          ...data.user,
+          role: 'user' // Force role to be user
+        };
+        localStorage.setItem('user', JSON.stringify(userWithoutRole));
+        // Set user in cookie
+        document.cookie = `user=${JSON.stringify(userWithoutRole)}; path=/`;
       }
 
-      onVerificationSuccess();
-      
-      // Remove the timeout and redirect since it's now handled in Login component
+      // Close the verification modal
       onClose();
+      
+      // Force navigation to marketing route
+      window.location.href = '/marketing';
 
     } catch (error) {
       console.error('OTP verification failed:', error);

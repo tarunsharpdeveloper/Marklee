@@ -104,9 +104,8 @@ export const Signup = ({ isOpen, onClose, onBack }) => {
         isOpen={true}
         email={formData.email}
         onVerificationSuccess={() => {
-          // Close modal and redirect to pre-homepage
           onClose();
-          router.push('/marketing');
+          // Remove router.push here as it's now handled in OtpVerification component
         }}
         onClose={onClose}
       />

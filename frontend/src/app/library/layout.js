@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../dashboard/styles.module.css';
+import Image from 'next/image';
 
 export default function LibraryLayout({ children }) {
   const router = useRouter();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [user, setUser] = useState({ name: '', initials: '' });
 
+  // Fix useEffect with router dependency
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('token');
@@ -46,7 +48,7 @@ export default function LibraryLayout({ children }) {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -63,7 +65,14 @@ export default function LibraryLayout({ children }) {
         <div className={styles.sidebarContent}>
           <div className={styles.sidebarHeader}>
             <div className={styles.logo}>
-              <img src="/Bold.png" alt="Logo" width={100} height={95} className={styles.logoImage} />
+              <Image
+                src="/Bold.png"
+                alt="Logo"
+                width={100}
+                height={95}
+                className={styles.logoImage}
+                priority
+              />
             </div>
           </div>
           <nav className={styles.nav}>

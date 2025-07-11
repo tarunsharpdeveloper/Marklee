@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styles from './styles.module.css';
 
 export default function PromptEdit() {
@@ -20,7 +20,8 @@ export default function PromptEdit() {
     const [isLoading, setIsLoading] = useState(true);
     const [expandedPromptId, setExpandedPromptId] = useState(null);
 
-    const fetchPrompts = async () => {
+    // Wrap fetchPrompts in useCallback
+    const fetchPrompts = useCallback(async () => {
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/ai-prompts`, {
                 method: 'GET',
@@ -52,7 +53,7 @@ export default function PromptEdit() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [categories]); // No dependencies needed as it only uses localStorage
 
     const handleAddPrompt = async (e) => {
         e.preventDefault();
@@ -237,7 +238,7 @@ export default function PromptEdit() {
         if (categories.length > 0) {
             fetchPrompts();
         }
-    }, [categories]);
+    }, [categories.length, fetchPrompts]);
 
     const closeEditModal = () => {
         setShowEditModal(false);

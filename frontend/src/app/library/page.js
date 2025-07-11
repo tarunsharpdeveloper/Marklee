@@ -6,6 +6,21 @@ import styles from '../dashboard/styles.module.css';
 import Image from 'next/image';
 import { Typewriter } from 'react-simple-typewriter';
 
+// Helper function defined at the top level
+const getAllValues = (obj) => {
+  let values = [];
+  if (typeof obj === 'object' && obj !== null) {
+    for (const key in obj) {
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        values = values.concat(getAllValues(obj[key]));
+      } else if (obj[key] !== null && obj[key] !== undefined) {
+        values.push(String(obj[key]));
+      }
+    }
+  }
+  return values;
+};
+
 const MemoizedEditAudiencePopup = memo(({ 
     isOpen, 
     audience, 
@@ -275,13 +290,15 @@ const MemoizedEditAudiencePopup = memo(({
     );
 });
 
-export default function Library() {
+MemoizedEditAudiencePopup.displayName = 'MemoizedEditAudiencePopup';
+
+const Library = () => {
   const router = useRouter();
   const [expandedFolders, setExpandedFolders] = useState({});
   const [isProjectPopupOpen, setIsProjectPopupOpen] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Set to false initially
   const [error, setError] = useState('');
   const [folderStructure, setFolderStructure] = useState({});
   const [selectedFolder, setSelectedFolder] = useState(null);
@@ -325,7 +342,7 @@ export default function Library() {
     "Preparing your content..."
   ]);
   const [briefQuestions, setBriefQuestions] = useState([]);
-  const [questionsLoading, setQuestionsLoading] = useState(true);
+  const [questionsLoading, setQuestionsLoading] = useState(false); // Set to false initially
   const [coreMessage, setCoreMessage] = useState('');
   const [showTypewriter, setShowTypewriter] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -337,87 +354,7 @@ export default function Library() {
   const [isSavingAudiences, setIsSavingAudiences] = useState(false);
   const [savedAudiences, setSavedAudiences] = useState({});  // briefId -> saved audiences map
 
-  useEffect(() => {
-    fetchProjects();
-    fetchBriefQuestions();
-  }, []);
-
-  // Add new useEffect to automatically open brief form
-  useEffect(() => {
-    if (projects.length > 0) {
-      // Get the first project
-      const firstProject = projects[0];
-      const projectKey = firstProject.name.toLowerCase().replace(/\s+/g, '_');
-      
-      // Set the selected folder to the first project
-      setSelectedFolder({
-        id: firstProject.id,
-        name: firstProject.name,
-        status: firstProject.status
-      });
-
-      // Open the brief form
-      setIsBriefFormOpen(true);
-
-      // Expand the first folder
-      setExpandedFolders(prev => ({
-        ...prev,
-        [projectKey]: true
-      }));
-    }
-  }, [projects]);
-
-  // Add resize listener for responsive behavior
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobileView(window.innerWidth <= 768);
-    };
-
-    handleResize(); // Initial check
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
-  // Handle mobile view transitions
-  useEffect(() => {
-    if (isMobileView) {
-      console.log(isMobileView);
-      if (isBriefFormOpen) {
-        setShowFolderSection(false);
-        setShowQASection(true);
-      } else if (audiences.length > 0) {
-        setShowFolderSection(false);
-        setShowQASection(true);
-      } else {
-        setShowFolderSection(true);
-        setShowQASection(false);
-      }
-    } else {
-      setShowFolderSection(true);
-      setShowQASection(true);
-    }
-  }, [isMobileView, isBriefFormOpen, audiences.length]);
-
-  // Add new effect to handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      const newIsMobileView = window.innerWidth <= 768;
-      setIsMobileView(newIsMobileView);
-      
-      // Reset states when switching to mobile view
-      if (newIsMobileView && !isBriefFormOpen && audiences.length === 0) {
-        setShowFolderSection(true);
-        setShowQASection(false);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isBriefFormOpen, audiences.length]);
-
+  // Define all functions before using them
   const fetchProjects = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -427,6 +364,7 @@ export default function Library() {
         return;
       }
 
+      // Don't set loading state for initial fetch
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/projects`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -588,45 +526,6 @@ export default function Library() {
         </div>
       </div>
     );
-  };
-  const fetchBriefQuestions = async () => {
-    try {
-      setQuestionsLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/brief-questions`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      if (data.success) {
-        setBriefQuestions(data.data);
-        
-        // Dynamically initialize briefData based on fetched questions
-        const initialBriefData = {};
-        data.data.forEach(question => {
-          initialBriefData[question.input_field_name] = '';
-        });
-        setBriefData(initialBriefData);
-        
-        console.log('Initialized briefData with fields:', Object.keys(initialBriefData)); // Debug log
-        setError('');
-      } else {
-        setError(data.message || 'Failed to fetch questions');
-      }
-      setQuestionsLoading(false);
-    } catch (error) {
-      console.error('Error fetching brief questions:', error);
-      setError('Failed to fetch questions. Please try again.');
-      setQuestionsLoading(false);
-    }
   };
   const handleCreateBrief = async (folder) => {
    
@@ -811,6 +710,14 @@ export default function Library() {
   const renderQASection = () => {
     return (
       <div className={`${styles.qaSection} ${!isBriefFormOpen && isMobileView ? styles.hidden : ''}`}>
+        {loading && (
+          <div className={styles.loadingOverlay}>
+            <div className={styles.loadingContainer}>
+              <div className={styles.loader}></div>
+              <p className={styles.loadingMessage}>{loadingMessage}</p>
+            </div>
+          </div>
+        )}
         {isBriefFormOpen && selectedFolder && !audiences.length && !showGeneratedContent && (
           <div className={styles.briefForm}>
             <button className={styles.backButton} onClick={handleBackToFolders}>
@@ -818,25 +725,18 @@ export default function Library() {
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
               </svg>
             </button>
+            <h2>Create Brief</h2>
             {error && <div className={styles.error}>{error}</div>}
             
-            {loading ? (
-              <div className={styles.loadingOverlay}>
-                <div className={styles.loadingContainer}>
-                  <div className={styles.loader}></div>
-                  <p className={styles.loadingMessage}>{loadingMessage}</p>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleBriefSubmit}>
-                {questionsLoading ? (
-                  <div className={styles.loadingOverlay}>
-                    <div className={styles.loadingContainer}>
-                      <div className={styles.loader}></div>
-                      <p className={styles.loadingMessage}>Loading questions...</p>
-                    </div>
+            <form onSubmit={handleBriefSubmit}>
+              {questionsLoading ? (
+                <div className={styles.loadingOverlay}>
+                  <div className={styles.loadingContainer}>
+                    <div className={styles.loader}></div>
+                    <p className={styles.loadingMessage}>Loading questions...</p>
                   </div>
-                ) : (
+                </div>
+              ) : (
                   <>
                     <div className={styles.formGroup}>
                       <h1>How would you like to define your audience?</h1>
@@ -926,7 +826,6 @@ export default function Library() {
                   </>
                 )}
               </form>
-            )}
           </div>
         )}
         {showGeneratedContent && (
@@ -1444,21 +1343,6 @@ export default function Library() {
     setDrawerOpen(true);
   };
 
-  // Helper to recursively get all values from an object
-  function getAllValues(obj) {
-    let values = [];
-    if (typeof obj === 'object' && obj !== null) {
-      for (const key in obj) {
-        if (typeof obj[key] === 'object' && obj[key] !== null) {
-          values = values.concat(getAllValues(obj[key]));
-        } else {
-          values.push(obj[key]);
-        }
-      }
-    }
-    return values;
-  }
-
   const fetchCoreMessage = async (refresh = false) => {
     try {
       setIsRefreshing(true);
@@ -1723,6 +1607,86 @@ export default function Library() {
     }
   };
 
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  // Add new useEffect to automatically open brief form
+  useEffect(() => {
+    if (projects.length > 0) {
+      // Get the first project
+      const firstProject = projects[0];
+      const projectKey = firstProject.name.toLowerCase().replace(/\s+/g, '_');
+      
+      // Set the selected folder to the first project
+      setSelectedFolder({
+        id: firstProject.id,
+        name: firstProject.name,
+        status: firstProject.status
+      });
+
+      // Open the brief form
+      setIsBriefFormOpen(true);
+
+      // Expand the first folder
+      setExpandedFolders(prev => ({
+        ...prev,
+        [projectKey]: true
+      }));
+    }
+  }, [projects]);
+
+  // Add resize listener for responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth <= 768);
+    };
+
+    handleResize(); // Initial check
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Handle mobile view transitions
+  useEffect(() => {
+    if (isMobileView) {
+      console.log(isMobileView);
+      if (isBriefFormOpen) {
+        setShowFolderSection(false);
+        setShowQASection(true);
+      } else if (audiences.length > 0) {
+        setShowFolderSection(false);
+        setShowQASection(true);
+      } else {
+        setShowFolderSection(true);
+        setShowQASection(false);
+      }
+    } else {
+      setShowFolderSection(true);
+      setShowQASection(true);
+    }
+  }, [isMobileView, isBriefFormOpen, audiences.length]);
+
+  // Add new effect to handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const newIsMobileView = window.innerWidth <= 768;
+      setIsMobileView(newIsMobileView);
+      
+      // Reset states when switching to mobile view
+      if (newIsMobileView && !isBriefFormOpen && audiences.length === 0) {
+        setShowFolderSection(true);
+        setShowQASection(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isBriefFormOpen, audiences.length]);
+
   return (
     <div className={styles.sections}>
       <section className={`${styles.section} ${styles.librarySection}`}>
@@ -1785,4 +1749,7 @@ export default function Library() {
       )}
     </div>
   );
-} 
+};
+
+Library.displayName = 'Library';
+export default Library; 

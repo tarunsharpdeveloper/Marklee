@@ -16,6 +16,26 @@ export const Login = ({ isOpen, onClose }) => {
   const [showVerification, setShowVerification] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
+  if (!isOpen) return null;
+
+  if (showSignup) {
+    return <Signup isOpen={true} onClose={onClose} onBack={() => setShowSignup(false)} />;
+  }
+
+  if (showVerification) {
+    return <OtpVerification 
+      isOpen={true}
+      email={email}
+      onVerificationSuccess={() => {
+        setShowVerification(false);
+        onClose();
+        // Remove router.push here as it's now handled in OtpVerification component
+      }}
+      onBack={() => setShowVerification(false)}
+      onClose={onClose}
+    />;
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -58,14 +78,8 @@ export const Login = ({ isOpen, onClose }) => {
       // Close modal and navigate based on role
       setTimeout(() => {
         onClose();
-        if (data.user.role === 'admin') {
-          // Admin users can only access admin routes
-          router.push('/usermanagement');
-        } else {
-          // Regular users can't access admin routes
-          // If no metadata, go to pre-homepage, otherwise dashboard
-          router.push(data.isUserMetaData ? '/dashboard' : '/marketing');
-        }
+        // For normal login (not OTP verification), navigate based on metadata
+        router.push(data.isUserMetaData ? '/dashboard' : '/marketing');
       }, 2000);
 
     } catch (error) {
@@ -75,26 +89,6 @@ export const Login = ({ isOpen, onClose }) => {
       setIsLoading(false);
     }
   };
-
-  if (!isOpen) return null;
-
-  if (showSignup) {
-    return <Signup isOpen={true} onClose={onClose} onBack={() => setShowSignup(false)} />;
-  }
-
-  if (showVerification) {
-    return <OtpVerification 
-      isOpen={true}
-      email={email}
-      onVerificationSuccess={() => {
-        setShowVerification(false);
-        onClose();
-        router.push('/marketing');
-      }}
-      onBack={() => setShowVerification(false)}
-      onClose={onClose}
-    />;
-  }
 
   return (
      <div className={styles.login_overlay} onMouseDown={onClose}>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import styles from '../dashboard/styles.module.css';
+import Image from 'next/image';
 
 export default function UserManagementLayout({ children }) {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function UserManagementLayout({ children }) {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -62,7 +63,14 @@ export default function UserManagementLayout({ children }) {
         <div className={styles.sidebarContent}>
           <div className={styles.sidebarHeader}>
             <div className={styles.logo}>
-              <img src="/Bold.png" alt="Logo" width={100} height={95} className={styles.logoImage} />
+              <Image
+                src="/Bold.png"
+                alt="Logo"
+                width={100}
+                height={95}
+                className={styles.logoImage}
+                priority
+              />
             </div>
           </div>
           <nav className={styles.nav}>
