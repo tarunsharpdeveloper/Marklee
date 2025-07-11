@@ -83,10 +83,11 @@ export default function MarketingPage() {
     setShowWelcome(false);
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = async (e) => {
     const { name, value } = e.target;
     const updated = { ...formAnswers, [name]: value };
     setFormAnswers(updated);
+    
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     } catch (error) {
@@ -111,20 +112,54 @@ export default function MarketingPage() {
     setLoading(true);
     setError(null);
 
+    // Validate required fields
+    const requiredFields = ['description', 'productSummary', 'coreAudience', 'outcome'];
+    const missingFields = requiredFields.filter(field => !formAnswers[field]?.trim());
+
+    if (missingFields.length > 0) {
+      setError('Please fill in all required fields');
+      setLoading(false);
+      return;
+    }
+
     const loadingInterval = startLoadingSequence();
 
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No authentication token found');
 
-      // Generate marketing content first to get the core message
+      // Create a project with the company name
+      const projectResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/project`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          projectName: formAnswers.description.trim()
+        })
+      });
+
+      if (!projectResponse.ok) {
+        throw new Error('Failed to create project');
+      }
+
+      const projectData = await projectResponse.json();
+      const projectId = projectData.data.id;
+      localStorage.setItem('currentProjectId', projectId);
+
+      // Generate marketing content
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formAnswers)
+        body: JSON.stringify({
+          ...formAnswers,
+          projectId,
+          projectName: formAnswers.description
+        })
       });
 
       if (!response.ok) {
@@ -145,13 +180,17 @@ export default function MarketingPage() {
         },
         body: JSON.stringify({ 
           data: formAnswers,
-          coreMessage: data.data?.coreMessage 
+          coreMessage: data.data?.coreMessage,
+          projectId
         })
       });
 
       if (data.data?.coreMessage) {
         localStorage.setItem('marketingCoreMessage', data.data.coreMessage);
       }
+
+      // Clear the stored project ID since we're done with it
+      localStorage.removeItem('currentProjectId');
 
       router.push('/dashboard');
     } catch (error) {
@@ -160,6 +199,7 @@ export default function MarketingPage() {
     } finally {
       setLoading(false);
       setLoadingMessage('');
+      clearInterval(loadingInterval);
     }
   };
 
@@ -196,43 +236,54 @@ export default function MarketingPage() {
           <div className={styles.formContainer}>
             <h2>Discovery Questionnaire</h2>
             <form onSubmit={handleSubmit} className={styles.form}>
-              {formFields?.fields.map((field, index) => (
-                <div key={index} className={styles.inputGroup}>
-                  <label htmlFor={field.nameKey}>{field.title}</label>
-                  {(field.nameKey === 'description' ||
-                    field.nameKey === 'targetMarket' ||
-                    field.nameKey === 'coreAudience' ||
-                    field.nameKey === 'problemSolved' ||
-                    field.nameKey === 'competitors' ||
-                    field.nameKey === 'differentiators' ||
-                    field.nameKey === 'keyFeatures' ||
-                    field.nameKey === 'uniqueOffering' ||
-                    field.nameKey === 'additionalInfo') ? (
-                    <textarea
-                      id={field.nameKey}
-                      name={field.nameKey}
-                      value={formAnswers[field.nameKey]}
-                      onChange={handleInputChange}
-                      placeholder={field.placeholder}
-                      required
-                      disabled={loading}
-                    />
-                  ) : (
-                    <textarea
-                      id={field.nameKey}
-                      name={field.nameKey}
-                      value={formAnswers[field.nameKey]}
-                      onChange={handleInputChange}
-                      placeholder={field.placeholder}
-                      required
-                      disabled={loading}
-                    />
-                  )}
-                  {field.guidance && (
-                    <small className={styles.guidance}>{field.guidance}</small>
-                  )}
-                </div>
-              ))}
+              {formFields?.fields.map((field, index) => {
+                // Check if field is one of the required ones
+                const isRequired = field.nameKey === 'description' || 
+                                 field.nameKey === 'productSummary' ||
+                                 field.nameKey === 'coreAudience' ||
+                                 field.nameKey === 'outcome';
+                
+                return (
+                  <div key={index} className={styles.inputGroup}>
+                    <label htmlFor={field.nameKey}>
+                      {field.title}
+                      {isRequired && <span className={styles.requiredIndicator}>*</span>}
+                    </label>
+                    {(field.nameKey === 'description' ||
+                      field.nameKey === 'targetMarket' ||
+                      field.nameKey === 'coreAudience' ||
+                      field.nameKey === 'problemSolved' ||
+                      field.nameKey === 'competitors' ||
+                      field.nameKey === 'differentiators' ||
+                      field.nameKey === 'keyFeatures' ||
+                      field.nameKey === 'uniqueOffering' ||
+                      field.nameKey === 'additionalInfo') ? (
+                      <textarea
+                        id={field.nameKey}
+                        name={field.nameKey}
+                        value={formAnswers[field.nameKey]}
+                        onChange={handleInputChange}
+                        placeholder={field.placeholder}
+                        required={isRequired}
+                        disabled={loading}
+                      />
+                    ) : (
+                      <textarea
+                        id={field.nameKey}
+                        name={field.nameKey}
+                        value={formAnswers[field.nameKey]}
+                        onChange={handleInputChange}
+                        placeholder={field.placeholder}
+                        required={isRequired}
+                        disabled={loading}
+                      />
+                    )}
+                    {field.guidance && (
+                      <small className={styles.guidance}>{field.guidance}</small>
+                    )}
+                  </div>
+                );
+              })}
               <div className={styles.buttonContainer}>
                 <button 
                   type="submit" 

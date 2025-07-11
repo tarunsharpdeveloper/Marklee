@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { useRouter } from "next/navigation";
 import { Typewriter } from "react-simple-typewriter";
 import styles from "./styles.module.css";
@@ -14,8 +14,582 @@ const MessageSkeleton = () => (
   </div>
 );
 
+const MemoizedEditPopup = memo(({ 
+  isOpen, 
+  messages, 
+  setMessages,
+  editedCoreMessage,
+  coreMessage,
+  setCoreMessage,
+  setEditedCoreMessage,
+  isRefreshing,
+  setIsRefreshing,
+  isSending,
+  setIsSending,
+  showTypewriter,
+  setShowTypewriter,
+  onClose 
+}) => {
+  const [localInputMessage, setLocalInputMessage] = useState("");
+  const [localEditedCoreMessage, setLocalEditedCoreMessage] = useState("");
+  const [editingMessageIndex, setEditingMessageIndex] = useState(null);
+  const [editInputValue, setEditInputValue] = useState("");
+  const [showMobileEdit, setShowMobileEdit] = useState(false);
+  const editInputRef = useRef(null);
+  const chatContainerRef = useRef(null);
+  const router = useRouter();
+
+  // Modified useEffect to scroll only on user messages
+  useEffect(() => {
+    if (chatContainerRef.current && messages.length > 0 && messages[messages.length - 1].type === 'ai') {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]); // Will only trigger when messages array changes
+
+  // Add effect to show edit view when AI responds
+  useEffect(() => {
+    if (messages.length > 0 && messages[messages.length - 1].type === 'ai' && window.innerWidth <= 838) {
+      setShowMobileEdit(true);
+    }
+  }, [messages]);
+
+  const handleLocalOptionClick = async (optionType) => {
+    try {
+      // setIsRefreshing(true);
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const onboardingResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!onboardingResponse.ok) {
+        throw new Error("Failed to fetch onboarding data");
+      }
+
+      const { data } = await onboardingResponse.json();
+      const formData =
+        typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+
+      let modificationPrompt = "";
+      switch (optionType) {
+        case "shorter":
+          modificationPrompt =
+            "Make this message shorter and punchier while keeping the main point";
+          break;
+        case "tone":
+          modificationPrompt =
+            "Make this message more friendly and confident";
+          break;
+        case "emphasis":
+          modificationPrompt = "Emphasize the benefits and value more";
+          break;
+        case "alternative":
+          modificationPrompt =
+            "Give me an alternative version with a different angle";
+          break;
+        case "fresh":
+          modificationPrompt = "Rewrite this with a fresh perspective";
+          break;
+        default:
+          break;
+      }
+
+      // Use the same endpoint and format as handleSendMessage
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            formData,
+            currentMessage: localEditedCoreMessage,
+            userPrompt: modificationPrompt,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to modify message");
+      }
+
+      const responseData = await response.json();
+
+      if (responseData.success) {
+        const newMessage = responseData.data.coreMessage;
+        
+        // Update local state
+        setLocalEditedCoreMessage(newMessage);
+        
+        // Update parent state
+        setCoreMessage(newMessage);
+        setEditedCoreMessage(newMessage);
+
+        // Save to database
+        await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ coreMessage: newMessage }),
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Error modifying message:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Initialize local state when popup opens
+  useEffect(() => {
+    if (isOpen) {
+      console.log("Initializing edit popup with:", editedCoreMessage);
+      setLocalEditedCoreMessage(editedCoreMessage || coreMessage);
+      setLocalInputMessage("");
+    }
+  }, [isOpen, editedCoreMessage, coreMessage]);
+
+  // Focus management for edit input
+  useEffect(() => {
+    if (editingMessageIndex !== null && editInputRef.current) {
+      editInputRef.current.focus();
+    }
+  }, [editingMessageIndex]);
+
+  const handleLocalInputChange = (e) => {
+    setLocalInputMessage(e.target.value);
+  };
+
+  const handleLocalSendMessage = async () => {
+    if (!localInputMessage.trim()) return;
+
+    // Add user message to chat
+    setMessages((prev) => [
+      ...prev,
+      {
+        content: localInputMessage,
+        type: "user",
+      },
+    ]);
+    setLocalInputMessage("");
+    setIsSending(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/");
+        return;
+      }
+
+      // First get the onboarding data
+      const onboardingResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!onboardingResponse.ok) {
+        throw new Error("Failed to fetch onboarding data");
+      }
+
+      const { data } = await onboardingResponse.json();
+      const formData =
+        typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+
+      // Now make the chat request with the form data
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            formData,
+            currentMessage: isOpen ? editedCoreMessage : coreMessage,
+            userPrompt: localInputMessage,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
+
+      const responseData = await response.json();
+
+      if (responseData.success) {
+        // Add AI response to chat
+        setMessages((prev) => [
+          ...prev,
+          {
+            content: responseData.data.chatResponse,
+            type: "ai",
+          },
+        ]);
+
+        // Update both core message states to keep them in sync
+        const newMessage = responseData.data.coreMessage;
+        setCoreMessage(newMessage);
+        setEditedCoreMessage(newMessage);
+
+        // Show typewriter effect for the update
+        setShowTypewriter(true);
+        // setTimeout(() => setShowTypewriter(false), 1000);
+
+        // Save the updated message to the database
+        await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ coreMessage: newMessage }),
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      // Show error message in chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          content: "Sorry, I encountered an error. Please try again.",
+          type: "ai",
+        },
+      ]);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleLocalEditSubmit = async (index) => {
+    if (!editInputValue.trim()) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/edit-message`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            messageIndex: index,
+            newContent: editInputValue,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to edit message");
+      }
+
+      // Update messages array with edited message
+      setMessages((prevMessages) => {
+        const newMessages = [...prevMessages];
+        newMessages[index] = {
+          ...newMessages[index],
+          content: editInputValue,
+        };
+        return newMessages;
+      });
+
+      // Clear edit state
+      setEditingMessageIndex(null);
+      setEditInputValue("");
+    } catch (error) {
+      console.error("Error editing message:", error);
+    }
+  };
+
+  const handleStartEditing = (index, content) => {
+    setEditingMessageIndex(index);
+    setEditInputValue(content);
+  };
+
+  const handleCancelEditing = () => {
+    setEditingMessageIndex(null);
+    setEditInputValue("");
+  };
+
+  const handleLocalSave = async () => {
+    if (!localEditedCoreMessage.trim()) return;
+
+    try {
+      setIsRefreshing(true);
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ coreMessage: localEditedCoreMessage }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update core message");
+      }
+
+      setCoreMessage(localEditedCoreMessage);
+      setEditedCoreMessage(localEditedCoreMessage);
+      onClose();
+      setShowTypewriter(true);
+    } catch (error) {
+      console.error("Error updating core message:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className={styles.editPopupOverlay}>
+      <div className={styles.editPopupContent}>
+        <div className={`${styles.editPopupLeft} ${showMobileEdit ? styles.hideMobile : ''}`}>
+          <div className={styles.Content}>
+            <div className={styles.editPopupHeader}>
+              <h2>Message Assistant</h2>
+              <button
+                className={styles.editPopupCloseButton}
+                onClick={onClose}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div className={styles.chatMessages} ref={chatContainerRef}>
+              {messages.map((message, index) => (
+                <div
+                  key={`message-${index}`}
+                  className={`${styles.messageContent} ${
+                    message.type === "user"
+                      ? styles.userMessage
+                      : styles.aiMessage
+                  }`}
+                >
+                  {message.type === "user" &&
+                  editingMessageIndex !== index ? (
+                    <>
+                      {/* <button
+                        className={styles.editButton}
+                        onClick={() =>
+                          handleStartEditing(index, message.content)
+                        }
+                        aria-label="Edit message"
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button> */}
+                      <p>{message.content}</p>
+                    </>
+                  ) : editingMessageIndex === index ? (
+                    <div className={styles.editInputContainer}>
+                      <input
+                        ref={editInputRef}
+                        type="text"
+                        className={styles.editInput}
+                        value={editInputValue}
+                        onChange={(e) => {
+                          e.preventDefault();
+                          setEditInputValue(e.target.value);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleLocalEditSubmit(index);
+                          } else if (e.key === "Escape") {
+                            e.preventDefault();
+                            handleCancelEditing();
+                          }
+                        }}
+                      />
+                      <button
+                        className={styles.editSendButton}
+                        onClick={() => handleLocalEditSubmit(index)}
+                        disabled={!editInputValue.trim()}
+                        aria-label="Send edited message"
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M22 2L11 13" />
+                          <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <p>{message.content}</p>
+                  )}
+                </div>
+              ))}
+              {isRefreshing && (
+                <div className={styles.aiMessage}>
+                  <MessageSkeleton />
+                </div>
+              )}
+            </div>
+            <div className={styles.inputContainer}>
+              <input
+                type="text"
+                className={styles.messageInput}
+                value={localInputMessage}
+                onChange={handleLocalInputChange}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleLocalSendMessage();
+                  }
+                }}
+                placeholder="Type your message..."
+                disabled={isRefreshing}
+              />
+              <button
+                className={styles.sendButton}
+                onClick={handleLocalSendMessage}
+                disabled={!localInputMessage.trim() || isRefreshing}
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className={`${styles.editPopupRight} ${!showMobileEdit ? styles.hideMobile : ''}`}>
+          {window.innerWidth <= 838 && (
+            <button 
+              className={styles.backButton}
+              onClick={() => setShowMobileEdit(false)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              Back to Chat
+            </button>
+          )}
+          <div className={styles.editPopupHeader}>
+                        <h2>Edit Core Message</h2>
+                    </div>
+            <textarea
+              className={styles.editCoreMessageInput}
+              value={localEditedCoreMessage}
+              onChange={(e) => setLocalEditedCoreMessage(e.target.value)}
+              placeholder="Enter your core message..."
+              style={{ minHeight: '150px' }}  // Give more space for the content
+            />
+            <div className={styles.messageOptions}>
+              <button
+                className={styles.optionButton}
+                onClick={() => handleLocalOptionClick("shorter")}
+                disabled={isRefreshing}
+              >
+                Make it Shorter
+              </button>
+              <button
+                className={styles.optionButton}
+                onClick={() => handleLocalOptionClick("tone")}
+                disabled={isRefreshing}
+              >
+                Adjust Tone
+              </button>
+              <button
+                className={styles.optionButton}
+                onClick={() => handleLocalOptionClick("emphasis")}
+                disabled={isRefreshing}
+              >
+                Add Emphasis
+              </button>
+              <button
+                className={styles.optionButton}
+                onClick={() => handleLocalOptionClick("alternative")}
+                disabled={isRefreshing}
+              >
+                Try Alternative
+              </button>
+              <button
+                className={styles.optionButton}
+                onClick={() => handleLocalOptionClick("fresh")}
+                disabled={isRefreshing}
+              >
+                Fresh Perspective
+              </button>
+            </div>
+            <div className={styles.editCoreMessageActions}>
+              <button
+                className={styles.saveButton}
+                onClick={handleLocalSave}
+                disabled={!localEditedCoreMessage.trim()}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  });
+
+  MemoizedEditPopup.displayName = 'MemoizedEditPopup';
+
 export default function Dashboard() {
   const router = useRouter();
+  const [isSavePopupOpen, setSavePopupOpen] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState({
     marketing: false,
     content: false,
@@ -800,6 +1374,10 @@ export default function Dashboard() {
     }
   };
 
+  const handleSaveAndContinue = () => {
+    setSavePopupOpen(true);
+  };
+
   const renderProjectPopup = () => {
     if (!isProjectPopupOpen) return null;
 
@@ -1138,540 +1716,82 @@ export default function Dashboard() {
     );
   };
 
-  // Add this component for the edit popup
-  const EditPopup = () => {
-    const [localInputMessage, setLocalInputMessage] = useState("");
-    const [localEditedCoreMessage, setLocalEditedCoreMessage] = useState("");
-    const [editingMessageIndex, setEditingMessageIndex] = useState(null);
-    const [editInputValue, setEditInputValue] = useState("");
-    const editInputRef = useRef(null);
-
-    const handleLocalOptionClick = async (optionType) => {
-      try {
-        // setIsRefreshing(true);
-        const token = localStorage.getItem("token");
-        if (!token) return;
-
-        const onboardingResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!onboardingResponse.ok) {
-          throw new Error("Failed to fetch onboarding data");
-        }
-
-        const { data } = await onboardingResponse.json();
-        const formData =
-          typeof data.data === "string" ? JSON.parse(data.data) : data.data;
-
-        let modificationPrompt = "";
-        switch (optionType) {
-          case "shorter":
-            modificationPrompt =
-              "Make this message shorter and punchier while keeping the main point";
-            break;
-          case "tone":
-            modificationPrompt =
-              "Make this message more friendly and confident";
-            break;
-          case "emphasis":
-            modificationPrompt = "Emphasize the benefits and value more";
-            break;
-          case "alternative":
-            modificationPrompt =
-              "Give me an alternative version with a different angle";
-            break;
-          case "fresh":
-            modificationPrompt = "Rewrite this with a fresh perspective";
-            break;
-          default:
-            break;
-        }
-
-        // Use the same endpoint and format as handleSendMessage
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              formData,
-              currentMessage: localEditedCoreMessage,
-              userPrompt: modificationPrompt,
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to modify message");
-        }
-
-        const responseData = await response.json();
-
-        if (responseData.success) {
-          const newMessage = responseData.data.coreMessage;
-          
-          // Update local state
-          setLocalEditedCoreMessage(newMessage);
-          
-          // Update parent state
-          setCoreMessage(newMessage);
-          setEditedCoreMessage(newMessage);
-
-          // Save to database
-          await fetch(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({ coreMessage: newMessage }),
-            }
-          );
-        }
-      } catch (error) {
-        console.error("Error modifying message:", error);
-      } finally {
-        setIsRefreshing(false);
-      }
-    };
-
-    // Initialize local state when popup opens
-    useEffect(() => {
-      if (isEditPopupOpen) {
-        console.log("Initializing edit popup with:", editedCoreMessage);
-        setLocalEditedCoreMessage(editedCoreMessage || coreMessage);
-        setLocalInputMessage("");
-      }
-    }, [isEditPopupOpen, editedCoreMessage, coreMessage]);
-
-    // Focus management for edit input
-    useEffect(() => {
-      if (editingMessageIndex !== null && editInputRef.current) {
-        editInputRef.current.focus();
-      }
-    }, [editingMessageIndex]);
-
-    const handleLocalInputChange = (e) => {
-      setLocalInputMessage(e.target.value);
-    };
-
-    const handleLocalSendMessage = async () => {
-      if (!localInputMessage.trim()) return;
-
-      // Add user message to chat
-      setMessages((prev) => [
-        ...prev,
-        {
-          content: localInputMessage,
-          type: "user",
-        },
-      ]);
-      setLocalInputMessage("");
-      setIsSending(true);
-
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          router.push("/");
-          return;
-        }
-
-        // First get the onboarding data
-        const onboardingResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!onboardingResponse.ok) {
-          throw new Error("Failed to fetch onboarding data");
-        }
-
-        const { data } = await onboardingResponse.json();
-        const formData =
-          typeof data.data === "string" ? JSON.parse(data.data) : data.data;
-
-        // Now make the chat request with the form data
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              formData,
-              currentMessage: isEditPopupOpen ? editedCoreMessage : coreMessage,
-              userPrompt: localInputMessage,
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to send message");
-        }
-
-        const responseData = await response.json();
-
-        if (responseData.success) {
-          // Add AI response to chat
-          setMessages((prev) => [
-            ...prev,
-            {
-              content: responseData.data.chatResponse,
-              type: "ai",
-            },
-          ]);
-
-          // Update both core message states to keep them in sync
-          const newMessage = responseData.data.coreMessage;
-          setCoreMessage(newMessage);
-          setEditedCoreMessage(newMessage);
-
-          // Show typewriter effect for the update
-          setShowTypewriter(true);
-          // setTimeout(() => setShowTypewriter(false), 1000);
-
-          // Save the updated message to the database
-          await fetch(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({ coreMessage: newMessage }),
-            }
-          );
-        }
-      } catch (error) {
-        console.error("Error sending message:", error);
-        // Show error message in chat
-        setMessages((prev) => [
-          ...prev,
-          {
-            content: "Sorry, I encountered an error. Please try again.",
-            type: "ai",
-          },
-        ]);
-      } finally {
-        setIsSending(false);
-      }
-    };
-
-    const handleLocalEditSubmit = async (index) => {
-      if (!editInputValue.trim()) return;
-
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/edit-message`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              messageIndex: index,
-              newContent: editInputValue,
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to edit message");
-        }
-
-        // Update messages array with edited message
-        setMessages((prevMessages) => {
-          const newMessages = [...prevMessages];
-          newMessages[index] = {
-            ...newMessages[index],
-            content: editInputValue,
-          };
-          return newMessages;
-        });
-
-        // Clear edit state
-        setEditingMessageIndex(null);
-        setEditInputValue("");
-      } catch (error) {
-        console.error("Error editing message:", error);
-      }
-    };
-
-    const handleStartEditing = (index, content) => {
-      setEditingMessageIndex(index);
-      setEditInputValue(content);
-    };
-
-    const handleCancelEditing = () => {
-      setEditingMessageIndex(null);
-      setEditInputValue("");
-    };
-
-    const handleLocalSave = async () => {
-      if (!localEditedCoreMessage.trim()) return;
-
-      try {
-        setIsLoading(true);
-        const token = localStorage.getItem("token");
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ coreMessage: localEditedCoreMessage }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to update core message");
-        }
-
-        setCoreMessage(localEditedCoreMessage);
-        setEditedCoreMessage(localEditedCoreMessage);
+  const handleCloseEditPopup = () => {
         setIsEditPopupOpen(false);
-        setShowTypewriter(true);
-      } catch (error) {
-        console.error("Error updating core message:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (!isEditPopupOpen) return null;
-
-    return (
-      <div className={styles.editPopupOverlay}>
-        <div className={styles.editPopupContent}>
-          <div className={styles.editPopupLeft}>
-            <div className={styles.Content}>
-              <div className={styles.editPopupHeader}>
-                <h2>Message Assistant</h2>
-                <button
-                  className={styles.editPopupCloseButton}
-                  onClick={() => {
-                    setIsEditPopupOpen(false);
-                    setLocalEditedCoreMessage("");
-                    setLocalInputMessage("");
-                    handleCancelEditing();
-                  }}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
-              </div>
-              <div className={styles.chatMessages}>
-                {messages.map((message, index) => (
-                  <div
-                    key={`message-${index}`}
-                    className={`${styles.messageContent} ${
-                      message.type === "user"
-                        ? styles.userMessage
-                        : styles.aiMessage
-                    }`}
-                  >
-                    {message.type === "user" &&
-                    editingMessageIndex !== index ? (
-                      <>
-                        {/* <button
-                          className={styles.editButton}
-                          onClick={() =>
-                            handleStartEditing(index, message.content)
-                          }
-                          aria-label="Edit message"
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </button> */}
-                        <p>{message.content}</p>
-                      </>
-                    ) : editingMessageIndex === index ? (
-                      <div className={styles.editInputContainer}>
-                        <input
-                          ref={editInputRef}
-                          type="text"
-                          className={styles.editInput}
-                          value={editInputValue}
-                          onChange={(e) => {
-                            e.preventDefault();
-                            setEditInputValue(e.target.value);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              handleLocalEditSubmit(index);
-                            } else if (e.key === "Escape") {
-                              e.preventDefault();
-                              handleCancelEditing();
-                            }
-                          }}
-                        />
-                        <button
-                          className={styles.editSendButton}
-                          onClick={() => handleLocalEditSubmit(index)}
-                          disabled={!editInputValue.trim()}
-                          aria-label="Send edited message"
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M22 2L11 13" />
-                            <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-                          </svg>
-                        </button>
-                      </div>
-                    ) : (
-                      <p>{message.content}</p>
-                    )}
-                  </div>
-                ))}
-                {isRefreshing && (
-                  <div className={styles.aiMessage}>
-                    <MessageSkeleton />
-                  </div>
-                )}
-              </div>
-              <div className={styles.inputContainer}>
-                <input
-                  type="text"
-                  className={styles.messageInput}
-                  value={localInputMessage}
-                  onChange={handleLocalInputChange}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleLocalSendMessage();
-                    }
-                  }}
-                  placeholder="Type your message..."
-                  disabled={isRefreshing}
-                />
-                <button
-                  className={styles.sendButton}
-                  onClick={handleLocalSendMessage}
-                  disabled={!localInputMessage.trim() || isRefreshing}
-                >
-                  Send
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className={styles.editPopupRight}>
-            <textarea
-              className={styles.editCoreMessageInput}
-              value={localEditedCoreMessage}
-              onChange={(e) => setLocalEditedCoreMessage(e.target.value)}
-              placeholder="Enter your core message..."
-              style={{ minHeight: '150px' }}  // Give more space for the content
-            />
-            <div className={styles.messageOptions}>
-              <button
-                className={styles.optionButton}
-                onClick={() => handleLocalOptionClick("shorter")}
-                disabled={isRefreshing}
-              >
-                Make it Shorter
-              </button>
-              <button
-                className={styles.optionButton}
-                onClick={() => handleLocalOptionClick("tone")}
-                disabled={isRefreshing}
-              >
-                Adjust Tone
-              </button>
-              <button
-                className={styles.optionButton}
-                onClick={() => handleLocalOptionClick("emphasis")}
-                disabled={isRefreshing}
-              >
-                Add Emphasis
-              </button>
-              <button
-                className={styles.optionButton}
-                onClick={() => handleLocalOptionClick("alternative")}
-                disabled={isRefreshing}
-              >
-                Try Alternative
-              </button>
-              <button
-                className={styles.optionButton}
-                onClick={() => handleLocalOptionClick("fresh")}
-                disabled={isRefreshing}
-              >
-                Fresh Perspective
-              </button>
-            </div>
-            <div className={styles.editCoreMessageActions}>
-              <button
-                className={styles.saveButton}
-                onClick={handleLocalSave}
-                disabled={!localEditedCoreMessage.trim()}
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
   };
 
   return (
     <div className={styles.container}>
       {renderProjectPopup()}
-      <EditPopup />
+      <MemoizedEditPopup 
+        isOpen={isEditPopupOpen}
+        messages={messages}
+        setMessages={setMessages}
+        editedCoreMessage={editedCoreMessage}
+        coreMessage={coreMessage}
+        setCoreMessage={setCoreMessage}
+        setEditedCoreMessage={setEditedCoreMessage}
+        isRefreshing={isRefreshing}
+        setIsRefreshing={setIsRefreshing}
+        isSending={isSending}
+        setIsSending={setIsSending}
+        showTypewriter={showTypewriter}
+        setShowTypewriter={setShowTypewriter}
+        onClose={handleCloseEditPopup}
+      />
+      {isSavePopupOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h2>Save and Continue</h2>
+              <button 
+                className={styles.closeButton}
+                onClick={() => setSavePopupOpen(false)}
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <h3>Great! Let's now pinpoint who you're talking to.</h3>
+              <div className={styles.modalList}>
+                <p>You can:</p>
+                <ul>
+                  <li>Create your own audience profiles</li>
+                  <li>Get AI suggestions based on the information you've shared and the Core Message we've created together</li>
+                  <li>Edit and refine any audience in a chat window</li>
+                  <li>Refresh suggestions to see new options</li>
+                  <li>Save the ones that fit</li>
+                  <li>Come back and adjust anytime</li>
+                </ul>
+                <p>Ready to go?</p>
+              </div>
+              <div className={styles.modalActions}>
+                <button 
+                  className={styles.generateButton}
+                  onClick={() => {
+                    setSavePopupOpen(false);
+                    router.push('/library');
+                  }}
+                >
+                  Let's go!
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <aside
         className={`${styles.sidebar} ${
           isSidebarCollapsed ? styles.collapsed : ""
@@ -1785,17 +1905,36 @@ export default function Dashboard() {
           <div className={styles.userProfile}>
             <span className={styles.userName}>{user.name || "Guest"}</span>
             <div className={styles.avatar}>{user.initials || "G"}</div>
+            <div className={styles.avatarDropdown}>
+              <button onClick={handleLogout} className={styles.dropdownLogoutBtn}>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                Logout
+              </button>
+            </div>
           </div>
         </header>
         <div className={styles.sections}>
-          <div className={styles.greetingContainer}>
+          {/* <div className={styles.greetingContainer}>
             <button
               className={styles.createProjectButton}
               onClick={() => setIsProjectPopupOpen(true)}
             >
               Create New Project
             </button>
-          </div>
+          </div> */}
           <section className={`${styles.section} ${styles.greetingSection}`}>
             {coreMessage && (
               <div className={styles.coreMessageSection}>
@@ -1917,6 +2056,23 @@ export default function Dashboard() {
                       </div>
                     )}
                                       </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                  <button
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#282ab3',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '0.375rem',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500'
+                    }}
+                    onClick={handleSaveAndContinue}
+                  >
+                    Save & Continue
+                  </button>
                 </div>
               </div>
             )}

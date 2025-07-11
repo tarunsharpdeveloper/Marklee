@@ -5,7 +5,8 @@ import styles from './styles.module.css';
 export default function PromptEdit() {
     const [prompts, setPrompts] = useState([]);
     const [categories, setCategories] = useState([]);
-    const [showAddForm, setShowAddForm] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showAddModal, setShowAddModal] = useState(false);
     const [editingPrompt, setEditingPrompt] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [promptToDelete, setPromptToDelete] = useState(null);
@@ -92,7 +93,7 @@ export default function PromptEdit() {
             await fetchPrompts();
 
             setNewPrompt({ prompt: '', category: '', variables: [] });
-            setShowAddForm(false);
+            setShowAddModal(false);
         } catch (error) {
             console.error('Detailed error:', error);
             setError(error.message || 'Error creating AI prompt. Please check your input and try again.');
@@ -101,7 +102,8 @@ export default function PromptEdit() {
         }
     };
 
-    const handleUpdatePrompt = async () => {
+    const handleUpdatePrompt = async (e) => {
+        e.preventDefault();
         if (!editingPrompt) return;
 
         setIsSubmitting(true);
@@ -134,7 +136,7 @@ export default function PromptEdit() {
 
             await fetchPrompts();
 
-            setShowAddForm(false);
+            setShowEditModal(false);
             setEditingPrompt(null);
             setNewPrompt({ prompt: '', category: '', variables: [] });
 
@@ -163,7 +165,12 @@ export default function PromptEdit() {
             category: category ? String(category.id) : '',
             variables: promptToEdit.variables
         });
-        setShowAddForm(true);
+        setShowEditModal(true);
+    };
+
+    const handleAddClick = () => {
+        setNewPrompt({ prompt: '', category: '', variables: [] });
+        setShowAddModal(true);
     };
 
     const handleDeletePrompt = async (id) => {
@@ -232,192 +239,288 @@ export default function PromptEdit() {
         }
     }, [categories]);
 
+    const closeEditModal = () => {
+        setShowEditModal(false);
+        setEditingPrompt(null);
+        setNewPrompt({ prompt: '', category: '', variables: [] });
+        setError('');
+    };
+
+    const closeAddModal = () => {
+        setShowAddModal(false);
+        setNewPrompt({ prompt: '', category: '', variables: [] });
+        setError('');
+    };
+
     return (
         <div className={styles.container}>
-            <div className={styles.header}>
-                <div className={styles.titleSection}>
-                    <h1>AI Prompt Editor</h1>
-                    <p className={styles.subtitle}>Create and manage your AI prompts</p>
+            <div className={styles.promptContainer}>
+                <div className={styles.header}>
+                    <div className={styles.titleSection}>
+                        <h1>AI Prompt Editor</h1>
+                        <p className={styles.subtitle}>Create and manage your AI prompts</p>
+                    </div>
+                    <button className={styles.addButton} onClick={handleAddClick}>
+                        Add New Prompt
+                    </button>
                 </div>
-                <button
-                    className={styles.addButton}
-                    onClick={() => {
-                        if (showAddForm) {
-                            setShowAddForm(false);
-                            setEditingPrompt(null);
-                        } else {
-                            setNewPrompt({ prompt: '', category: '', variables: [] });
-                            setEditingPrompt(null);
-                            setShowAddForm(true);
-                        }
-                    }}
-                >
-                    {showAddForm ? '✕ Cancel' : '+ New Prompt'}
-                </button>
-            </div>
 
-            {error && (
-                <div className={styles.error}>
-                    {error}
-                </div>
-            )}
+                {error && (
+                    <div className={styles.error}>
+                        {error}
+                    </div>
+                )}
 
-            {showAddForm && (
-                <div className={styles.addFormContainer}>
-                    <form className={styles.addForm} onSubmit={handleFormSubmit}>
-                        <h2>{editingPrompt ? 'Edit Prompt' : 'Create New Prompt'}</h2>
-                        <div className={styles.formGroup}>
-                            <label>Category</label>
-                            <select
-                                value={newPrompt.category}
-                                onChange={(e) => setNewPrompt({ ...newPrompt, category: e.target.value })}
-                                required
-                            >
-                                <option value="">Select a category</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.id}>{cat.type}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Prompt Template</label>
-                            <div className={styles.promptInputContainer}>
-                                <textarea
-                                    value={newPrompt.prompt}
-                                    onChange={(e) => setNewPrompt({ ...newPrompt, prompt: e.target.value })}
-                                    required
-                                    placeholder="Write your prompt here... Use {variable_name} for dynamic variables"
-                                    className={styles.promptInput}
-                                />
-                                <div className={styles.promptTips}>
-                                    <h4>Tips:</h4>
-                                    <ul>
-                                        <li>Use {'{variable_name}'} for dynamic content</li>
-                                        <li>Be specific with instructions</li>
-                                        <li>Include examples if needed</li>
-                                    </ul>
-                                </div>
+                {isLoading ? (
+                    <div className={styles.loading}>Loading prompts...</div>
+                ) : (
+                    <div className={styles.promptsGrid}>
+                        {prompts.length === 0 ? (
+                            <div className={styles.noPrompts}>
+                                No prompts available. Create your first prompt!
                             </div>
-                        </div>
-                        <button
-                            type="submit"
-                            className={styles.submitButton}
-                            disabled={isSubmitting}
-                        >
-                            {isSubmitting ? 'Saving...' : (editingPrompt ? 'Update Prompt' : 'Create Prompt')}
-                        </button>
-                    </form>
-                </div>
-            )}
-
-            {isLoading ? (
-                <div className={styles.loading}>Loading prompts...</div>
-            ) : (
-                <div className={styles.promptsGrid}>
-                    {prompts.length === 0 ? (
-                        <div className={styles.noPrompts}>
-                            No prompts available. Create your first prompt!
-                        </div>
-                    ) : (
-                        prompts.map((prompt) => (
-                            <div
-                                key={prompt.id}
-                                className={`${styles.promptCard}`}
-                            >
-                                <div className={styles.promptCardHeader}>
-                                    <span className={styles.categoryTag}>
-                                        {prompt.category}
-                                    </span>
-                                    <div className={styles.promptActions}>
-                                        <button
-                                            className={styles.editButton}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleEditClick(prompt);
-                                            }}
-                                            title="Edit Prompt"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" width="20">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            className={styles.deleteButton}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setPromptToDelete(prompt);
-                                                setShowDeleteConfirm(true);
-                                            }}
-                                            title="Delete Prompt"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                strokeWidth={1.5}
-                                                stroke="currentColor"
-                                                className="w-6 h-6" width="24" height="20">
-                                                <path strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    d="M6 7h12M9 7V4h6v3M10 11v6M14 11v6M5 7h14l-1.5 12.5a1.5 1.5 0 01-1.5 1.5H8a1.5 1.5 0 01-1.5-1.5L5 7z" />
-                                            </svg>
-                                        </button>
+                        ) : (
+                            prompts.map((prompt) => (
+                                <div
+                                    key={prompt.id}
+                                    className={`${styles.promptCard}`}
+                                >
+                                    <div className={styles.promptCardHeader}>
+                                        <span className={styles.categoryTag}>
+                                            {prompt.category}
+                                        </span>
+                                        <div className={styles.promptActions}>
+                                            <button
+                                                className={styles.editButton}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEditClick(prompt);
+                                                }}
+                                                title="Edit Prompt"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" width="20">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                className={styles.deleteButton}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setPromptToDelete(prompt);
+                                                    setShowDeleteConfirm(true);
+                                                }}
+                                                title="Delete Prompt"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    strokeWidth={1.5}
+                                                    stroke="currentColor"
+                                                    className="w-6 h-6" width="24" height="20">
+                                                    <path strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        d="M6 7h12M9 7V4h6v3M10 11v6M14 11v6M5 7h14l-1.5 12.5a1.5 1.5 0 01-1.5 1.5H8a1.5 1.5 0 01-1.5-1.5L5 7z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div 
+                                        className={`${styles.promptContent} ${expandedPromptId === prompt.id ? styles.expanded : ''}`}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (countWords(prompt.prompt) > 100) {
+                                                setExpandedPromptId(expandedPromptId === prompt.id ? null : prompt.id);
+                                            }
+                                        }}
+                                    >
+                                        {expandedPromptId === prompt.id ? prompt.prompt : truncateText(prompt.prompt)}
+                                    </div>
+                                    <div className={styles.promptFooter}>
+                                        <div className={styles.variables}>
+                                            {prompt.variables.map((variable, index) => (
+                                                <span key={index} className={styles.variableTag}>
+                                                    {variable}
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <div className={styles.updatedAt}>
+                                            {/* Updated: {prompt.updatedAt} */}
+                                        </div>
                                     </div>
                                 </div>
-                                <div 
-                                    className={`${styles.promptContent} ${expandedPromptId === prompt.id ? styles.expanded : ''}`}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (countWords(prompt.prompt) > 100) {
-                                            setExpandedPromptId(expandedPromptId === prompt.id ? null : prompt.id);
-                                        }
+                            ))
+                        )}
+                    </div>
+                )}
+
+                {showDeleteConfirm && (
+                    <div className={styles.deleteConfirmation}>
+                        <div className={styles.confirmationContent}>
+                            <h3>Confirm Deletion</h3>
+                            <p>Are you sure you want to delete this prompt?</p>
+                            <div className={styles.buttonGroup}>
+                                <button
+                                    className={styles.cancelButton}
+                                    onClick={() => {
+                                        setShowDeleteConfirm(false);
+                                        setPromptToDelete(null);
                                     }}
                                 >
-                                    {expandedPromptId === prompt.id ? prompt.prompt : truncateText(prompt.prompt)}
-                                </div>
-                                <div className={styles.promptFooter}>
-                                    <div className={styles.variables}>
-                                        {prompt.variables.map((variable, index) => (
-                                            <span key={index} className={styles.variableTag}>
-                                                {variable}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <div className={styles.updatedAt}>
-                                        {/* Updated: {prompt.updatedAt} */}
-                                    </div>
-                                </div>
+                                    Cancel
+                                </button>
+                                <button
+                                    className={styles.deleteButton}
+                                    onClick={() => {
+                                        handleDeletePrompt(promptToDelete.id);
+                                        setShowDeleteConfirm(false);
+                                        setPromptToDelete(null);
+                                    }}
+                                >
+                                    Delete
+                                </button>
                             </div>
-                        ))
-                    )}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Add Modal */}
+            {showAddModal && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.modalContent}>
+                        <div className={styles.modalHeader}>
+                            <h2 className={styles.modalTitle}>Add New Prompt</h2>
+                            <button className={styles.closeButton} onClick={closeAddModal}>
+                                ×
+                            </button>
+                        </div>
+                        
+                        <form onSubmit={handleAddPrompt}>
+                            <div className={styles.formGroup}>
+                                <label htmlFor="category">Category</label>
+                                <select
+                                    id="category"
+                                    value={newPrompt.category}
+                                    onChange={(e) => setNewPrompt({
+                                        ...newPrompt,
+                                        category: e.target.value
+                                    })}
+                                    required
+                                >
+                                    <option value="">Select a category</option>
+                                    {categories.map(category => (
+                                        <option key={category.id} value={category.id}>
+                                            {category.type}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className={styles.formGroup}>
+                                <label htmlFor="prompt">Prompt</label>
+                                <textarea
+                                    id="prompt"
+                                    className={styles.promptInput}
+                                    value={newPrompt.prompt}
+                                    onChange={(e) => setNewPrompt({
+                                        ...newPrompt,
+                                        prompt: e.target.value
+                                    })}
+                                    required
+                                    rows={6}
+                                    placeholder="Write your prompt here... Use {variable_name} for dynamic variables"
+                                />
+                            </div>
+
+                            {error && <p className={styles.error}>{error}</p>}
+
+                            <div className={styles.buttonGroup}>
+                                <button
+                                    type="button"
+                                    className={styles.cancelButton}
+                                    onClick={closeAddModal}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className={styles.submitButton}
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? 'Creating...' : 'Create Prompt'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             )}
 
-            {showDeleteConfirm && (
-                <div className={styles.deleteConfirmation}>
-                    <div className={styles.confirmationContent}>
-                        <h3>Confirm Deletion</h3>
-                        <p>Are you sure you want to delete this prompt?</p>
-                        <div className={styles.buttonGroup}>
-                            <button
-                                className={styles.cancelButton}
-                                onClick={() => {
-                                    setShowDeleteConfirm(false);
-                                    setPromptToDelete(null);
-                                }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className={styles.deleteButton}
-                                onClick={() => {
-                                    handleDeletePrompt(promptToDelete.id);
-                                    setShowDeleteConfirm(false);
-                                    setPromptToDelete(null);
-                                }}
-                            >
-                                Delete
+            {/* Edit Modal */}
+            {showEditModal && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.modalContent}>
+                        <div className={styles.modalHeader}>
+                            <h2 className={styles.modalTitle}>Edit Prompt</h2>
+                            <button className={styles.closeButton} onClick={closeEditModal}>
+                                ×
                             </button>
                         </div>
+                        
+                        <form onSubmit={handleUpdatePrompt}>
+                            <div className={styles.formGroup}>
+                                <label htmlFor="editCategory">Category</label>
+                                <select
+                                    id="editCategory"
+                                    value={newPrompt.category}
+                                    onChange={(e) => setNewPrompt({
+                                        ...newPrompt,
+                                        category: e.target.value
+                                    })}
+                                    required
+                                >
+                                    <option value="">Select a category</option>
+                                    {categories.map(category => (
+                                        <option key={category.id} value={category.id}>
+                                            {category.type}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className={styles.formGroup}>
+                                <label htmlFor="editPrompt">Prompt</label>
+                                <textarea
+                                    id="editPrompt"
+                                    className={styles.promptInput}
+                                    value={newPrompt.prompt}
+                                    onChange={(e) => setNewPrompt({
+                                        ...newPrompt,
+                                        prompt: e.target.value
+                                    })}
+                                    required
+                                    rows={6}
+                                />
+                            </div>
+
+                            {error && <p className={styles.error}>{error}</p>}
+
+                            <div className={styles.buttonGroup}>
+                                <button
+                                    type="button"
+                                    className={styles.cancelButton}
+                                    onClick={closeEditModal}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className={styles.submitButton}
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? 'Saving...' : 'Save Changes'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

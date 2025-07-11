@@ -1,10 +1,279 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../dashboard/styles.module.css';
 import Image from 'next/image';
 import { Typewriter } from 'react-simple-typewriter';
+
+const MemoizedEditAudiencePopup = memo(({ 
+    isOpen, 
+    audience, 
+    briefData,
+    onClose, 
+    onSave 
+}) => {
+    const [localInputMessage, setLocalInputMessage] = useState("");
+    const [messages, setMessages] = useState([]);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [localSegment, setLocalSegment] = useState(audience?.segment || "");
+    const [showMobileEdit, setShowMobileEdit] = useState(false);
+    const textareaRef = useRef(null);
+    const chatContainerRef = useRef(null);
+    const router = useRouter();
+    const timeoutRef = useRef(null);
+
+    // Add effect to show edit view when AI responds
+    useEffect(() => {
+        if (messages.length > 0 && messages[messages.length - 1].type === 'ai' && window.innerWidth <= 838) {
+            setShowMobileEdit(true);
+        }
+    }, [messages]);
+
+    // Modified useEffect to scroll only on user messages
+    useEffect(() => {
+        if (chatContainerRef.current && messages.length > 0 && messages[messages.length - 1].type === 'ai') {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [messages]); // Will only trigger when messages array changes
+
+    // Initialize textarea value once
+    useEffect(() => {
+        if (audience?.segment) {
+            setLocalSegment(audience.segment);
+        }
+    }, []); // Empty dependency array - only run once
+
+    const handleTextAreaChange = (e) => {
+        const newValue = e.target.value;
+        setLocalSegment(newValue);
+    };
+
+    const handleLocalSendMessage = async () => {
+        if (!localInputMessage.trim()) return;
+
+        setMessages(prev => [...prev, { content: localInputMessage, type: 'user' }]);
+        setLocalInputMessage('');
+        setIsRefreshing(true);
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                router.push('/');
+                return;
+            }
+
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        formData: {
+                            labelName: briefData.labelName,
+                            whoTheyAre: briefData.whoTheyAre,
+                            whatTheyWant: briefData.whatTheyWant,
+                            whatTheyStruggle: briefData.whatTheyStruggle,
+                            additionalInfo: briefData.additionalInfo
+                        },
+                        currentMessage: localSegment,
+                        userPrompt: localInputMessage,
+                        isAudienceEdit: true
+                    }),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to send message');
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                setMessages(prev => [...prev, {
+                    content: data.data.chatResponse,
+                    type: 'ai'
+                }]);
+                
+                // Clear any pending timeout
+                if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current);
+                }
+                
+                // Set new value with a small delay
+                timeoutRef.current = setTimeout(() => {
+                    setLocalSegment(data.data.coreMessage);
+                }, 100);
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            setMessages(prev => [...prev, {
+                content: "Sorry, I encountered an error. Please try again.",
+                type: 'ai'
+            }]);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    const handleSave = async () => {
+        if (!audience?.id) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                router.push('/');
+                return;
+            }
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/audience/${audience.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    segment: localSegment
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update audience');
+            }
+
+            // Call the parent's onSave with the updated audience
+            onSave({
+                ...audience,
+                segment: localSegment
+            });
+        } catch (error) {
+            console.error('Error updating audience:', error);
+        }
+    };
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
+
+    if (!isOpen || !audience) return null;
+
+    return (
+        <div className={styles.editPopupOverlay}>
+            <div className={styles.editPopupContent}>
+                <div className={`${styles.editPopupLeft} ${showMobileEdit ? styles.hideMobile : ''}`}>
+                    <div className={styles.editPopupHeader}>
+                        <h2>Message Assistant</h2>
+                        <button
+                            className={styles.editPopupCloseButton}
+                            onClick={onClose}
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div className={styles.chatMessages} ref={chatContainerRef}>
+                        {messages.map((message, index) => (
+                            <div
+                                key={index}
+                                className={`${styles.messageContent} ${
+                                    message.type === "user"
+                                        ? styles.userMessage
+                                        : styles.aiMessage
+                                }`}
+                            >
+                                <p>{message.content}</p>
+                            </div>
+                        ))}
+                        {isRefreshing && (
+                            <div className={styles.aiMessage}>
+                                <div className={styles.loadingDots}>
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <div className={styles.inputContainer}>
+                        <input
+                            type="text"
+                            className={styles.messageInput}
+                            value={localInputMessage}
+                            onChange={(e) => setLocalInputMessage(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    handleLocalSendMessage();
+                                }
+                            }}
+                            placeholder="Type your message..."
+                        />
+                        <button
+                            className={styles.sendButton}
+                            onClick={handleLocalSendMessage}
+                            disabled={isRefreshing || !localInputMessage.trim()}
+                        >Send
+                        </button>
+                    </div>
+                </div>
+                <div className={`${styles.editPopupRight} ${!showMobileEdit ? styles.hideMobile : ''}`}>
+                    {window.innerWidth <= 838 && (
+                        <button 
+                            className={styles.backButton}
+                            onClick={() => setShowMobileEdit(false)}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                            Back to Chat
+                        </button>
+                    )}
+                    <div className={styles.editPopupHeader}>
+                        <h2>Edit Audience</h2>
+                    </div>
+                    <div className={styles.formGroup}>
+                        <textarea
+                            ref={textareaRef}
+                            className={styles.editCoreMessageInput}
+                            value={localSegment}
+                            onChange={handleTextAreaChange}
+                            placeholder="Type your audience description here..."
+                        />
+                    </div>
+                    <div className={styles.editCoreMessageActions}>
+                        <button
+                            className={styles.saveButton}
+                            onClick={handleSave}
+                        >
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+});
 
 export default function Library() {
   const router = useRouter();
@@ -64,13 +333,39 @@ export default function Library() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isEditAudiencePopupOpen, setIsEditAudiencePopupOpen] = useState(false);
   const [editingAudience, setEditingAudience] = useState(null);
-  const [localAudienceName, setLocalAudienceName] = useState("");
-  const [localAudienceDesc, setLocalAudienceDesc] = useState("");
+  const [checkedAudiences, setCheckedAudiences] = useState({});
+  const [isSavingAudiences, setIsSavingAudiences] = useState(false);
+  const [savedAudiences, setSavedAudiences] = useState({});  // briefId -> saved audiences map
 
   useEffect(() => {
     fetchProjects();
     fetchBriefQuestions();
   }, []);
+
+  // Add new useEffect to automatically open brief form
+  useEffect(() => {
+    if (projects.length > 0) {
+      // Get the first project
+      const firstProject = projects[0];
+      const projectKey = firstProject.name.toLowerCase().replace(/\s+/g, '_');
+      
+      // Set the selected folder to the first project
+      setSelectedFolder({
+        id: firstProject.id,
+        name: firstProject.name,
+        status: firstProject.status
+      });
+
+      // Open the brief form
+      setIsBriefFormOpen(true);
+
+      // Expand the first folder
+      setExpandedFolders(prev => ({
+        ...prev,
+        [projectKey]: true
+      }));
+    }
+  }, [projects]);
 
   // Add resize listener for responsive behavior
   useEffect(() => {
@@ -89,6 +384,7 @@ export default function Library() {
   // Handle mobile view transitions
   useEffect(() => {
     if (isMobileView) {
+      console.log(isMobileView);
       if (isBriefFormOpen) {
         setShowFolderSection(false);
         setShowQASection(true);
@@ -121,23 +417,6 @@ export default function Library() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [isBriefFormOpen, audiences.length]);
-
-  // Add this effect to initialize local state when popup opens
-  useEffect(() => {
-    if (isEditAudiencePopupOpen && editingAudience) {
-        let currentSegment = {};
-        try {
-            currentSegment = JSON.parse(editingAudience.segment);
-        } catch (e) {
-            currentSegment = {
-                name: editingAudience.name || '',
-                description: editingAudience.description || ''
-            };
-        }
-        setLocalAudienceName(currentSegment.name);
-        setLocalAudienceDesc(currentSegment.description);
-    }
-  }, [isEditAudiencePopupOpen, editingAudience]);
 
   const fetchProjects = async () => {
     try {
@@ -392,7 +671,7 @@ export default function Library() {
   const renderFolderContent = (folder) => {
     return (
       <div className={styles.folderContent}>
-        <button 
+        {/* <button 
           className={styles.createBriefButton}
           onClick={() => handleCreateBrief(folder)}
         >
@@ -402,7 +681,7 @@ export default function Library() {
               <path d="M12 5v14M5 12h14"/>
             </svg>
           </div>
-        </button>
+        </button> */}
 
         {/* Display Briefs */}
         {folder.briefs && folder.briefs.length > 0 && (
@@ -411,8 +690,19 @@ export default function Library() {
               console.log(brief),
               <div key={brief.id || index} className={styles.briefCard}>
                 <div className={styles.briefHeader} onClick={() => handleBriefClick(brief.id)}>
-                  <h4>{brief.title || 'Brief'}</h4>
+                  <h4>Target Audience</h4>
                 </div>
+                {/* Show saved audiences for this brief */}
+                {/* {savedAudiences[brief.id] && savedAudiences[brief.id].length > 0 && (
+                  <div className={styles.savedAudiences}>
+                    <h5>Target Audiences</h5>
+                    <ul>
+                      {savedAudiences[brief.id].map((audience, idx) => (
+                        <li key={idx}>Target audience {idx + 1}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )} */}
               </div>
             ))}
           </div>
@@ -451,15 +741,15 @@ export default function Library() {
               try {
                 const insightsData = JSON.parse(audience.insights);
                 if (Array.isArray(insightsData)) {
-                    description = insightsData.join(' ');
+                  description = insightsData.join(' ');
                 } else if (typeof insightsData === 'object' && insightsData !== null) {
-                    description = getAllValues(insightsData).join(' ').replace(/<br\s*\/?>/gi, ' ');
+                  description = getAllValues(insightsData).join(' ').replace(/<br\s*\/?>/gi, ' ');
                 } else {
-                    description = String(insightsData);
+                  description = String(insightsData);
                 }
                 description = description.substring(0, 150) + (description.length > 150 ? '...' : '');
               } catch (e) {
-                  description = 'No description available.';
+                description = 'No description available.';
               }
             }
           } catch (e) {
@@ -468,7 +758,14 @@ export default function Library() {
           }
           return { ...audience, name, description };
         });
-        setAudiences(formattedAudiences);
+
+        // If there are saved audiences for this brief, show only those
+        if (savedAudiences[briefId] && savedAudiences[briefId].length > 0) {
+          setAudiences(savedAudiences[briefId]);
+        } else {
+          // Otherwise show all available audiences
+          setAudiences(formattedAudiences);
+        }
       }
 
       // Show the brief form section to display the audiences
@@ -521,7 +818,6 @@ export default function Library() {
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
               </svg>
             </button>
-            {/* <h2>Create Brief for {selectedFolder.name}</h2> */}
             {error && <div className={styles.error}>{error}</div>}
             
             {loading ? (
@@ -569,95 +865,64 @@ export default function Library() {
                             name="audienceType"
                             value="suggest"
                             checked={briefData.audienceType === 'suggest'}
-                            onChange={(e) => setBriefData({ 
-                              audienceType: e.target.value,
-                              description: '',
-                              whoItHelps: '',
-                              problemItSolves: ''
-                            })}
+                            onChange={(e) => {
+                              setBriefData({ 
+                                audienceType: e.target.value
+                              });
+                              // Automatically submit for audience suggestions
+                              setTimeout(() => handleBriefSubmit(new Event('submit')), 0);
+                            }}
                             id="suggest"
                           />
                           <label htmlFor="suggest" className={styles.radioLabel}>Suggest audiences for me</label>
                         </div>
                       </div>
                       {briefData.audienceType === 'know' && (
-                      <div className={styles.questionsContainer}>
-                        <div className={styles.formGroup}>
-                          <h4>Label / Persona name</h4>
-                          <textarea
-                            value={briefData.labelName || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, labelName: e.target.value }))}
-                            className={styles.textarea}
-                          />
-                        </div>
-                        <div className={styles.formGroup}>
-                          <h4>Who they are (role, life stage, market segment)?</h4>
-                          <textarea
-                            value={briefData.whoTheyAre || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, whoTheyAre: e.target.value }))}
-                            className={styles.textarea}
-                          />
-                    </div>
-                        <div className={styles.formGroup}>
-                          <h4>What they want (main goal or desired outcome)?</h4>
-                          <textarea
-                            value={briefData.whatTheyWant || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, whatTheyWant: e.target.value }))}
-                            className={styles.textarea}
-                          />
-                        </div>
-                        <div className={styles.formGroup}>
-                          <h4>What they struggle with (main pain point or problem)?</h4>
-                          <textarea
-                            value={briefData.whatTheyStruggle || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, whatTheyStruggle: e.target.value }))}
-                            className={styles.textarea}
-                          />
-                        </div>
-                        <div className={styles.formGroup}>
+                        <div className={styles.questionsContainer}>
+                          <div className={styles.formGroup}>
+                            <h4>Label / Persona name</h4>
+                            <textarea
+                              value={briefData.labelName || ''}
+                              onChange={(e) => setBriefData(prev => ({ ...prev, labelName: e.target.value }))}
+                              className={styles.textarea}
+                            />
+                          </div>
+                          <div className={styles.formGroup}>
+                            <h4>Who they are (role, life stage, market segment)?</h4>
+                            <textarea
+                              value={briefData.whoTheyAre || ''}
+                              onChange={(e) => setBriefData(prev => ({ ...prev, whoTheyAre: e.target.value }))}
+                              className={styles.textarea}
+                            />
+                          </div>
+                          <div className={styles.formGroup}>
+                            <h4>What they want (main goal or desired outcome)?</h4>
+                            <textarea
+                              value={briefData.whatTheyWant || ''}
+                              onChange={(e) => setBriefData(prev => ({ ...prev, whatTheyWant: e.target.value }))}
+                              className={styles.textarea}
+                            />
+                          </div>
+                          <div className={styles.formGroup}>
+                            <h4>What they struggle with (main pain point or problem)?</h4>
+                            <textarea
+                              value={briefData.whatTheyStruggle || ''}
+                              onChange={(e) => setBriefData(prev => ({ ...prev, whatTheyStruggle: e.target.value }))}
+                              className={styles.textarea}
+                            />
+                          </div>
+                          <div className={styles.formGroup}>
                             <h4>(Optional) Age, channels, purchasing power, etc.</h4>
-                          <textarea
-                            value={briefData.additionalInfo || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, additionalInfo: e.target.value }))}
-                            className={styles.textarea}
-                          />
+                            <textarea
+                              value={briefData.additionalInfo || ''}
+                              onChange={(e) => setBriefData(prev => ({ ...prev, additionalInfo: e.target.value }))}
+                              className={styles.textarea}
+                            />
+                          </div>
+                          <button className={styles.submitButton} type="submit">Generate</button>
                         </div>
-                        <button className={styles.submitButton} type="submit" onClick={handleBriefSubmit}>Generate</button>
-                      </div>
-                    )}
-
-                    {briefData.audienceType === 'suggest' && (
-                      <div className={styles.questionsContainer}>
-                        <div className={styles.formGroup}>
-                          <h4>what it is and what it does?</h4>
-                          <textarea
-                            value={briefData.description || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, description: e.target.value }))}
-                            className={styles.textarea}
-                          />
-                        </div>
-                        <div className={styles.formGroup}>
-                          <h4>Who it helps?</h4>
-                          <textarea
-                            value={briefData.whoItHelps || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, whoItHelps: e.target.value }))}
-                            className={styles.textarea}
-                          />
-                        </div>
-                        <div className={styles.formGroup}>
-                          <h4>Problem it solves?</h4>
-                          <textarea
-                            value={briefData.problemItSolves || ''}
-                            onChange={(e) => setBriefData(prev => ({ ...prev, problemItSolves: e.target.value }))}
-                            className={styles.textarea}
-                          />
-                        </div>
-                        <button className={styles.submitButton} type="submit" onClick={handleBriefSubmit}>Generate</button>
-                      </div>
-                    )}
+                      )}
                     </div>
-
-                  
                   </>
                 )}
               </form>
@@ -806,18 +1071,34 @@ export default function Library() {
               </button>
             <div className={styles.audienceHeader}>
               <h3>Target Audience Segments</h3>
+              {!savedAudiences[currentBriefId] && (
+                <button 
+                  className={styles.saveAudiencesButton}
+                  onClick={handleSaveSelectedAudiences}
+                  disabled={isSavingAudiences || !Object.values(checkedAudiences).some(isChecked => isChecked)}
+                >
+                  {isSavingAudiences ? 'Saving...' : 'Save'}
+                </button>
+              )}
             </div>
             <div className={styles.segmentsList}>
               {audiences.map((audience, index) => (
                 console.log(audience),
                 <div key={index} className={styles.segmentCard}>
                     <div className={styles.segmentHeader}>
+                        {!savedAudiences[currentBriefId] && (
+                          <input 
+                            type="checkbox"
+                            checked={checkedAudiences[audience.id] || false}
+                            onChange={() => handleCheckAudience(audience.id)}
+                          />
+                        )}
                         {/* <h4>{audience.segment}</h4> */}
                         <button
                             className={styles.editAudienceButton}
                             onClick={() => handleEditAudience(audience)}
                         >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            <svg width="18" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
                     </div>
                     <p>{audience.segment}</p>
@@ -828,7 +1109,7 @@ export default function Library() {
                         >
                             view
                         </button>
-                        <button className={styles.generateDocumentButton} onClick={() => {
+                        {/* <button className={styles.generateDocumentButton} onClick={() => {
                             setSelectedAudienceId(audience.id);
                             setSelectedAssetType(audience.segment);
                             setIsAssetPopupOpen(true);
@@ -838,7 +1119,7 @@ export default function Library() {
                             width={20}
                             height={20}
                             priority
-                        /></button>
+                        /></button> */}
                     </div>
                 </div>
               ))}
@@ -960,19 +1241,48 @@ export default function Library() {
           throw new Error('No folder selected. Please select a folder first.');
         }
 
+        // Get the onboarding data first
+        const onboardingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!onboardingResponse.ok) {
+          throw new Error('Failed to fetch onboarding data');
+        }
+
+        const onboardingData = await onboardingResponse.json();
+        if (!onboardingData.data || !onboardingData.data.data) {
+          throw new Error('No Discovery Questionnaire data found. Please complete the questionnaire first.');
+        }
+
+        const formData = typeof onboardingData.data.data === 'string' 
+          ? JSON.parse(onboardingData.data.data) 
+          : onboardingData.data.data;
+
+        // Map Discovery Questionnaire data to required fields
+        const mappedData = {
+          description: formData.productSummary || formData.description || '',
+          whoItHelps: formData.coreAudience || formData.targetMarket || '',
+          problemItSolves: formData.outcome || formData.problemSolved || '',
+          projectId: selectedFolder.id,
+          projectName: selectedFolder.name
+        };
+
+        // Validate required fields
+        if (!mappedData.description || !mappedData.whoItHelps || !mappedData.problemItSolves) {
+          throw new Error('Insufficient data in Discovery Questionnaire. Please make sure you have filled out the product summary, core audience, and outcome sections.');
+        }
+
+        // Use the mapped data to generate audiences
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-suggested-audiences`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({
-            description: briefData.description,
-            whoItHelps: briefData.whoItHelps,
-            problemItSolves: briefData.problemItSolves,
-            projectId: selectedFolder.id,
-            projectName: selectedFolder.name
-          })
+          body: JSON.stringify(mappedData)
         });
 
         if (!response.ok) {
@@ -991,12 +1301,12 @@ export default function Library() {
             
             // Update folder structure with new brief and audiences
             const folderKey = selectedFolder.name.toLowerCase().replace(/\s+/g, '_');
-        setFolderStructure(prev => {
+            setFolderStructure(prev => {
               const currentFolder = prev[folderKey] || {};
               const currentBriefs = currentFolder.briefs || [];
               
-          return {
-            ...prev,
+              return {
+                ...prev,
                 [folderKey]: {
                   ...currentFolder,
                   briefs: [
@@ -1006,9 +1316,9 @@ export default function Library() {
                       audiences: data.data.audiences
                     }
                   ]
-            }
-          };
-        });
+                }
+              };
+            });
           }
         }
       }
@@ -1340,189 +1650,77 @@ export default function Library() {
     setIsEditAudiencePopupOpen(true);
   };
 
-  const EditAudiencePopup = () => {
-    const [localName, setLocalName] = useState("");
-    const [localDesc, setLocalDesc] = useState("");
-    const [localInputMessage, setLocalInputMessage] = useState("");
-    const [messages, setMessages] = useState([]);
-    const [isRefreshing, setIsRefreshing] = useState(false);
+  const handleCloseEditPopup = () => {
+    setIsEditAudiencePopupOpen(false);
+    setEditingAudience(null);
+  };
 
-    useEffect(() => {
-        if (editingAudience) {
-            setLocalDesc(editingAudience.segment || '');
+  const handleSaveEditedAudience = (updatedAudience) => {
+    // Update the audiences list
+    setAudiences(audiences.map(a => 
+      a.id === updatedAudience.id ? updatedAudience : a
+    ));
+    setIsEditAudiencePopupOpen(false);
+    setEditingAudience(null);
+  };
+
+  const handleCheckAudience = (audienceId) => {
+    setCheckedAudiences(prev => ({
+      ...prev,
+      [audienceId]: !prev[audienceId]
+    }));
+  };
+
+  const handleSaveSelectedAudiences = async () => {
+    try {
+      setIsSavingAudiences(true);
+      const token = localStorage.getItem('token');
+      
+      // Get the selected and unselected audience objects
+      const selectedAudienceObjects = audiences.filter(audience => 
+        checkedAudiences[audience.id]
+      );
+      
+      const unselectedAudienceIds = audiences
+        .filter(audience => !checkedAudiences[audience.id])
+        .map(audience => audience.id);
+
+      // Delete unselected audiences from the database
+      if (unselectedAudienceIds.length > 0) {
+        const deleteResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/brief/${currentBriefId}/audience/delete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            audienceIds: unselectedAudienceIds
+          })
+        });
+
+        if (!deleteResponse.ok) {
+          throw new Error('Failed to delete unselected audiences');
         }
-    }, [editingAudience]);
+      }
 
-    const handleLocalSendMessage = async () => {
-        if (!localInputMessage.trim()) return;
+      // Update saved audiences in local state
+      setSavedAudiences(prev => ({
+        ...prev,
+        [currentBriefId]: selectedAudienceObjects
+      }));
 
-        setMessages(prev => [...prev, { content: localInputMessage, type: 'user' }]);
-        setLocalInputMessage('');
-        setIsRefreshing(true);
+      // Update audiences state to only show selected ones
+      setAudiences(selectedAudienceObjects);
 
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                router.push('/');
-                return;
-            }
-
-            // Add AI response
-            setMessages(prev => [...prev, {
-                content: "I'll help you refine your audience details.",
-                type: 'ai'
-            }]);
-        } catch (error) {
-            console.error('Error sending message:', error);
-            setMessages(prev => [...prev, {
-                content: "Sorry, I encountered an error. Please try again.",
-                type: 'ai'
-            }]);
-        } finally {
-            setIsRefreshing(false);
-        }
-    };
-
-    const handleSave = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                router.push('/');
-                return;
-            }
-
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/audience/${editingAudience.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    segment: localDesc
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to update audience');
-            }
-
-            // Update the audiences list
-            setAudiences(audiences.map(a => 
-                a.id === editingAudience.id ? {
-                    ...a,
-                    segment: localDesc
-                } : a
-            ));
-
-            setIsEditAudiencePopupOpen(false);
-            setEditingAudience(null);
-        } catch (error) {
-            console.error('Error updating audience:', error);
-            setError(error.message);
-        }
-    };
-
-    if (!isEditAudiencePopupOpen || !editingAudience) return null;
-
-    return (
-        <div className={styles.editPopupOverlay}>
-            <div className={styles.editPopupContent}>
-                <div className={styles.editPopupLeft}>
-                    <div className={styles.editPopupHeader}>
-                        <h2>Message Assistant</h2>
-                        <button
-                            className={styles.editPopupCloseButton}
-                            onClick={() => {
-                                setIsEditAudiencePopupOpen(false);
-                                setEditingAudience(null);
-                            }}
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                        </button>
-                    </div>
-                    <div className={styles.chatMessages}>
-                        {messages.map((message, index) => (
-                            <div
-                                key={index}
-                                className={`${styles.messageContent} ${
-                                    message.type === "user"
-                                        ? styles.userMessage
-                                        : styles.aiMessage
-                                }`}
-                            >
-                                <p>{message.content}</p>
-                            </div>
-                        ))}
-                        {isRefreshing && (
-                            <div className={styles.aiMessage}>
-                                <div className={styles.loadingDots}>
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    <div className={styles.inputContainer}>
-                        <input
-                            type="text"
-                            className={styles.messageInput}
-                            value={localInputMessage}
-                            onChange={(e) => setLocalInputMessage(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    handleLocalSendMessage();
-                                }
-                            }}
-                            placeholder="Type your message..."
-                            disabled={isRefreshing}
-                        />
-                        <button
-                            className={styles.sendButton}
-                            onClick={handleLocalSendMessage}
-                            disabled={!localInputMessage.trim() || isRefreshing}
-                        >
-                            Send
-                        </button>
-                    </div>
-                </div>
-                <div className={styles.editPopupRight}>
-                    <div className={styles.formGroup}>
-                        {/* <h4>Target Audience</h4> */}
-                        <textarea
-                            className={styles.editCoreMessageInput}
-                            value={localDesc}
-                            onChange={(e) => setLocalDesc(e.target.value)}
-                            placeholder="Enter audience description..."
-                            rows={4}
-                        />
-                    </div>
-                    <div className={styles.editCoreMessageActions}>
-                        <button
-                            className={styles.saveButton}
-                            onClick={handleSave}
-                        >
-                            Save Changes
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+      // Clear checkboxes after successful save
+      setCheckedAudiences({});
+      
+    } catch (error) {
+      console.error('Error saving/deleting audiences:', error);
+      setError('Failed to save changes to audiences');
+    } finally {
+      setIsSavingAudiences(false);
+    }
   };
 
   return (
@@ -1576,7 +1774,15 @@ export default function Library() {
           </div>
         </>
       )}
-      <EditAudiencePopup />
+      {isEditAudiencePopupOpen && (
+          <MemoizedEditAudiencePopup
+              isOpen={isEditAudiencePopupOpen}
+              audience={editingAudience}
+              briefData={briefData}
+              onClose={handleCloseEditPopup}
+              onSave={handleSaveEditedAudience}
+          />
+      )}
     </div>
   );
 } 

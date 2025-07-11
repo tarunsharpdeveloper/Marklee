@@ -129,6 +129,7 @@ export const Signup = ({ isOpen, onClose, onBack }) => {
           exit={{ scale: 0.95, opacity: 0 }}
           onMouseDown={e => e.stopPropagation()}
         >
+          
           <div className={styles.signup_modal_content}>
             <button className={styles.close_button} onClick={onClose}></button>
             
