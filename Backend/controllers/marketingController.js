@@ -42,7 +42,7 @@ class MarketingController {
             const messages = [
                 {
                     role: "system",
-                    content: "Generate a marketing form structure very quickly. Return a JSON object only, no explanations needed."
+                    content: "Generate a marketing form structure quickly. Return a JSON object only, no explanations needed."
                 },
                 {
                     role: "user",
