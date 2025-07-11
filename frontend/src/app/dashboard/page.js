@@ -800,26 +800,35 @@ export default function Dashboard() {
     const checkAuth = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
-        router.push("/");
+        window.location.href = '/';
         return;
       }
 
       try {
         // Set user data from localStorage
         const userData = JSON.parse(localStorage.getItem("user"));
-        if (userData) {
-          setUser({
-            name: userData.name,
-            initials: userData.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .toUpperCase(),
-          });
+        if (!userData) {
+          window.location.href = '/';
+          return;
         }
+
+        // Check if user is admin - redirect to admin panel
+        if (userData.role === 'admin') {
+          window.location.href = '/usermanagement';
+          return;
+        }
+
+        setUser({
+          name: userData.name,
+          initials: userData.name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase(),
+        });
       } catch (error) {
         console.error("Error checking auth:", error);
-        router.push("/");
+        window.location.href = '/';
       }
     };
 
@@ -907,7 +916,7 @@ export default function Dashboard() {
 
   const handleLogout = () => {
     localStorage.clear();
-    router.push("/");
+    window.location.href = '/';
   };
 
   const handleCreateProject = async (e) => {

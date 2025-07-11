@@ -54,7 +54,7 @@ export default function UserManagementLayout({ children }) {
 
   const handleLogout = () => {
     localStorage.clear();
-    router.push('/');
+    window.location.href = '/';
   };
 
   return (

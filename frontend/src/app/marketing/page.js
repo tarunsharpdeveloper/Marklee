@@ -27,14 +27,33 @@ export default function MarketingPage() {
   ]);
 
   useEffect(() => {
-    try {
-      const savedAnswers = localStorage.getItem(STORAGE_KEY);
-      if (savedAnswers) {
-        setFormAnswers(JSON.parse(savedAnswers));
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          window.location.href = '/';
+          return;
+        }
+
+        // Check user role
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (!userData) {
+          window.location.href = '/';
+          return;
+        }
+
+        // If admin, redirect to admin panel
+        if (userData.role === 'admin') {
+          window.location.href = '/usermanagement';
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        window.location.href = '/';
       }
-    } catch (error) {
-      console.error('Error loading saved answers:', error);
-    }
+    };
+
+    checkAuth();
   }, []);
 
   useEffect(() => {

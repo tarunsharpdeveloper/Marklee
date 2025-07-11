@@ -69,17 +69,18 @@ export const Login = ({ isOpen, onClose }) => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       
-      // Also set in cookies for middleware
-      document.cookie = `user=${JSON.stringify(data.user)}; path=/`;
-      document.cookie = `token=${data.token}; path=/`;
-      
       setSuccessMessage('Logged in successfully!');
       
       // Close modal and navigate based on role
       setTimeout(() => {
         onClose();
-        // For normal login (not OTP verification), navigate based on metadata
-        router.push(data.isUserMetaData ? '/dashboard' : '/marketing');
+        // Navigate based on user role
+        if (data.user.role === 'admin') {
+          window.location.href = '/usermanagement';
+        } else {
+          // For normal users, navigate based on metadata
+          window.location.href = data.isUserMetaData ? '/dashboard' : '/marketing';
+        }
       }, 2000);
 
     } catch (error) {

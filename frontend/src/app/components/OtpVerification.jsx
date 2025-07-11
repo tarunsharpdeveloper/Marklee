@@ -36,8 +36,6 @@ export const OtpVerification = ({ isOpen, email, onVerificationSuccess, onClose 
       // Store the token and user data
       if (data.token) {
         localStorage.setItem('token', data.token);
-        // Set token in cookie
-        document.cookie = `token=${data.token}; path=/`;
       }
       if (data.user) {
         // Ensure we're not storing role information that might affect routing
@@ -46,8 +44,6 @@ export const OtpVerification = ({ isOpen, email, onVerificationSuccess, onClose 
           role: 'user' // Force role to be user
         };
         localStorage.setItem('user', JSON.stringify(userWithoutRole));
-        // Set user in cookie
-        document.cookie = `user=${JSON.stringify(userWithoutRole)}; path=/`;
       }
 
       // Close the verification modal

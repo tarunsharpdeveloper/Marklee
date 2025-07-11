@@ -11,30 +11,14 @@ export function middleware(request) {
   const isUserRoute = userRoutes.some(route => pathname.startsWith(route));
   const isAdminRoute = adminRoutes.some(route => pathname.startsWith(route));
 
-  try {
-    // Get user data from cookies
-    const userData = request.cookies.get('user')?.value;
-    if (!userData) {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-
-    const user = JSON.parse(userData);
-
-    // Check admin trying to access user routes
-    if (isUserRoute && user.role === 'admin') {
-      return NextResponse.redirect(new URL('/usermanagement', request.url));
-    }
-
-    // Check regular user trying to access admin routes
-    if (isAdminRoute && user.role !== 'admin') {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
-
+  // Since we can't access localStorage in middleware (server-side),
+  // we'll handle auth in the components and use this middleware just for path protection
+  if (isUserRoute || isAdminRoute) {
+    // Allow the request to proceed - auth will be checked in the component
     return NextResponse.next();
-  } catch (error) {
-    // If there's any error, redirect to home
-    return NextResponse.redirect(new URL('/', request.url));
   }
+
+  return NextResponse.next();
 }
 
 export const config = {
