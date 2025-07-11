@@ -17,9 +17,25 @@ const MemoizedEditAudiencePopup = memo(({
     const [messages, setMessages] = useState([]);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [localSegment, setLocalSegment] = useState(audience?.segment || "");
+    const [showMobileEdit, setShowMobileEdit] = useState(false);
     const textareaRef = useRef(null);
+    const chatContainerRef = useRef(null);
     const router = useRouter();
     const timeoutRef = useRef(null);
+
+    // Add effect to show edit view when AI responds
+    useEffect(() => {
+        if (messages.length > 0 && messages[messages.length - 1].type === 'ai' && window.innerWidth <= 838) {
+            setShowMobileEdit(true);
+        }
+    }, [messages]);
+
+    // Modified useEffect to scroll only on user messages
+    useEffect(() => {
+        if (chatContainerRef.current && messages.length > 0 && messages[messages.length - 1].type === 'ai') {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [messages]); // Will only trigger when messages array changes
 
     // Initialize textarea value once
     useEffect(() => {
@@ -152,7 +168,7 @@ const MemoizedEditAudiencePopup = memo(({
     return (
         <div className={styles.editPopupOverlay}>
             <div className={styles.editPopupContent}>
-                <div className={styles.editPopupLeft}>
+                <div className={`${styles.editPopupLeft} ${showMobileEdit ? styles.hideMobile : ''}`}>
                     <div className={styles.editPopupHeader}>
                         <h2>Message Assistant</h2>
                         <button
@@ -175,7 +191,7 @@ const MemoizedEditAudiencePopup = memo(({
                             </svg>
                         </button>
                     </div>
-                    <div className={styles.chatMessages}>
+                    <div className={styles.chatMessages} ref={chatContainerRef}>
                         {messages.map((message, index) => (
                             <div
                                 key={index}
@@ -215,44 +231,43 @@ const MemoizedEditAudiencePopup = memo(({
                         <button
                             className={styles.sendButton}
                             onClick={handleLocalSendMessage}
-                            disabled={isRefreshing}
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <line x1="22" y1="2" x2="11" y2="13"></line>
-                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                            </svg>
+                            disabled={isRefreshing || !localInputMessage.trim()}
+                        >Send
                         </button>
                     </div>
                 </div>
-                <div className={styles.editPopupRight}>
+                <div className={`${styles.editPopupRight} ${!showMobileEdit ? styles.hideMobile : ''}`}>
+                    {window.innerWidth <= 838 && (
+                        <button 
+                            className={styles.backButton}
+                            onClick={() => setShowMobileEdit(false)}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                            Back to Chat
+                        </button>
+                    )}
                     <div className={styles.editPopupHeader}>
                         <h2>Edit Audience</h2>
                     </div>
                     <div className={styles.formGroup}>
                         <textarea
+                            ref={textareaRef}
                             className={styles.editCoreMessageInput}
                             value={localSegment}
                             onChange={handleTextAreaChange}
                             placeholder="Type your audience description here..."
                         />
-                        <div className={styles.editCoreMessageActions}>
-                            <button
-                                className={styles.saveButton}
-                                onClick={handleSave}
-                            >
-                                Save Changes
-                            </button>
-                        </div>
+                    </div>
+                    <div className={styles.editCoreMessageActions}>
+                        <button
+                            className={styles.saveButton}
+                            onClick={handleSave}
+                        >
+                            Save Changes
+                        </button>
                     </div>
                 </div>
             </div>
