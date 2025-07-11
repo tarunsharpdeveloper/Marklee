@@ -42,6 +42,7 @@ jobs:
           password: ${{ secrets.FE_SSH_PASSWORD }}
           port: 22
           script: |
+            set -e  # !Exit immediately if a command fails
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             cd htdocs/marklee.ai/Marklee
