@@ -2392,6 +2392,7 @@
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
   animation: modalSlideIn 0.2s ease-out;
+  height: auto;
 }
 
 @keyframes modalSlideIn {
@@ -2406,7 +2407,7 @@
 }
 
 .modalHeader {
-  padding: 1.25rem 1.5rem;
+  padding: 0.90rem;
   border-bottom: 1px solid #f1f5f9;
   display: flex;
   align-items: center;
@@ -2419,7 +2420,14 @@
   color: #0f172a;
   margin: 0;
 }
-
+@media (max-width: 480px) {
+  .modalContent{
+    height: 100vh;
+    width: 100vw;
+    border-radius: 0px; 
+  }
+  
+}
 .closeButton {
   background: none;
   border: none;
@@ -2436,7 +2444,7 @@
 }
 
 .modalBody {
-  padding: 1.5rem;
+  padding: 0.5rem;
 }
 
 .formGroup {
@@ -3694,7 +3702,7 @@
 }
 
 .modalList {
-  margin: 1.5rem 0;
+  margin: 1rem 0;
   color: #374151;
 }
 
@@ -3706,7 +3714,7 @@
 }
 
 .modalList p {
-  margin: 1rem 0;
+  /* margin: 1rem 0; */
   font-size: 1rem;
   line-height: 1.5;
 }
@@ -3714,7 +3722,7 @@
 .modalList ul {
   list-style-type: none;
   padding-left: 1.5rem;
-  margin: 1rem 0;
+  margin: 0.5rem 0;
 }
 
 .modalList li {
