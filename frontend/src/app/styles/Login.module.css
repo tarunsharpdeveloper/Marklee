@@ -275,6 +275,11 @@
   color: #666;
   margin: 0;
 }
+.signup_prompt a {
+  color: #646cff;
+  text-decoration: none;
+  font-weight: 500;
+}
 
 .resend_button {
   background: none;
