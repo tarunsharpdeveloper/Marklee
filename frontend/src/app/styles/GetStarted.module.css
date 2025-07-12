@@ -130,6 +130,7 @@
 }
 
 .getstarted_modal {
+  padding-top: 1rem;
   background: white;
   border-radius: 16px;
   width: 95%;
@@ -138,7 +139,7 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  height: 80vh;
+  height: 90vh;
 }
 
 .getstarted_modal_close {
