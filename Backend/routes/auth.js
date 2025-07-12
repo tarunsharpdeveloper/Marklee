@@ -2,6 +2,7 @@ import express from 'express';
 import authController from '../controllers/authController.js';
 import validateRequest from '../middlewares/validateRequest.js';
 import authSchema from '../utils/validationSchema.js';
+import { forgotPasswordSchema, resetPasswordSchema } from '../utils/validationSchema.js';
 
 const router = express.Router();
 
@@ -13,15 +14,8 @@ router.post('/resend-otp', validateRequest(authSchema.resendOTP), authController
 // Login route
 router.post('/login', validateRequest(authSchema.login), authController.login);
 
-// Protected route example
-// router.get('/me', auth, (req, res) => {
-//   res.json({
-//     user: {
-//       id: req.user.id,
-//       username: req.user.username,
-//       email: req.user.email
-//     }
-//   });
-// });
+// Password reset routes
+router.post('/forgot-password', validateRequest(forgotPasswordSchema), authController.forgotPassword);
+router.post('/reset-password', validateRequest(resetPasswordSchema), authController.resetPassword);
 
 export default router; 

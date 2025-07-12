@@ -8,11 +8,14 @@ import UserOnboarding from '../models/UserOnboarding.js';
 class AuthController {
   async register(req, res) {
     try {
+      console.log('Starting registration process for email:', req.body.email);
       const { email, password, name } = req.body;
 
       // Check if user already exists
+      console.log('Checking if user exists...');
       const existingUser = await User.findByEmail(email);
       if (existingUser) {
+        console.log('User already exists:', email);
         return res.status(400).json({
           success: false,
           message: "Email already registered",
@@ -20,21 +23,27 @@ class AuthController {
       }
 
       // Create user and generate OTP
+      console.log('Creating new user and generating OTP...');
       const { userId, otp } = await User.create({ email, password, name });
+      console.log('User created with ID:', userId, 'OTP generated:', otp);
 
       // Send OTP email
+      console.log('Attempting to send OTP email...');
       const emailSent = await emailService.sendOTP(email, otp);
+      console.log('Email send attempt result:', emailSent);
+      
       if (!emailSent) {
+        console.error('Failed to send verification email to:', email);
         return res.status(500).json({
           success: false,
           message: "Failed to send verification email",
         });
       }
 
+      console.log('Registration successful for user:', userId);
       res.status(201).json({
         success: true,
-        message:
-          "Registration successful. Please check your email for OTP verification.",
+        message: "Registration successful. Please check your email for OTP verification.",
         userId,
       });
     } catch (error) {
@@ -193,6 +202,78 @@ class AuthController {
       res.status(500).json({
         success: false,
         message: "Failed to resend OTP",
+      });
+    }
+  }
+
+  async forgotPassword(req, res) {
+    try {
+      const { email } = req.body;
+      console.log('Processing forgot password request for:', email);
+
+      const user = await User.findByEmail(email);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "If a user with this email exists, they will receive password reset instructions."
+        });
+      }
+
+      const token = await User.createPasswordResetToken(email);
+      const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+      
+      console.log('Reset link generated:', resetLink);
+      const emailSent = await emailService.sendPasswordResetEmail(email, resetLink);
+
+      if (!emailSent) {
+        return res.status(500).json({
+          success: false,
+          message: "Failed to send reset instructions. Please try again later."
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "If a user with this email exists, they will receive password reset instructions."
+      });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to process request"
+      });
+    }
+  }
+
+  async resetPassword(req, res) {
+    try {
+      const { token, newPassword } = req.body;
+      console.log('Processing password reset for token');
+
+      if (!token || !newPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Token and new password are required"
+        });
+      }
+
+      const success = await User.resetPassword(token, newPassword);
+      if (!success) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid or expired reset token"
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Password has been reset successfully"
+      });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to reset password"
       });
     }
   }
