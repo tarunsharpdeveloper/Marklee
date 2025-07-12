@@ -3,6 +3,7 @@
   min-height: 100vh;
   background-color: #ffffff;
   position: relative;
+  transition: all 0.3s ease;
 }
 
 /* Modern Form Styles */
@@ -3942,5 +3943,4 @@
     transform: translateX(0);
   }
 }
-
 
