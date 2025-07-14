@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './styles.module.css';
 
-export default function ResetPassword() {
+// Client component that uses useSearchParams
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [password, setPassword] = useState('');
@@ -116,9 +117,6 @@ export default function ResetPassword() {
               required
               minLength={6}
             />
-            {/* <p className={styles.passwordRequirements}>
-              Password must be at least 6 characters long and can contain letters, numbers, and special characters (!@#$%^&*()_+-=[]&#123;&#125;;:&apos;&quot;,.&lt;&gt;/?)
-            </p> */}
           </div>
 
           <div className={styles.inputGroup}>
@@ -149,5 +147,22 @@ export default function ResetPassword() {
         </form>
       </div>
     </div>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function ResetPassword() {
+  return (
+    <Suspense fallback={
+      <div className={styles.container}>
+        <div className={styles.formContainer}>
+          <div className={styles.loading_spinner}>
+            <div className={styles.spinner}></div>
+          </div>
+        </div>
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   );
 } 
