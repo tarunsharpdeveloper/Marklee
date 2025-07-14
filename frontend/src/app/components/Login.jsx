@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import styles from '../styles/Login.module.css';
 import { Signup } from './Signup';
 import { OtpVerification } from './OtpVerification';
+import { ForgotPassword } from './ForgotPassword';
 
 export const Login = ({ isOpen, onClose }) => {
   const router = useRouter();
@@ -15,11 +16,16 @@ export const Login = ({ isOpen, onClose }) => {
   const [error, setError] = useState('');
   const [showVerification, setShowVerification] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   if (!isOpen) return null;
 
   if (showSignup) {
     return <Signup isOpen={true} onClose={onClose} onBack={() => setShowSignup(false)} />;
+  }
+
+  if (showForgotPassword) {
+    return <ForgotPassword isOpen={true} onClose={onClose} onBack={() => setShowForgotPassword(false)} />;
   }
 
   if (showVerification) {
@@ -29,7 +35,6 @@ export const Login = ({ isOpen, onClose }) => {
       onVerificationSuccess={() => {
         setShowVerification(false);
         onClose();
-        // Remove router.push here as it's now handled in OtpVerification component
       }}
       onBack={() => setShowVerification(false)}
       onClose={onClose}
@@ -91,6 +96,11 @@ export const Login = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleForgotPassword = (e) => {
+    e.preventDefault();
+    setShowForgotPassword(true);
+  };
+
   return (
      <div className={styles.login_overlay} onMouseDown={onClose}>
      <div className={styles.login_modal} onMouseDown={(e) => e.stopPropagation()}>
@@ -143,7 +153,13 @@ export const Login = ({ isOpen, onClose }) => {
               <label className={styles.remember_me}>
                 <input type="checkbox" /> Remember me
               </label>
-              <a href="#" className={styles.forgot_password}>Forgot Password?</a>
+              <button 
+                type="button"
+                className={styles.forgot_password}
+                onClick={handleForgotPassword}
+              >
+                Forgot Password?
+              </button>
             </div>
 
             <button 
