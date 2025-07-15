@@ -9,6 +9,12 @@
     background-attachment: fixed;
 }
 
+/* Dark mode styles for marketing container */
+:global(.dark) .container {
+    background-color: #000000;
+    background: none;
+}
+
 .content {
     max-width: 800px;
     margin: 0 auto;
@@ -17,17 +23,18 @@
 }
 
 .formContainer {
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--background);
+    color: var(--foreground);
     border-radius: 30px;
     padding: 3rem;
     margin-top: 4rem;
     box-shadow: 
-        20px 20px 60px rgba(0, 0, 0, 0.15),
-        -20px -20px 60px rgba(255, 255, 255, 0.8);
+        8px 8px 20px rgba(0, 0, 0, 0.08),
+        -8px -8px 20px rgba(255, 255, 255, 0.4);
 }
 
 .formContainer h2 {
-    color: #1e293b;
+    color: var(--foreground);
     font-size: 2.25rem;
     margin-bottom: 1rem;
     text-align: center;
@@ -50,7 +57,7 @@
 
 .inputGroup label {
     font-weight: 600;
-    color: #334155;
+    color: var(--foreground);
     font-size: 1rem;
     display: flex;
     align-items: center;
@@ -78,24 +85,25 @@
     border: 2px solid transparent;
     border-radius: 15px;
     font-size: 1rem;
-    color: #1e293b;
-    background: #f8fafc;
+    color: var(--foreground);
+    background: var(--background);
     box-shadow: 
         inset 2px 2px 5px rgba(0, 0, 0, 0.05),
         inset -2px -2px 5px rgba(255, 255, 255, 0.8);
     transition: all 0.3s ease;
 }
 
-.inputGroup input:hover,
+/* .inputGroup input:hover,
 .inputGroup textarea:hover {
     background: #f1f5f9;
-}
+} */
 
 .inputGroup input:focus,
 .inputGroup textarea:focus {
     outline: none;
     border-color: #8075ff;
-    background: #ffffff;
+    background: var(--background);
+    color: var(--foreground);
     box-shadow: 
         0 0 0 3px rgba(128, 117, 255, 0.1),
         inset 2px 2px 5px rgba(0, 0, 0, 0.02),
@@ -199,6 +207,8 @@
     justify-content: center;
     min-height: 60vh;
     gap: 1.5rem;
+    background: var(--background);
+    color: var(--foreground);
 }
 
 .loadingSpinner {
@@ -314,8 +324,9 @@
     align-items: center;
     justify-content: center;
     height: calc(100vh - 80px);
-    background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
-}
+    background: var(--background);
+    color: var(--foreground);
+    }
 
 .loadingSpinner {
     width: 40px;
@@ -329,7 +340,7 @@
 
 .loadingContainer p {
     font-size: 1rem;
-    color: #666;
+    color: var(--foreground);
     font-weight: 500;
 }
 

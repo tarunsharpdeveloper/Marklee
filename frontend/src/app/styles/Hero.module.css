@@ -2,7 +2,7 @@
   width: 100%;
   min-height: 100vh;
   padding-top: 70px;
-  background: rgb(255, 255, 255);
+  background: var(--background);
 }
 
 .hero_section {
@@ -66,7 +66,7 @@
   line-height: 1.1;
   margin-bottom: 1.5rem;
   font-weight: 700;
-  color: black;
+  color: var(--foreground);
   letter-spacing: -0.02em;
 }
 
@@ -74,7 +74,7 @@
   font-size: clamp(1.125rem, 2vw, 1.25rem);
   line-height: 1.6;
   margin-bottom: 2.5rem;
-  color: black;
+  color: var(--foreground);
   max-width: 600px;
 }
 
@@ -106,7 +106,7 @@
   align-items: center;
   padding: 0.875rem 2rem;
   background: rgba(255, 255, 255, 0.1);
-  color: black;
+  color: var(--foreground);
   text-decoration: none;
   border-radius: 6px;
   font-weight: 600;

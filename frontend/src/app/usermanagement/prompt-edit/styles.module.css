@@ -4,7 +4,8 @@
   max-width: 1400px;
   margin: 0 auto;
   min-height: 100vh;
-  background-color: #ffffff;
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 .header {
@@ -61,7 +62,8 @@
 }
 
 .promptCard {
-  background-color: white;
+  background-color: var(--background);
+  color: var(--foreground);
   border-radius: 16px;
   padding: 1.5rem;
   cursor: pointer;
@@ -138,7 +140,7 @@
 }
 
 .promptContent {
-  color: #1e293b;
+  color: var(--foreground);
   font-size: 0.875rem;
   line-height: 1.5;
   margin-bottom: 1rem;

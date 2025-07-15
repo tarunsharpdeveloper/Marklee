@@ -24,6 +24,8 @@
 .login_modal_content {
   padding: 2rem;
   position: relative;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .back_button {
@@ -38,6 +40,8 @@
   align-items: center;
   font-size: 14px;
   padding: 0;
+  background: var(--background);  
+  color: var(--foreground);
 }
 
 .back_button:hover {
@@ -51,12 +55,12 @@
 
 .login_header h2 {
   font-size: 1.5rem;
-  color: #333;
-  margin-bottom: 0.5rem;
+  color: var(--foreground);
+  margin-bottom: 0.5rem;  
 }
 
 .login_header p {
-  color: #666;
+  color: var(--foreground);
   margin: 0;
 }
 
@@ -73,16 +77,18 @@
 }
 
 .form_group label {
-  color: #213547;
+  color: var(--foreground);
   font-size: 0.85rem;
   font-weight: 500;
 }
 
 .form_group input {
   padding: 0.5rem 0.75rem;
-  border: 1.5px solid #e0e0e0;
+  border: 1.5px solid var(--card-border);
   border-radius: 6px;
   font-size: 0.9rem;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .form_group input:focus {

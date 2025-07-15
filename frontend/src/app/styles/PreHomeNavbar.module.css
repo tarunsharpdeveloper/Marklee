@@ -11,6 +11,12 @@
   align-items: center;
 }
 
+/* Dark mode styles for PreHomeNavbar */
+:global(.dark) .preHomeNav {
+  background: var(--background);
+  color: var(--foreground);
+}
+
 .preHomeContainer {
   max-width: 1200px;
   margin: 0 auto;
@@ -58,6 +64,15 @@
   white-space: nowrap;
 }
 
+/* Dark mode styles for user elements */
+:global(.dark) .preHomeUserIcon {
+  color: var(--foreground);
+}
+
+:global(.dark) .preHomeUserName {
+  color: var(--foreground);
+}
+
 .preHomeUserTooltip {
   display: none;
 }
@@ -78,6 +93,15 @@
 
 .preHomeNavLink:hover {
   color: #FF904D;
+}
+
+/* Dark mode styles for nav links */
+:global(.dark) .preHomeNavLink {
+  color: var(--foreground);
+}
+
+:global(.dark) .preHomeNavLink:hover {
+  color: var(--primary-light);
 }
 
 .preHomeLogoutBtn {
@@ -113,6 +137,11 @@
   transition: all 0.3s linear;
   position: relative;
   transform-origin: 1px;
+}
+
+/* Dark mode styles for hamburger */
+:global(.dark) .preHomeHamburger span {
+  background: var(--foreground);
 }
 
 /* Mobile Styles */
@@ -172,6 +201,19 @@
     box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.05);
   }
 
+  /* Dark mode styles for tooltip */
+  :global(.dark) .preHomeUserTooltip {
+    background: var(--card-bg);
+    color: var(--foreground);
+    border: 1px solid var(--card-border);
+  }
+
+  :global(.dark) .preHomeUserTooltip::before {
+    background: var(--card-bg);
+    border-left: 1px solid var(--card-border);
+    border-top: 1px solid var(--card-border);
+  }
+
   .preHomeUserProfile:hover .preHomeUserTooltip {
     display: block;
     animation: fadeIn 0.2s ease-in-out;
@@ -214,6 +256,8 @@
 
   .preHomeNavLinks.preHomeShow {
     display: flex;
+    background-color: var(--background);
+    color: var(--foreground);
   }
 
   .preHomeNavLink {

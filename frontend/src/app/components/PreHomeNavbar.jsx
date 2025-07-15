@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import styles from '../styles/PreHomeNavbar.module.css';
+import DarkModeToggle from './DarkModeToggle';
 
 const PreHomeNavbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -102,6 +103,9 @@ const PreHomeNavbar = () => {
             >
               FAQ
             </motion.a>
+            
+            <DarkModeToggle />
+            
             <motion.button
               className={styles.preHomeLogoutBtn}
               onClick={handleLogout}

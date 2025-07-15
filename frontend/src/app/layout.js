@@ -1,4 +1,5 @@
 import './globals.css';
+import { DarkModeProvider } from './context/DarkModeContext';
 
 export const metadata = {
   title: "Marklee",
@@ -14,7 +15,11 @@ export default function RootLayout({ children }) {
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <DarkModeProvider>
+          {children}
+        </DarkModeProvider>
+      </body>
     </html>
   );
 }
