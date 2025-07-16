@@ -4069,3 +4069,11 @@
   }
 }
 
+
+@media only screen and (max-width: 420px) {
+  .header {
+    width: calc(100% - 50px);
+    margin-left: 0;
+    padding-right: 1.3rem;
+  }
+}
