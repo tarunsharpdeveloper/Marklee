@@ -4074,11 +4074,7 @@
   .header {
     width: calc(100% - 50px);
     margin-left: 0;
-    padding-right: 1.3rem;
+    padding-right: 1rem;
   }
-  .userProfile{
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-  }
+  
 }
