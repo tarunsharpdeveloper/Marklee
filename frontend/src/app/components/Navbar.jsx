@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import styles from '../styles/Navbar.module.css';
 import { Login } from './Login';
 import GetStarted from './GetStarted';
+import DarkModeToggle from './DarkModeToggle';
 
 const Navbar = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -92,6 +93,8 @@ const Navbar = () => {
             >
               FAQ
             </motion.a>
+            
+            <DarkModeToggle />
             
             {user ? (
               <>

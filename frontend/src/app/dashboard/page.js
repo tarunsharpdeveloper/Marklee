@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Typewriter } from "react-simple-typewriter";
 import Image from 'next/image';
 import styles from "./styles.module.css";
+import DarkModeToggle from "../components/DarkModeToggle";
 
 const MessageSkeleton = () => (
   <div className={styles.skeleton}>
@@ -915,7 +916,8 @@ export default function Dashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     window.location.href = '/';
   };
 
@@ -1910,27 +1912,35 @@ export default function Dashboard() {
               </svg>
             </button>
           </div>
-          <div className={styles.userProfile}>
-            <span className={styles.userName}>{user.name || "Guest"}</span>
-            <div className={styles.avatar}>{user.initials || "G"}</div>
-            <div className={styles.avatarDropdown}>
-              <button onClick={handleLogout} className={styles.dropdownLogoutBtn}>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                  <polyline points="16 17 21 12 16 7"></polyline>
-                  <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                Logout
-              </button>
+          
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "1rem"
+          }}>
+            <DarkModeToggle inHeader={true} />
+            <div className={styles.userProfile}>
+              <span className={styles.userName}>{user.name || "Guest"}</span>
+              <div className={styles.avatar}>{user.initials || "G"}</div>
+              <div className={styles.avatarDropdown}>
+                <button onClick={handleLogout} className={styles.dropdownLogoutBtn}>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                  </svg>
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
         </header>

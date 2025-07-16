@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import styles from '../dashboard/styles.module.css';
 import Image from 'next/image';
+import DarkModeToggle from '../components/DarkModeToggle';
+
 
 export default function UserManagementLayout({ children }) {
   const router = useRouter();
@@ -53,7 +55,8 @@ export default function UserManagementLayout({ children }) {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     window.location.href = '/';
   };
 
@@ -128,7 +131,10 @@ export default function UserManagementLayout({ children }) {
               </svg>
             </button>
           </div>
+          
+          
           <div className={styles.userProfile}>
+          <DarkModeToggle inHeader={true} />
             <span className={styles.userName}>{user.name || 'Guest'}</span>
             <div className={styles.avatar}>{user.initials || 'G'}</div>
             <div className={styles.avatarDropdown}>

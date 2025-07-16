@@ -4,6 +4,26 @@
   --primary: rgb(0, 74, 173);
   --primary-light: #007AFF;
   --accent: rgb(236, 215, 65);
+  --navbar-bg: rgb(0, 74, 173);
+  --navbar-shadow: rgba(0, 0, 0, 0.05);
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.1);
+  --text-secondary: #666666;
+  --text-muted: #999999;
+}
+
+.dark {
+  --background: #100C08;
+  --foreground: #ffffff;
+  --primary: rgb(0, 74, 173);
+  --primary-light: #007AFF;
+  --accent: rgb(236, 215, 65);
+  --navbar-bg: rgba(16, 12, 8, 0.95);
+  --navbar-shadow: rgba(0, 0, 0, 0.2);
+  --card-bg: rgba(16, 12, 8, 0.98);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --text-secondary: #cccccc;
+  --text-muted: #888888;
 }
  
 /* @media (prefers-color-scheme: dark) {

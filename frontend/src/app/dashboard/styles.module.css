@@ -1,7 +1,7 @@
 .container {
   display: flex;
   min-height: 100vh;
-  background-color: #ffffff;
+  background-color: var(--background);
   position: relative;
   transition: all 0.3s ease;
 }
@@ -20,11 +20,11 @@
   min-width: 220px;
   flex: 1;
   padding: 1rem 1.5rem;
-  border: 2px solid rgb(236, 228, 228);
+  border: 2px solid var(--card-border);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: transparent;
+  background: var(--card-bg);
 }
 
 .radioOption:hover {
@@ -66,7 +66,7 @@
 .radioLabel {
   margin: 0.5rem;
   font-size: 1rem;
-  color: #374151;
+  color: var(--foreground);
   font-weight: 500;
   cursor: pointer;
 }
@@ -95,10 +95,10 @@
 .questionsContainer {
   /* margin-top: 2.5rem; */
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--card-bg);
   border-radius: 24px;
   backdrop-filter: blur(12px);
-  /* border: 1px solid rgba(226, 232, 240, 0.8); */
+  border: 1px solid var(--card-border);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.03), 0 4px 8px rgba(0, 0, 0, 0.02);
   animation: fadeIn 0.6s ease-out;
 }
@@ -120,19 +120,13 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 1rem;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--card-bg);
   backdrop-filter: blur(12px);
-  /* border: 1px solid rgba(226, 232, 240, 0.8); */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.02), 0 2px 4px rgba(0, 0, 0, 0.01);
+  /* border: 1px solid var(--card-border); */
+  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.02), 0 2px 4px rgba(0, 0, 0, 0.01); */
 }
 
-.formGroup:focus-within {
-  transform: translateY(-3px);
-  background: rgba(255, 255, 255, 0.98);
-  /* border-color: #60a5fa; */
-  box-shadow: 0 12px 24px rgba(96, 165, 250, 0.12),
-    0 4px 8px rgba(96, 165, 250, 0.06);
-}
+
 
 .formGroup label {
   display: flex;
@@ -142,10 +136,7 @@
   font-weight: 600;
   margin-bottom: 1.25rem;
   letter-spacing: 0.01em;
-  background: linear-gradient(90deg, #1e293b 0%, #334155 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+  color: var(--foreground);
   transform-origin: left;
   transition: transform 0.3s ease;
 }
@@ -158,12 +149,12 @@
   width: 100%;
   min-height: 140px;
   padding: 1.5rem;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--card-border);
   border-radius: 16px;
   font-size: 1.0625rem;
-  color: #1f2937;
+  color: var(--foreground);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--card-bg);
   resize: vertical;
   line-height: 1.6;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
@@ -171,14 +162,14 @@
 
 .textarea:focus {
   outline: none;
-  border-color: #60a5fa;
+  border-color: var(--primary-light);
   box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.12),
     inset 0 2px 4px rgba(0, 0, 0, 0.02);
-  background: white;
+  background: var(--card-bg);
 }
 
 .textarea::placeholder {
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 1rem;
   opacity: 0.75;
 }
@@ -229,9 +220,9 @@
 }
 .sidebar {
   width: 14%;
-  background-color: rgb(0, 74, 173);
+  background-color: #004aad;
   padding: 2rem 1rem;
-  border-right: 1px solid #e9ecef;
+  border-right: 1px solid #003c8f;
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -241,6 +232,12 @@
   left: 0;
   height: 100vh;
   z-index: 20;
+}
+
+/* Dark mode styles for sidebar */
+:global(.dark) .sidebar {
+  background-color: var(--card-bg);
+  border-right: 1px solid var(--card-border);
 }
 
 .sidebarContent {
@@ -288,7 +285,7 @@
 .toggleButton {
   background: none;
   border: none;
-  color: rgb(5, 5, 5);
+  color: white;
   cursor: pointer;
   padding: 0.5rem;
   display: flex;
@@ -296,6 +293,11 @@
   justify-content: center;
   border-radius: 50%;
   transition: all 0.3s ease;
+}
+
+/* Dark mode styles for toggle button */
+:global(.dark) .toggleButton {
+  color: var(--foreground);
 }
 
 .toggleButton:hover {
@@ -306,6 +308,11 @@
   transition: transform 0.3s ease;
 }
 
+/* Dark mode styles for toggle button SVG */
+:global(.dark) .toggleButton svg {
+  fill: white !important;
+}
+
 .toggleButton svg.rotated {
   transform: rotate(180deg);
 }
@@ -313,7 +320,12 @@
 .logo span {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: white;
+}
+
+/* Dark mode styles for logo */
+:global(.dark) .logo span {
+  color: var(--foreground);
 }
 
 .nav ul {
@@ -332,19 +344,32 @@
   padding: 0.55rem 0.29rem;
   border-radius: 8px;
   cursor: pointer;
-  color: #f8f9fa;
+  color: white;
   transition: all 0.3s ease;
   white-space: nowrap;
 }
 
 .nav li:hover {
-  background-color: #f8f9fa;
-  color: #1a1a1a;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
 }
 
 .nav li.active {
-  background-color: #ffffffde;
-  color: #1a1a1a;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Dark mode styles for nav items */
+:global(.dark) .nav li {
+  color: var(--foreground);
+}
+
+:global(.dark) .nav li:hover {
+  color: var(--foreground);
+}
+
+:global(.dark) .nav li.active {
+  color: var(--foreground);
 }
 
 .nav li svg {
@@ -386,8 +411,8 @@
 
 .header {
   height: 70px;
-  background-color: white;
-  border-bottom: 1px solid #e9ecef;
+  background-color: var(--card-bg);
+  border-bottom: 1px solid var(--card-border);
   padding: 0px 1rem;
   display: flex;
   align-items: center;
@@ -398,6 +423,14 @@
   width: calc(100% - 14%);
   transition: all 0.3s ease;
   right: 0;
+}
+
+/* Ensure dark mode toggle is visible in header */
+.header > div:last-child {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  min-width: fit-content !important;
 }
 
 /* Desktop and larger screens */
@@ -423,9 +456,10 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background-color: #f8f9fa;
+  background-color: var(--card-bg);
   padding: 0.5rem 1rem;
   border-radius: 8px;
+  border: 1px solid var(--card-border);
   width: 300px;
 }
 
@@ -435,6 +469,7 @@
   outline: none;
   width: 100%;
   font-size: 0.875rem;
+  color: var(--foreground);
 }
 
 .userProfile {
@@ -445,7 +480,7 @@
 }
 
 .userName {
-  color: #1a1a1a;
+  color: var(--foreground);
   font-weight: 500;
 }
 
@@ -466,13 +501,14 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: white;
+  background: var(--card-bg);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 0.5rem;
   display: none;
   min-width: 120px;
   z-index: 1000;
+  border: 1px solid var(--card-border);
 }
 
 .userProfile:hover .avatarDropdown {
@@ -486,7 +522,7 @@
   right: 16px;
   width: 12px;
   height: 12px;
-  background: white;
+  background: var(--card-bg);
   transform: rotate(45deg);
   box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.05);
 }
@@ -496,7 +532,7 @@
   padding: 0.5rem 1rem;
   background: none;
   border: none;
-  color: #1a1a1a;
+  color: var(--foreground);
   font-size: 0.9rem;
   text-align: left;
   cursor: pointer;
@@ -507,13 +543,13 @@
 }
 
 .dropdownLogoutBtn:hover {
-  background-color: #f5f5f5;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .dropdownLogoutBtn svg {
   width: 16px;
   height: 16px;
-  stroke: #1a1a1a;
+  stroke: var(--foreground);
 }
 
 .sections {
@@ -524,18 +560,19 @@
 }
 
 .section {
-  background-color: white;
+  background-color: var(--card-bg);
   border-radius: 16px;
   flex: 1;
   max-width: 100%;
   height: fit-content;
   transition: all 0.3s ease;
+  border: 1px solid var(--card-border);
 }
 
 .activityText {
   font-size: 1rem;
   font-weight: 700;
-  color: #333;
+  color: var(--foreground);
   margin-top: 1rem;
 }
 .activityItemButton {
@@ -554,22 +591,22 @@
 .section h2 {
   margin: 0 0 1.5rem 0;
   font-size: 1.25rem;
-  color: #1a1a1a;
+  color: var(--foreground);
   font-weight: 600;
 }
 
 .questionCategory {
-  background-color: #ffffff;
+  background-color: var(--card-bg);
   border-radius: 12px;
   padding: 1.2rem;
   /* margin-bottom: 1.2rem; */
-  border: 1px solid #eaeaea;
+  border: 1px solid var(--card-border);
 }
 
 .questionCategory h3 {
   margin: 0 0 1rem 0;
   font-size: 1.1rem;
-  color: #1a1a1a;
+  color: var(--foreground);
   display: flex;
   align-items: center;
   gap: 0.1rem;
@@ -579,20 +616,20 @@
 .questionItem {
   padding: 0.8rem;
   border-radius: 8px;
-  background-color: white;
+  background-color: var(--card-bg);
   /* margin-bottom: 0.8rem; */
   transition: all 0.2s ease;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--card-border);
 }
 
 .questionItem:hover {
-  background-color: #ffffff;
+  background-color: var(--card-bg);
   transform: translateX(4px);
 }
 
 .questionItem p {
   margin: 0;
-  color: #444;
+  color: var(--foreground);
   font-size: 0.9rem;
   line-height: 1.5;
 }
@@ -628,7 +665,7 @@
 
 .activityContent p {
   margin: 0;
-  color: #444;
+  color: var(--foreground);
   font-size: 0.9rem;
   line-height: 1.6;
 }
@@ -749,7 +786,7 @@
 .folderHeader span {
   flex: 1;
   font-weight: 500;
-  color: #333;
+  color: var(--foreground);
 }
 
 .arrowIcon {
@@ -796,7 +833,7 @@
 }
 
 .subFolder span {
-  color: #666;
+  color: var(--text-muted);
   font-size: 0.875rem;
 }
 
@@ -807,7 +844,7 @@
   padding: 0.75rem 0.7rem;
   background: none;
   border: none;
-  color: #f8f9fa;
+  color: white;
   cursor: pointer;
   border-radius: 8px;
   transition: all 0.2s ease;
@@ -817,6 +854,11 @@
 
 .logoutButton:hover {
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Dark mode styles for logout button */
+:global(.dark) .logoutButton {
+  color: var(--foreground);
 }
 
 .logoutButton svg {
@@ -1259,7 +1301,7 @@
   max-height: calc(100vh - 100px);
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-color: var(--card-border) transparent;
 }
 
 /* Custom scrollbar for Webkit browsers (Chrome, Safari, etc.) */
@@ -1272,13 +1314,13 @@
 }
 
 .folderSection::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
+  background-color: var(--card-border);
   border-radius: 20px;
   border: 2px solid transparent;
 }
 
 .folderSection::-webkit-scrollbar-thumb:hover {
-  background-color: #94a3b8;
+  background-color: var(--text-muted);
 }
 
 .folderList {
@@ -1299,14 +1341,16 @@
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
 }
 
 .folderHeader:hover {
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .folderIcon {
-  color: #64748b;
+  color: var(--foreground);
 }
 
 .arrowIcon {
@@ -1331,14 +1375,17 @@
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  margin-bottom: 0.5rem;
 }
 
 .subfolderItem:hover {
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .subfolderIcon {
-  color: #94a3b8;
+  color: var(--foreground);
 }
 
 .qaList {
@@ -1348,15 +1395,16 @@
 }
 
 .qaCard {
-  background: #f8fafc;
+  background: var(--card-bg);
   border-radius: 12px;
   padding: 1.5rem;
+  border: 1px solid var(--card-border);
 }
 
 .qaCard h3 {
   font-size: 1rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--foreground);
   margin-bottom: 1rem;
 }
 
@@ -1368,10 +1416,10 @@
 
 .optionButton {
   padding: 0.75rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--card-border);
   border-radius: 6px;
-  background: white;
-  color: #1a1a1a;
+  background: var(--card-bg);
+  color: var(--foreground);
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1379,8 +1427,8 @@
 }
 
 .optionButton:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--primary-light);
 }
 
 .generateButton {
@@ -1429,26 +1477,31 @@
   }
 
   .backButton {
-    display: none;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-    background: none;
-    border: none;
-    color: #1f2937;
-    font-size: 16px;
-    cursor: pointer;
-    margin-bottom: 16px;
-  }
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: none;
+  border: none;
+  color: var(--foreground);
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
 
-  .backButton svg {
-    width: 20px;
-    height: 20px;
-  }
+.backButton svg {
+  width: 20px;
+  height: 20px;
+}
 
-  .backButton:hover {
-    color: #2563eb;
-  }
+/* Dark mode styles for back button SVG */
+:global(.dark) .backButton svg {
+  stroke: white !important;
+}
+
+.backButton:hover {
+  color: var(--primary-light);
+}
 }
 
 /* Desktop Styles */
@@ -1460,7 +1513,7 @@
     padding: 0;
     background: none;
     border: none;
-    color: #1a1a1a;
+    color: var(--foreground);
     font-size: 0.875rem;
     cursor: pointer;
     margin-bottom: 1rem;
@@ -1613,8 +1666,8 @@
 
 .folderContent {
   padding: 0.5rem 1rem 1rem 2.5rem;
-  border-top: 1px solid #eaeaea;
-  background: #ffffff;
+  border-top: 1px solid var(--card-border);
+  background: var(--card-bg);
 }
 
 .createBriefButton {
@@ -1648,12 +1701,13 @@
 
 .briefForm {
   padding: 1.5rem;
+  background-color: var(--background);
 }
 
 .briefForm h2 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--foreground);
   margin-bottom: 1.5rem;
 }
 
@@ -1664,7 +1718,7 @@
   display: block;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--foreground);
   margin-bottom: 0.75rem;
   letter-spacing: 0.01em;
 }
@@ -1673,24 +1727,24 @@
   width: 100%;
   min-height: 120px;
   padding: 1rem;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--card-border);
   border-radius: 12px;
   font-size: 0.95rem;
-  color: #1f2937;
+  color: var(--foreground);
   transition: all 0.2s ease;
-  background: #ffffff;
+  background: var(--card-bg);
   resize: vertical;
   line-height: 1.6;
 }
 
 .textarea:focus {
   outline: none;
-  border-color: #60a5fa;
+  border-color: var(--primary-light);
   box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
 }
 
 .textarea::placeholder {
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
@@ -1700,23 +1754,23 @@
   gap: 1rem;
   margin-top: 2.5rem;
   padding-top: 2rem;
-  border-top: 2px solid #f3f4f6;
+  border-top: 2px solid var(--card-border);
 }
 
 .cancelButton {
   padding: 0.75rem 1.5rem;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--card-border);
   border-radius: 12px;
-  background: #ffffff;
-  color: #4b5563;
+  background: var(--card-bg);
+  color: var(--foreground);
   font-size: 0.95rem;
   font-weight: 600;
   transition: all 0.2s ease;
 }
 
 .cancelButton:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
+  background: var(--card-bg);
+  border-color: var(--card-border);
   transform: translateY(-1px);
 }
 
@@ -1738,7 +1792,7 @@
 }
 
 .submitButton:disabled {
-  background: #9ca3af;
+  background: var(--text-muted);
   transform: none;
   box-shadow: none;
   cursor: not-allowed;
@@ -1985,6 +2039,8 @@
   width: 100%;
   height: auto;
   overflow: visible;
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 .audienceHeader {
@@ -1992,6 +2048,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
   border-bottom: 2px solid #f3f4f6;
   /* padding-bottom: 1rem; */
 }
@@ -1999,7 +2056,7 @@
 .audienceHeader h3 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--foreground);
 }
 
 .newBriefButton {
@@ -2029,7 +2086,8 @@
 }
 
 .segmentCard {
-  background: #f8fafc;
+  background: var(--background);
+  color: var(--foreground);
   border-radius: 12px;
   padding: 1rem;
   border: 1px solid #e2e8f0;
@@ -2056,7 +2114,7 @@
 }
 
 .segmentCard p {
-  color: #64748b;
+  color: var(--foreground);
   font-size: 0.95rem;
   line-height: 1.6;
   margin: 0;
@@ -2090,7 +2148,7 @@
 }
 
 .loadingContainer {
-  background: white;
+  background: var(--background);
   padding: 3rem;
   border-radius: 16px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
@@ -2137,7 +2195,7 @@
 
 .loadingMessage {
   font-size: 1.2rem;
-  color: #1a1a1a;
+  color: var(--foreground);
   text-align: center;
   margin: 0;
   min-height: 1.5em;
@@ -2166,10 +2224,10 @@
 }
 
 .briefCard {
-  background: #f8fafc;
+  background: var(--card-bg);
   border-radius: 12px;
   padding: 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--card-border);
   margin-bottom: 1rem;
   transition: all 0.2s ease;
 }
@@ -2182,19 +2240,19 @@
 .briefHeader h4 {
   margin: 0;
   font-size: 1rem;
-  color: #1a1a1a;
+  color: var(--foreground);
 }
 
 .savedAudiences {
   margin-top: 0.5rem;
   padding: 0.5rem;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--card-border);
 }
 
 .savedAudiences h5 {
   margin: 0 0 0.5rem 0;
   font-size: 0.9rem;
-  color: #4b5563;
+  color: var(--text-muted);
 }
 
 .savedAudiences ul {
@@ -2205,7 +2263,7 @@
 
 .savedAudiences li {
   font-size: 0.85rem;
-  color: #1a1a1a;
+  color: var(--foreground);
   padding: 0.25rem 0;
   display: flex;
   align-items: center;
@@ -2219,8 +2277,8 @@
 }
 
 .briefCard:hover {
-  background: white;
-  border-color: #cbd5e1;
+  background: var(--card-bg);
+  border-color: var(--card-border);
   transform: translateY(-1px);
 }
 
@@ -2233,17 +2291,18 @@
 .briefContent p {
   margin: 0;
   font-size: 0.95rem;
-  color: #4b5563;
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
 .briefContent strong {
-  color: #1a1a1a;
+  color: var(--foreground);
   font-weight: 600;
 }
 
 .qaSection {
-  background: #ffffff;
+  background: var(--background);
+  color: var(--foreground);
   border-radius: 20px;
   max-height: calc(100vh - 100px);
   overflow-y: auto;
@@ -2277,7 +2336,7 @@
 .briefForm h2 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--foreground);
   margin-bottom: 1.5rem;
 }
 
@@ -2333,6 +2392,8 @@
   }
   .audienceSegments{
     margin-top: 0rem;
+    background: var(--background);
+    color: var(--foreground);
    }
    .folderSection{
     padding: 0.2rem;
@@ -2386,7 +2447,7 @@
 }
 
 .modalContent {
-  background: white;
+  background: var(--card-bg);
   border-radius: 16px;
   width: 90%;
   max-width: 480px;
@@ -2410,7 +2471,7 @@
 
 .modalHeader {
   padding: 0.90rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--card-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2419,7 +2480,7 @@
 .modalHeader h2 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--foreground);
   margin: 0;
 }
 @media (max-width: 480px) {
@@ -2433,7 +2494,7 @@
 .closeButton {
   background: none;
   border: none;
-  color: #64748b;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 8px;
@@ -2441,8 +2502,8 @@
 }
 
 .closeButton:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--card-bg);
+  color: var(--foreground);
 }
 
 .modalBody {
@@ -2457,18 +2518,18 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #334155;
+  color: var(--foreground);
   margin-bottom: 0.5rem;
 }
 
 .assetSelect {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--card-border);
   border-radius: 10px;
   font-size: 0.875rem;
-  color: #0f172a;
-  background-color: white;
+  color: var(--foreground);
+  background-color: var(--card-bg);
   cursor: pointer;
   transition: all 0.2s ease;
   appearance: none;
@@ -2480,12 +2541,12 @@
 }
 
 .assetSelect:hover {
-  border-color: #cbd5e1;
+  border-color: var(--card-border);
 }
 
 .assetSelect:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--primary-light);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -2494,7 +2555,7 @@
   justify-content: space-between;
   gap: 1rem;
   /* padding: 1rem 1.5rem; */
-  background: #ffffff;
+  background: var(--card-bg);
   /* border-top: 1px solid #f1f5f9; */
   border-radius: 0 0 16px 16px;
   align-items: center;
@@ -2502,10 +2563,10 @@
 
 .cancel {
   padding: 0.4rem 1.5rem;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 10px;
-  color: #475569;
+  color: var(--foreground);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -2516,8 +2577,8 @@
 }
 
 .cancel:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--card-bg);
+  color: var(--foreground);
 }
 
 .generateButton {
@@ -2742,16 +2803,18 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
-  background: white;
+  background: var(--card-bg);
   border-radius: 12px;
+  /* border: 1px solid var(--card-border); */
   /* box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); */
 }
 
 .coreMessageContainer {
-  background: white;
+  background: var(--card-bg);
   border-radius: 12px;
   padding: 2rem;
   width: 100%;
+  /* border: 1px solid var(--card-border); */
 }
 
 .coreMessageHeader {
@@ -2764,7 +2827,7 @@
 
 .coreMessageHeader h3 {
   font-size: 1.5rem;
-  color: #333;
+  color: var(--foreground);
   margin: 0;
   font-weight: 600;
 }
@@ -2772,22 +2835,23 @@
 .messageContainer {
  width: 100%;
   padding: 1.5rem;
-  background: white;
+  background: var(--card-bg);
   border-radius: 16px;
   border-left: 4px solid #282ab3;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   word-wrap: break-word;
   hyphens: auto;
-  color: #334155;
+  color: var(--foreground);
   font-size: 1.125rem;
   line-height: 1.8;
   white-space: pre-wrap;
+  /* border: 1px solid var(--card-border); */
 }
 
 .messageContainer p {
   font-size: 1.1rem;
   line-height: 1.6;
-  color: #4a5568;
+  color: var(--foreground);
   margin: 0;
   white-space: pre-wrap;
 }
@@ -2810,7 +2874,7 @@
 .typewriterContainer h4 {
   font-size: 1.2rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--foreground);
   margin: 1.5rem 0 1rem;
 }
 
@@ -2820,7 +2884,7 @@
 
 .typewriterContainer p {
   margin: 0.75rem 0;
-  color: #475569;
+  color: var(--foreground);
 }
 
 /* Mobile Styles */
@@ -2875,6 +2939,8 @@
   }
 }
 
+/* Dark Mode Toggle Styles for Dashboard/Library Headers - Moved to DarkModeToggle.module.css */
+
 .refreshButton {
   background: none;
   border: none;
@@ -2898,6 +2964,11 @@
 
 .refreshButton svg {
   transition: transform 0.2s ease;
+}
+
+/* Dark mode styles for refresh button SVG */
+:global(.dark) .refreshButton svg {
+  stroke: white !important;
 }
 
 @keyframes spin {
@@ -3172,6 +3243,8 @@
   font-size: 1.125rem;
   line-height: 1.8;
   box-shadow: 0 4px 12px #0000000d;  
+  background: var(--background);
+  color: var(--foreground);
 }
 
 
@@ -3229,6 +3302,8 @@
 .aiMessage {
   justify-content: flex-start;
   margin-right: auto;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .aiMessage p {
@@ -3236,12 +3311,16 @@
   padding: 0.5rem 1rem;
   border-radius: 12px;
   border-left: 4px solid #282ab3;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .inputContainer {
   display: flex;
   gap: 1rem;
   margin-top: 1rem;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .messageInput {
@@ -3261,6 +3340,8 @@
   text-orientation: upright;
   -webkit-writing-mode: horizontal-tb;
   writing-mode: horizontal-tb;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .messageInput:focus {
@@ -3282,6 +3363,8 @@
   background: white;
   border-top: 1px solid #e2e8f0;
   width: 100%;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .sendButton {
@@ -3300,7 +3383,8 @@
 }
 
 .sendButton:disabled {
-  background-color: #ccc;
+  background-color: var(--background);
+  color: black;
   cursor: not-allowed;
 }
 
@@ -3318,6 +3402,8 @@
   .inputContainer {
     flex-direction: column;
     gap: 0.5rem;
+    background: var(--background);
+    color: var(--foreground);
   }
 
   .messageInput,
@@ -3355,6 +3441,8 @@
   flex-direction: column;
   height: 100%;
   position: relative;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .Content {
@@ -3394,6 +3482,8 @@
   margin-top: auto;
   z-index: 10;
   margin-bottom: 2.8rem;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .messageInput {
@@ -3442,6 +3532,8 @@
   width: 70%;
   padding: 2rem;
   overflow-y: auto;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .editPopupCloseButton {
@@ -3536,6 +3628,8 @@
   border-right: 1px solid #e5e7eb;
   padding: 2rem;
   overflow-y: auto;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .editPopupRight {
@@ -3549,12 +3643,14 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .editPopupHeader h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--foreground);
 }
 
 .editPopupCloseButton {
@@ -3653,10 +3749,10 @@
 .editAudienceButton {
   /* padding: 4px 12px; */
   padding-bottom: 0.6rem;
-  background-color: #f8fafc;
-  border: 1px solid #f8fafc;
+  background-color: var(--background);
+  border: 1px solid var(--background);
   border-radius: 4px;
-  color: #4b5563;
+  color: var(--foreground);
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -3671,6 +3767,7 @@
   font-weight: 500;
   margin-bottom: 0.5rem;
   color: #374151;
+  color: var(--foreground);
 }
 
 .input {
@@ -3698,6 +3795,8 @@
   resize: vertical;
   outline: none;
   transition: all 0.2s ease;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .textarea:focus {
@@ -3721,12 +3820,14 @@
   /* margin: 1rem 0; */
   font-size: 1rem;
   line-height: 1.5;
+  color: var(--foreground);
 }
 
 .modalList ul {
   list-style-type: none;
   padding-left: 1.5rem;
   margin: 0.5rem 0;
+  color: var(--foreground);
 }
 
 .modalList li {
@@ -3844,8 +3945,8 @@
 
 .aiMessage {
   align-self: flex-start;
-  background-color: #f3f4f6;
-  color: #1f2937;
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 .chatInput {

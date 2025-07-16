@@ -226,10 +226,12 @@ export default function MarketingPage() {
     return (
       <div className={styles.container}>
         <PreHomeNavbar />
-        <div className={styles.loadingContainer}>
-          <div className={styles.loadingSpinner} />
-          <p>Loading your workspace...</p>
-        </div>
+        <div className={styles.loadingOverlay}>
+            <div className={styles.loadingContainer}>
+              <div className={styles.loader}></div>
+              <p className={styles.loadingMessage}>Loading your workspace...</p>
+            </div>
+          </div>
       </div>
     );
   }
@@ -237,14 +239,16 @@ export default function MarketingPage() {
   return (
     <div className={styles.container}>
       <PreHomeNavbar />
+
       {loading && (
-        <div className={styles.loaderOverlay}>
-          <div className={styles.loaderContainer}>
-            <div className={styles.loaderSpinner}></div>
-            <p className={styles.loaderMessage}>{loadingMessage}</p>
+          <div className={styles.loadingOverlay}>
+            <div className={styles.loadingContainer}>
+              <div className={styles.loader}></div>
+              <p className={styles.loadingMessage}>{loadingMessage}</p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+        
       {showWelcome && formFields ? (
         <WelcomePopup 
           welcomeMessage={formFields.welcomeMessage} 
