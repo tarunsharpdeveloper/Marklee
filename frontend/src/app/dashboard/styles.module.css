@@ -429,7 +429,7 @@
 .header > div:last-child {
   display: flex !important;
   align-items: center !important;
-  gap: 1rem !important;
+  gap: 0.5rem !important;
   min-width: fit-content !important;
 }
 

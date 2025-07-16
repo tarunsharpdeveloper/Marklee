@@ -1913,11 +1913,7 @@ export default function Dashboard() {
             </button>
           </div>
           
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "1rem"
-          }}>
+          <div >
             <DarkModeToggle inHeader={true} />
             <div className={styles.userProfile}>
               <span className={styles.userName}>{user.name || "Guest"}</span>
