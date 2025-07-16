@@ -131,7 +131,7 @@
 
 .getstarted_modal {
   padding-top: 1rem;
-  background: white;
+  background: var(--background);
   border-radius: 16px;
   width: 95%;
   max-width: 1200px;
@@ -172,14 +172,14 @@
 
 .getstarted_modal_title {
   font-size: 2rem;
-  color: #1a1a1a;
+  color: var(--foreground);
   margin-bottom: 0.5rem;
   font-weight: 700;
 }
 
 .getstarted_modal_subtitle {
   font-size: 1.1rem;
-  color: #666;
+  color: var(--foreground);
   max-width: 600px;
   margin: 0 auto;
 }
@@ -193,13 +193,20 @@
 }
 
 .getstarted_plan_card {
-  background: #f8f9fa;
+    background: var(--background);
   border-radius: 12px;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   transition: transform 0.3s ease;
   width: 300px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Dark mode styles for plan card */
+:global(.dark) .getstarted_plan_card {
+  box-shadow: 0 4px 20px rgba(128, 128, 128, 0.4);
 }
 
 .getstarted_plan_card:hover {
@@ -209,7 +216,7 @@
 .getstarted_plan_name {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--foreground);
   margin-bottom: 0.5rem;
 }
 
@@ -221,7 +228,7 @@
 }
 
 .getstarted_plan_billing {
-  color: #666;
+  color: var(--foreground);
   font-size: 0.9rem;
 }
 
@@ -236,13 +243,13 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: #444;
+  color: var(--foreground);
   /* margin-bottom: 0.75rem; */
   font-size: 0.95rem;
 }
 
 .getstarted_feature_icon {
-  color: black;
+    color: var(--foreground);
   font-size: 1.2rem;
   flex-shrink: 0;
 }

@@ -13,14 +13,19 @@
   position: relative;
   overflow: hidden;
 }
-
+:global(.dark) .toggle_button {
+  border: none;
+}
+:global(.dark) .toggle_button .icon{
+  color: yellow;
+}
 .toggle_button:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
 .toggle_button:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  /* box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3); */
 }
 
 .icon_container {
@@ -72,18 +77,24 @@
   overflow: hidden !important;
   z-index: 10 !important;
 }
-
+:global(.dark) .header_toggle {
+  border: 1px solid yellow !important;
+}
 .header_toggle:hover {
-  background: rgba(0, 74, 173, 0.1) !important;
-  border-color: #004aad !important;
+  /* background: rgba(0, 74, 173, 0.1) !important; */
+
   transform: scale(1.05) !important;
 }
 
 .header_toggle .icon {
   width: 20px !important;
   height: 20px !important;
-  color: #004aad !important;
+  color: blue !important;
 }
+  /* Dark mode styles for header toggle icon */
+  :global(.dark) .header_toggle .icon {
+    color: yellow !important;
+  }
 
 .header_toggle .icon_container {
   display: flex !important;
@@ -95,16 +106,16 @@
 
 /* Light mode specific styles for header */
 .header_toggle {
-  color: #004aad !important;
+  color: black !important;
 }
 
 .header_toggle:hover {
-  background: rgba(0, 74, 173, 0.1) !important;
+  /* background: rgba(0, 74, 173, 0.1) !important; */
 }
 
 /* Dark mode specific styles for header */
 :global(.dark) .header_toggle {
-  color: #004aad !important;
+  color: white !important;
 }
 
 /* Mobile text styles */
@@ -113,6 +124,9 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: inherit;
+}
+:global(.dark) .mobile_text {
+  color: white !important;
 }
 
 /* Mobile styles for regular toggle button (non-header) */
@@ -126,13 +140,18 @@
     background: transparent;
     border: 1px solid #004aad;
   }
-  
+  :global(.dark) .toggle_button {
+    border: 1px solid yellow;
+  }
   .icon_container {
     display: none;
   }
   
   .mobile_text {
     display: block;
+  }
+  :global(.dark) .mobile_text{
+    color: yellow !important;
   }
 }
 
@@ -145,7 +164,7 @@
     border-radius: 50% !important;
     color: #004aad !important;
     background: transparent !important;
-    border: 1px solid #004aad !important;
+    border: 1px solid black !important;
   }
   
   .header_toggle .icon_container {
@@ -159,7 +178,12 @@
   .header_toggle .icon {
     width: 20px !important;
     height: 20px !important;
-    color: #004aad !important;
+    color: skyblue !important;
+  }
+
+  /* Dark mode styles for header toggle icon */
+  :global(.dark) .header_toggle .icon {
+    color: yellow !important;
   }
   
   .header_toggle:hover {
@@ -174,9 +198,17 @@
     color: #004aad;
     border-color: #004aad;
   }
-  
+  :global(.dark) .toggle_button {
+    border: 1px solid white;
+  }
   :global(.dark) .header_toggle {
     color: #004aad !important;
     border-color: #004aad !important;
+  }
+  :global(.dark) .mobile_text{
+    color: yellow !important;
+  }
+  :global(.dark) .toggle_button{
+    border: 1px solid yellow !important;
   }
 } 

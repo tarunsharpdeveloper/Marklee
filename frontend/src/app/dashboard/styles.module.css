@@ -308,6 +308,11 @@
   transition: transform 0.3s ease;
 }
 
+/* Dark mode styles for toggle button SVG */
+:global(.dark) .toggleButton svg {
+  fill: white !important;
+}
+
 .toggleButton svg.rotated {
   transform: rotate(180deg);
 }
@@ -1489,6 +1494,11 @@
   height: 20px;
 }
 
+/* Dark mode styles for back button SVG */
+:global(.dark) .backButton svg {
+  stroke: white !important;
+}
+
 .backButton:hover {
   color: var(--primary-light);
 }
@@ -1503,7 +1513,7 @@
     padding: 0;
     background: none;
     border: none;
-    color: #1a1a1a;
+    color: var(--foreground);
     font-size: 0.875rem;
     cursor: pointer;
     margin-bottom: 1rem;
@@ -2038,6 +2048,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
   border-bottom: 2px solid #f3f4f6;
   /* padding-bottom: 1rem; */
 }
@@ -2137,7 +2148,7 @@
 }
 
 .loadingContainer {
-  background: white;
+  background: var(--background);
   padding: 3rem;
   border-radius: 16px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
@@ -2184,7 +2195,7 @@
 
 .loadingMessage {
   font-size: 1.2rem;
-  color: #1a1a1a;
+  color: var(--foreground);
   text-align: center;
   margin: 0;
   min-height: 1.5em;
@@ -2953,6 +2964,11 @@
 
 .refreshButton svg {
   transition: transform 0.2s ease;
+}
+
+/* Dark mode styles for refresh button SVG */
+:global(.dark) .refreshButton svg {
+  stroke: white !important;
 }
 
 @keyframes spin {

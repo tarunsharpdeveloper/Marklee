@@ -284,7 +284,7 @@
 }
 
 .signup_prompt p {
-  color: #666;
+  color: var(--foreground);
   margin: 0;
 }
 .signup_prompt a {
