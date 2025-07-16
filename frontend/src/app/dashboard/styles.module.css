@@ -3562,6 +3562,8 @@
     height: 50%;
     border-right: none;
     border-bottom: 1px solid #e5e7eb;
+    background: var(--background);
+    color: var(--foreground);
   }
 
   .editPopupRight {
@@ -3583,6 +3585,8 @@
     min-height: 50vh;
     border-right: none;
     border-bottom: 1px solid #e5e7eb;
+    background: var(--background);
+    color: var(--foreground);
   }
 
   .editPopupRight {
@@ -3594,6 +3598,7 @@
   .chatMessages {
     max-height: 40vh;
     overflow-y: auto;
+    background: var(--background);
   }
 
   .editCoreMessageInput {
@@ -3617,7 +3622,7 @@
 .editPopupContent {
   width: 100%;
   height: 100%;
-  background: white;
+  background: var(--background);
   display: flex;
   overflow: hidden;
 }
@@ -3636,6 +3641,8 @@
   width: 70%;
   padding: 2rem;
   overflow-y: auto;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .editPopupHeader {
@@ -3679,10 +3686,14 @@
     height: 50%;
     border-right: none;
     border-bottom: 1px solid #e5e7eb;
+    background: var(--background);
+    color: var(--foreground);
   }
 
   .editPopupRight {
     width: 100%;
+    background: var(--background);
+    color: var(--foreground);
     height: auto;
   }
 }
@@ -3701,17 +3712,23 @@
     min-height: 50vh;
     border-right: none;
     border-bottom: 1px solid #e5e7eb;
+    background: var(--background);
+    color: var(--foreground);
   }
 
   .editPopupRight {
     width: 100%;
     height: auto;
     min-height: 40vh;
+    background: var(--background);
+    color: var(--foreground);
   }
 
   .chatMessages {
     max-height: 40vh;
     overflow-y: auto;
+    background: var(--background);
+    color: var(--foreground);
   }
 
   .editCoreMessageInput {
@@ -4014,6 +4031,8 @@
 @media (max-width: 838px) {
   .editPopupContent {
     flex-direction: column;
+    background: var(--background);
+    color: var(--foreground);
   }
 
   .editPopupLeft,
@@ -4024,7 +4043,8 @@
     top: 0;
     left: 0;
     transition: transform 0.3s ease;
-    background: white;
+    background: var(--background);
+    color: var(--foreground);
   }
 
   .backButton {
@@ -4038,10 +4058,14 @@
 
   .editPopupRight:not(.hideMobile) {
     transform: translateX(0);
+    background: var(--background);
+    color: var(--foreground);
   }
 
   .editPopupLeft:not(.hideMobile) {
     transform: translateX(0);
+    background: var(--background);
+    color: var(--foreground);
   }
 }
 
