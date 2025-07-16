@@ -505,14 +505,26 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 0.5rem;
-  display: none;
+  opacity: 0;
+  visibility: hidden;
   min-width: 120px;
   z-index: 1000;
   border: 1px solid var(--card-border);
+  transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
 .userProfile:hover .avatarDropdown {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Add a small delay before hiding the dropdown */
+.userProfile .avatarDropdown {
+  transition-delay: 0.1s;
+}
+
+.userProfile:hover .avatarDropdown {
+  transition-delay: 0s;
 }
 
 .avatarDropdown::before {
@@ -1486,7 +1498,8 @@
   color: var(--foreground);
   font-size: 16px;
   cursor: pointer;
-  margin-bottom: 16px;
+  margin-bottom: 0.5rem;
+  margin-left: 0.5rem;
 }
 
 .backButton svg {
@@ -1516,7 +1529,8 @@
     color: var(--foreground);
     font-size: 0.875rem;
     cursor: pointer;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    margin-left: 0.5rem;
   }
   
 }
@@ -1708,7 +1722,9 @@
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--foreground);
-  margin-bottom: 1.5rem;
+  /* margin-bottom: 1.5rem; */
+  margin-bottom: 0;
+  margin-left: 1rem;
 }
 
 .formGroup {
@@ -2337,7 +2353,8 @@
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--foreground);
-  margin-bottom: 1.5rem;
+  /* margin-bottom: 1.5rem; */
+  margin-bottom: 0;
 }
 
 .librarySections {

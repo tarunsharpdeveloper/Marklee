@@ -589,7 +589,7 @@ const Library = () => {
               console.log(brief),
               <div key={brief.id || index} className={styles.briefCard}>
                 <div className={styles.briefHeader} onClick={() => handleBriefClick(brief.id)}>
-                  <h4>Target Audience</h4>
+                  <h4>Target Audiences</h4>
                 </div>
                 {/* Show saved audiences for this brief */}
                 {/* {savedAudiences[brief.id] && savedAudiences[brief.id].length > 0 && (
