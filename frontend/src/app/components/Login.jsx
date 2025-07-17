@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../styles/Login.module.css';
 import { Signup } from './Signup';
@@ -14,9 +14,117 @@ export const Login = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
   const [error, setError] = useState('');
-  const [showVerification, setShowVerification] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showVerification, setShowVerification] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
+  const googleButtonRef = useRef(null);
+
+  // Initialize Google Identity Services
+  useEffect(() => {
+    if (isOpen && typeof window !== 'undefined') {
+      // Check if script is already loaded
+      const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+      
+      if (existingScript) {
+        // Script already exists, just initialize
+        setGoogleScriptLoaded(true);
+        setTimeout(() => initializeGoogleSignIn(), 100);
+      } else {
+        // Load Google Identity Services script
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.onload = () => {
+          setGoogleScriptLoaded(true);
+          setTimeout(() => initializeGoogleSignIn(), 100);
+        };
+        document.head.appendChild(script);
+      }
+    }
+  }, [isOpen]);
+
+  // Re-initialize Google button when component becomes visible again
+  useEffect(() => {
+    if (isOpen && googleScriptLoaded && !showSignup && !showForgotPassword && !showVerification) {
+      setTimeout(() => initializeGoogleSignIn(), 200);
+    }
+  }, [isOpen, googleScriptLoaded, showSignup, showForgotPassword, showVerification]);
+
+  const initializeGoogleSignIn = () => {
+    if (typeof window !== 'undefined' && window.google && googleButtonRef.current) {
+      try {
+        // Clear any existing button
+        googleButtonRef.current.innerHTML = '';
+        
+        // Initialize Google Identity Services
+        window.google.accounts.id.initialize({
+          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+          callback: handleGoogleSignIn
+        });
+
+        // Render the Google Sign-In button
+        window.google.accounts.id.renderButton(
+          googleButtonRef.current,
+          { 
+            theme: 'outline', 
+            size: 'large',
+            width: '100%',
+            text: 'signin_with'
+          }
+        );
+      } catch (error) {
+        console.error('Error initializing Google Sign-In:', error);
+      }
+    }
+  };
+
+  const handleGoogleSignIn = async (response) => {
+    try {
+      setIsLoading(true);
+      setError('');
+
+      const result = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: response.credential
+        }),
+      });
+
+      const data = await result.json();
+
+      if (!result.ok) {
+        throw new Error(data.message || 'Google login failed');
+      }
+
+      // Store the token and user data in localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      setSuccessMessage('Logged in successfully with Google!');
+      
+      // Close modal and navigate based on role
+      setTimeout(() => {
+        onClose();
+        if (data.user.role === 'admin') {
+          window.location.href = '/usermanagement';
+        } else {
+          // For normal users, navigate based on metadata
+          window.location.href = data.isUserMetaData ? '/dashboard' : '/marketing';
+        }
+      }, 2000);
+
+    } catch (error) {
+      console.error('Google login failed:', error);
+      setError(error.message || 'Google login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -178,12 +286,7 @@ export const Login = ({ isOpen, onClose }) => {
           <div className={styles.social_login}>
             <p>Or continue with</p>
             <div className={styles.social_buttons}>
-              <button className={`${styles.social_button} ${styles.google}`}>
-                <svg viewBox="0 0 24 24" width="24" height="24">
-                  <path fill="currentColor" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
-                </svg>
-                Google
-              </button>
+              <div ref={googleButtonRef} id="google-signin-button"></div>
               <button className={`${styles.social_button} ${styles.facebook}`}>
                 <svg viewBox="0 0 24 24" width="24" height="24">
                   <path fill="currentColor" d="M12,2C6.477,2,2,6.477,2,12c0,4.991,3.657,9.128,8.438,9.879V14.89h-2.54V12h2.54V9.797c0-2.506,1.492-3.89,3.777-3.89c1.094,0,2.238,0.195,2.238,0.195v2.46h-1.26c-1.243,0-1.63,0.771-1.63,1.562V12h2.773l-0.443,2.89h-2.33v6.989C18.343,21.129,22,16.991,22,12c0-5.523-4.477-10-10-10z"/>
