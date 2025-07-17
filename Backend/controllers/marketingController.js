@@ -468,11 +468,27 @@ Keep outputs diverse in sector, job type, or context (e.g. solopreneurs, mid-siz
 
 When this prompt is used again to regenerate new audience options, do not repeat any of the previously returned audiences. Return fresh options based on different possible market angles or overlooked personas.
 
+IMPORTANT: For each audience segment, format the "segment" field as follows:
+- Start with exactly 2 words that form a complete, logical title (e.g., "Young Tech Professionals", "Small Business Owners", "Health-Conscious Parents", "Active Sports Families", "Busy Working Parents", "Creative Entrepreneurs")
+- The 2 words must form a complete phrase that makes sense on its own
+- Follow immediately with a space and then a full descriptive paragraph about the audience
+- Example: "Young Tech Professionals These individuals are typically aged 25-35, working in technology companies or startups, and are early adopters of new digital solutions. They value efficiency, innovation, and seamless user experiences. They often struggle with work-life balance and are constantly seeking tools that can streamline their daily tasks and improve productivity."
+
+CRITICAL RULES:
+1. The first 2 words must be a complete, logical title that makes sense on its own. 
+   - AVOID: Incomplete phrases like "Active Parents of" or "Dedicated Coaches and"
+   - USE: Complete phrases like "Active Sports Parents", "Dedicated Sports Coaches", "Busy Working Parents"
+   - The title must NOT end with words like "and", "of", "the", "in", "to", "for", "with"
+   - The title must be a complete noun phrase that can stand alone
+2. The description paragraph must NOT start with the same words as the title. For example:
+   - WRONG: "Active Sports Families Active sports families consist of..."
+   - CORRECT: "Active Sports Families These families typically consist of..." or "Active Sports Families Parents with children who participate in..."
+
 Return a JSON object with this structure:
 {
     "audiences": [
         {
-            "segment": "Full descriptive paragraph about the audience",
+            "segment": "Complete 2 Word Title Full descriptive paragraph about the audience including who they are, what they care about, why this offering is relevant to them, and their key pain points and desires.",
             "insights": ["Key insight 1", "Key insight 2"],
             "messagingAngle": "How to position the offering for this audience",
             "tone": "Appropriate tone for this audience"

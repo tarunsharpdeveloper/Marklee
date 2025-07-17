@@ -21,6 +21,53 @@ const getAllValues = (obj) => {
   return values;
 };
 
+// Function to get first 2 words from a string (title)
+const getFirstTwoWords = (text) => {
+  if (!text || typeof text !== 'string') {
+    return 'Untitled Segment';
+  }
+  
+  // Split by whitespace and filter out empty strings
+  const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+  
+  // If we have 2 or more words, take the first 2
+  if (words.length >= 2) {
+    const firstTwoWords = words.slice(0, 2).join(' ');
+    return firstTwoWords;
+  }
+  
+  // If we have only 1 word, return it
+  if (words.length === 1) {
+    return words[0];
+  }
+  
+  return 'Untitled Segment';
+};
+
+// Function to get description (everything after the first 2 words)
+const getDescription = (text) => {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+  
+  // Split by whitespace and filter out empty strings
+  const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+  
+  // If we have 3 or more words, return everything after the first 2 words
+  if (words.length >= 3) {
+    const description = words.slice(2).join(' ');
+    return description;
+  }
+  
+  // If we have exactly 2 words, there's no description
+  if (words.length === 2) {
+    return 'No description available';
+  }
+  
+  // If we have only 1 word, treat it as description
+  return text;
+};
+
 const MemoizedEditAudiencePopup = memo(({ 
     isOpen, 
     audience, 
@@ -55,7 +102,11 @@ const MemoizedEditAudiencePopup = memo(({
     // Initialize textarea value once
     useEffect(() => {
         if (audience?.segment) {
-            setLocalSegment(audience.segment);
+            const title = getFirstTwoWords(audience.segment);
+            const description = getDescription(audience.segment);
+            // Format with "Title - " prefix
+            const formattedText = `Title - ${title}\n${description}`;
+            setLocalSegment(formattedText);
         }
     }, []); // Empty dependency array - only run once
 
@@ -120,7 +171,12 @@ const MemoizedEditAudiencePopup = memo(({
                 
                 // Set new value with a small delay
                 timeoutRef.current = setTimeout(() => {
-                    setLocalSegment(data.data.coreMessage);
+                    const newSegment = data.data.coreMessage;
+                    const title = getFirstTwoWords(newSegment);
+                    const description = getDescription(newSegment);
+                    // Format with "Title - " prefix
+                    const formattedText = `Title - ${title}\n${description}`;
+                    setLocalSegment(formattedText);
                 }, 100);
             }
         } catch (error) {
@@ -144,6 +200,17 @@ const MemoizedEditAudiencePopup = memo(({
                 return;
             }
 
+            // Split the textarea content by lines
+            const lines = localSegment.split('\n');
+            const titleLine = lines[0] || '';
+            const description = lines.slice(1).join('\n') || '';
+            
+            // Extract title from "Title - " prefix
+            const title = titleLine.replace('Title - ', '');
+            
+            // Combine title and description with a space
+            const combinedSegment = `${title} ${description}`.trim();
+
             const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/audience/${audience.id}`, {
                 method: 'PUT',
                 headers: {
@@ -151,7 +218,7 @@ const MemoizedEditAudiencePopup = memo(({
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    segment: localSegment
+                    segment: combinedSegment
                 })
             });
 
@@ -162,7 +229,7 @@ const MemoizedEditAudiencePopup = memo(({
             // Call the parent's onSave with the updated audience
             onSave({
                 ...audience,
-                segment: localSegment
+                segment: combinedSegment
             });
         } catch (error) {
             console.error('Error updating audience:', error);
@@ -273,7 +340,8 @@ const MemoizedEditAudiencePopup = memo(({
                             className={styles.editCoreMessageInput}
                             value={localSegment}
                             onChange={handleTextAreaChange}
-                            placeholder="Type your audience description here..."
+                            placeholder="Title - Your Title Here&#10;Description goes here..."
+                            style={{minHeight: '120px'}}
                         />
                     </div>
                     <div className={styles.editCoreMessageActions}>
@@ -355,7 +423,7 @@ const Library = () => {
   const [savedAudiences, setSavedAudiences] = useState({});  // briefId -> saved audiences map
 
   // Define all functions before using them
-  const fetchProjects = async () => {
+  const fetchProjects = async () => { 
     try {
       const token = localStorage.getItem('token');
       
@@ -628,33 +696,10 @@ const Library = () => {
       // Update the audiences state with the fetched data
       if (data.data && data.data.length > 0) {
         const formattedAudiences = data.data.map(audience => {
-          let name = 'Audience Segment';
-          let description = '';
-          try {
-            const segmentData = JSON.parse(audience.segment);
-            if (typeof segmentData === 'object' && segmentData !== null) {
-              name = segmentData.name || 'Untitled Segment';
-              description = segmentData.description || '';
-            } else if (typeof segmentData === 'string') {
-              name = segmentData;
-              try {
-                const insightsData = JSON.parse(audience.insights);
-                if (Array.isArray(insightsData)) {
-                  description = insightsData.join(' ');
-                } else if (typeof insightsData === 'object' && insightsData !== null) {
-                  description = getAllValues(insightsData).join(' ').replace(/<br\s*\/?>/gi, ' ');
-                } else {
-                  description = String(insightsData);
-                }
-                description = description.substring(0, 150) + (description.length > 150 ? '...' : '');
-              } catch (e) {
-                description = 'No description available.';
-              }
-            }
-          } catch (e) {
-            name = 'Error Parsing Segment';
-            description = '';
-          }
+          // Use our new helper functions to extract title and description
+          const name = getFirstTwoWords(audience.segment);
+          const description = getDescription(audience.segment);
+          
           return { ...audience, name, description };
         });
 
@@ -982,7 +1027,6 @@ const Library = () => {
             </div>
             <div className={styles.segmentsList}>
               {audiences.map((audience, index) => (
-                console.log(audience),
                 <div key={index} className={styles.segmentCard}>
                     <div className={styles.segmentHeader}>
                         {!savedAudiences[currentBriefId] && (
@@ -992,7 +1036,7 @@ const Library = () => {
                             onChange={() => handleCheckAudience(audience.id)}
                           />
                         )}
-                        {/* <h4>{audience.segment}</h4> */}
+                        
                         <button
                             className={styles.editAudienceButton}
                             onClick={() => handleEditAudience(audience)}
@@ -1000,7 +1044,8 @@ const Library = () => {
                             <svg width="18" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
                     </div>
-                    <p>{audience.segment}</p>
+                    <h4>{getFirstTwoWords(audience.segment)}</h4>
+                    <p>{getDescription(audience.segment) || 'No description available'}</p>
                     <div className={styles.audienceActions}>
                         <button
                             className={styles.viewDetailsButton}
@@ -1707,6 +1752,8 @@ const Library = () => {
             {selectedAudience && (
               <div>
                 <h2>Audience Details</h2>
+                <h3>{getFirstTwoWords(selectedAudience.segment)}</h3>
+                <p>{getDescription(selectedAudience.segment)}</p>
                 <h3>Insights</h3>
                 <pre style={{whiteSpace: 'pre-line'}}>
                   {(() => {
