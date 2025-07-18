@@ -127,7 +127,7 @@ export default function SettingsLayout({ children }) {
             alignItems: "center",
             gap: "1rem"
           }}>
-            <DarkModeToggle inHeader={true} />
+            {/* <DarkModeToggle inHeader={true} /> */}
             <div className={styles.userProfile}>
               <span className={styles.userName}>{user.name || 'Guest'}</span>
               <div className={styles.avatar}>{user.initials || 'G'}</div>

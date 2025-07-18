@@ -3,7 +3,7 @@
   max-width: 800px;
   margin: 0 auto;
   min-height: 100vh;
-  background: white;
+  background: var(--background-color);
 }
 
 .header {
@@ -14,22 +14,23 @@
 .header h1 {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #333;
+  color:var(--foreground);
   margin-bottom: 10px;
   background: black;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  /* -webkit-background-clip: text; */
+  
   background-clip: text;
+  padding-top: 1rem;
 }
 
 .header p {
-  color: #666;
+  color:var(--foreground);
   font-size: 1.1rem;
 }
 
 .tabs {
   display: flex;
-  border-bottom: 2px solid #eee;
+  border-bottom: 2px solid var(--foreground);
   margin-bottom: 30px;
   gap: 0;
 }
@@ -41,7 +42,7 @@
   cursor: pointer;
   font-size: 1rem;
   font-weight: 500;
-  color: #666;
+  color:var(--foreground);
   border-bottom: 3px solid transparent;
   transition: all 0.3s ease;
 }
@@ -68,10 +69,10 @@
 .section h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #333;
+  color:var(--foreground);
   margin-bottom: 25px;
   padding-bottom: 10px;
-  border-bottom: 2px solid #eee;
+  border-bottom: 2px solid var(--foreground);
 }
 
 .form {
@@ -86,13 +87,13 @@
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #333;
+  color:var(--foreground);
 }
 
 .formGroup input {
   width: 100%;
   padding: 12px 15px;
-  border: 2px solid #eee;
+  border: 2px solid var(--foreground);
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.3s ease;
@@ -130,7 +131,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--foreground);
 }
 
 .preferenceItem:last-child {
@@ -140,12 +141,12 @@
 .preferenceInfo h3 {
   font-size: 1.1rem;
   font-weight: 500;
-  color: #333;
+  color:var(--foreground);
   margin-bottom: 5px;
 }
 
 .preferenceInfo p {
-  color: #666;
+  color:var(--foreground);
   font-size: 0.9rem;
 }
 
@@ -170,7 +171,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  background-color: rgb(212, 211, 211);
   transition: 0.4s;
   border-radius: 34px;
 }
@@ -182,7 +183,7 @@
   width: 26px;
   left: 4px;
   bottom: 4px;
-  background-color: white;
+  background-color: var(--foreground);
   transition: 0.4s;
   border-radius: 50%;
 }
@@ -204,7 +205,7 @@ input:checked + .slider:before {
   justify-content: space-between;
   align-items: center;
   padding: 25px;
-  background: #fff5f5;
+  background: var(--background-color);
   border: 2px solid #fed7d7;
   border-radius: 10px;
   margin-bottom: 20px;
@@ -218,14 +219,14 @@ input:checked + .slider:before {
 }
 
 .dangerInfo p {
-  color: #666;
+  color:var(--foreground);
   font-size: 0.9rem;
   max-width: 400px;
 }
 
 .deleteButton {
   background: #e53e3e;
-  color: white;
+  color: white  ;
   border: none;
   padding: 10px 20px;
   border-radius: 6px;
@@ -245,7 +246,7 @@ input:checked + .slider:before {
   align-items: center;
   height: 200px;
   font-size: 1.1rem;
-  color: #666;
+  color:var(--foreground);
 }
 
 @keyframes fadeIn {
@@ -258,11 +259,15 @@ input:checked + .slider:before {
     transform: translateY(0);
   }
 }
-
+@media (max-width: 942px){
+  .container{
+    padding: 4rem;
+  }
+}
 /* Responsive Design */
 @media (max-width: 768px) {
   .container {
-    padding: 20px;
+    padding: 3rem;
   }
   
   .header h1 {
@@ -302,6 +307,7 @@ input:checked + .slider:before {
   
   .header h1 {
     font-size: 1.8rem;
+    padding-top: 2rem;
   }
   
   .tabs {

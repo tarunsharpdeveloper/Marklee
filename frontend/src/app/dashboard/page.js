@@ -1914,7 +1914,7 @@ export default function Dashboard() {
           </div>
           
           <div >
-            <DarkModeToggle inHeader={true} />
+            {/* <DarkModeToggle inHeader={true} /> */}
             <div className={styles.userProfile}>
               <span className={styles.userName}>{user.name || "Guest"}</span>
               <div className={styles.avatar}>{user.initials || "G"}</div>

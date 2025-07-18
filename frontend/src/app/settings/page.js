@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useDarkMode } from '../context/DarkModeContext';
 import styles from './styles.module.css';
 
 export default function Settings() {
   const router = useRouter();
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('profile');
@@ -15,7 +17,6 @@ export default function Settings() {
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
-    darkMode: false,
     emailNotifications: true,
     marketingEmails: false
   });
@@ -39,8 +40,7 @@ export default function Settings() {
         setFormData(prev => ({
           ...prev,
           name: userData.name || '',
-          email: userData.email || '',
-          darkMode: localStorage.getItem('darkMode') === 'true'
+          email: userData.email || ''
         }));
       } catch (error) {
         console.error('Error checking auth:', error);
@@ -139,9 +139,9 @@ export default function Settings() {
   const handlePreferenceChange = async (name, value) => {
     try {
       if (name === 'darkMode') {
-        localStorage.setItem('darkMode', value);
-        // Trigger dark mode change event
-        window.dispatchEvent(new CustomEvent('darkModeChange', { detail: { darkMode: value } }));
+        // Use the DarkModeContext to toggle dark mode
+        toggleDarkMode();
+        return; // Don't make API call for dark mode
       }
 
       const token = localStorage.getItem('token');
@@ -318,11 +318,8 @@ export default function Settings() {
                 <label className={styles.switch}>
                   <input
                     type="checkbox"
-                    checked={formData.darkMode}
-                    onChange={(e) => {
-                      handleInputChange(e);
-                      handlePreferenceChange('darkMode', e.target.checked);
-                    }}
+                    checked={isDarkMode}
+                    onChange={() => handlePreferenceChange('darkMode', !isDarkMode)}
                   />
                   <span className={styles.slider}></span>
                 </label>
