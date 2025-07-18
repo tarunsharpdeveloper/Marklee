@@ -1852,7 +1852,7 @@ export default function Dashboard() {
                 </svg>
                 <span>Library</span>
               </li>
-              <li>
+              <li onClick={() => router.push("/settings")}> 
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
