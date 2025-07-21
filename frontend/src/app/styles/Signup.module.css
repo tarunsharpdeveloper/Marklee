@@ -13,7 +13,7 @@
 }
 
 .signup_modal {
-  background: #ffffff;
+  background: var(--background);
   border-radius: 12px;
   width: 100%;
   max-width: 480px;
@@ -256,7 +256,9 @@
     flex-direction: row;
     gap: 0.5rem;
   }
-
+  .close_button {
+    top: 3.8rem;
+  }
   .social_button {
     max-width: none;
   }
