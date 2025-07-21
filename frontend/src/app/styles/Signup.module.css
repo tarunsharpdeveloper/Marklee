@@ -72,18 +72,24 @@
   top: 1rem;
   right: 1rem;
   background: none;
+  /* background: rgba(0, 0, 0, 0.1); */
   border: none;
-  font-size: 1.25rem;
   color: #666;
   cursor: pointer;
-  padding: 0.25rem;
-  width: 32px;
-  height: 32px;
+  padding: 0.5rem;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1;
+  transition: all 0.2s ease;
+}
+
+.close_button:hover {
+
+  transform: scale(1.1);
 }
 
 .signup_header {

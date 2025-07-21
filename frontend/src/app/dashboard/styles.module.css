@@ -3247,7 +3247,7 @@
 
 .editCoreMessageInput {
   /* width: 100%; */
-  height: calc(100vh - 200px);
+  height: calc(100vh - 230px);
   word-wrap: break-word;
   hyphens: auto;
   color: #334155;
@@ -3304,6 +3304,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
 }
 
 .saveButton:hover {
@@ -3478,9 +3479,9 @@
 }
 
 .editPopupHeader {
-  padding-bottom: 1rem;
+  /* padding-bottom: 1rem;   */
   border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 1rem;
+  /* margin-bottom: 1rem; */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -3674,7 +3675,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   background: var(--background);
   color: var(--foreground);
 }

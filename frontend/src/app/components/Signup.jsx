@@ -6,7 +6,7 @@ import { OtpVerification } from './OtpVerification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 
-export const Signup = ({ isOpen, onClose, onBack }) => {
+export const Signup = ({ isOpen, onClose, onBack, hideBackButton = false }) => {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [formData, setFormData] = useState({
@@ -130,13 +130,20 @@ export const Signup = ({ isOpen, onClose, onBack }) => {
         >
           
           <div className={styles.signup_modal_content}>
-            <button className={styles.close_button} onClick={onClose}></button>
-            
-            <button className={styles.back_button} onClick={onBack}>
-              <svg viewBox="0 0 24 24" width="24" height="24">
-                <path fill="currentColor" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/>
+            <button className={styles.close_button} onClick={onClose}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
             </button>
+            
+            {!hideBackButton && (
+              <button className={styles.back_button} onClick={onBack}>
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                  <path fill="currentColor" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/>
+                </svg>
+              </button>
+            )}
             
             <div className={styles.signup_header}>
               <h2>Create Account</h2>

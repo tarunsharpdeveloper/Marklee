@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from '../styles/Navbar.module.css';
 import { Login } from './Login';
-import GetStarted from './GetStarted';
+import { Signup } from './Signup';
 import DarkModeToggle from './DarkModeToggle';
 
 const Navbar = () => {
@@ -132,7 +132,7 @@ const Navbar = () => {
                 <motion.button
                   className={styles.action_button}
                   onClick={() => {
-                   setIsLoginModalOpen(true);
+                   setIsGetStartedModalOpen(true);
                     setIsMobileMenuOpen(false);
                   }}
                   whileHover={{ scale: 1.05 }}
@@ -150,9 +150,10 @@ const Navbar = () => {
         isOpen={isLoginModalOpen} 
         onClose={() => setIsLoginModalOpen(false)} 
       />
-      <GetStarted 
+      <Signup 
         isOpen={isGetStartedModalOpen} 
         onClose={() => setIsGetStartedModalOpen(false)} 
+        hideBackButton={true}
       />
     </>
   );

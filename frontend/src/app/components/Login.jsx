@@ -8,6 +8,14 @@ import { OtpVerification } from './OtpVerification';
 import { ForgotPassword } from './ForgotPassword';
 
 export const Login = ({ isOpen, onClose }) => {
+  const handleClose = () => {
+    setShowSignup(false);
+    setShowForgotPassword(false);
+    setShowVerification(false);
+    setError('');
+    setSuccessMessage('');
+    onClose();
+  };
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -238,11 +246,11 @@ export const Login = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   if (showSignup) {
-    return <Signup isOpen={true} onClose={onClose} onBack={() => setShowSignup(false)} />;
+    return <Signup isOpen={true} onClose={handleClose} onBack={() => setShowSignup(false)} />;
   }
 
   if (showForgotPassword) {
-    return <ForgotPassword isOpen={true} onClose={onClose} onBack={() => setShowForgotPassword(false)} />;
+    return <ForgotPassword isOpen={true} onClose={handleClose} onBack={() => setShowForgotPassword(false)} />;
   }
 
   if (showVerification) {
@@ -251,10 +259,10 @@ export const Login = ({ isOpen, onClose }) => {
       email={email}
       onVerificationSuccess={() => {
         setShowVerification(false);
-        onClose();
+        handleClose();
       }}
       onBack={() => setShowVerification(false)}
-      onClose={onClose}
+      onClose={handleClose}
     />;
   }
 
@@ -295,7 +303,7 @@ export const Login = ({ isOpen, onClose }) => {
       
       // Close modal and navigate based on role
       setTimeout(() => {
-        onClose();
+        handleClose();
         // Navigate based on user role
         if (data.user.role === 'admin') {
           window.location.href = '/usermanagement';
@@ -319,10 +327,10 @@ export const Login = ({ isOpen, onClose }) => {
   };
 
   return (
-     <div className={styles.login_overlay} onMouseDown={onClose}>
+     <div className={styles.login_overlay} onMouseDown={handleClose}>
      <div className={styles.login_modal} onMouseDown={(e) => e.stopPropagation()}>
         <div className={styles.login_modal_content}>
-          <button className={styles.close_button} onClick={onClose}></button>
+          <button className={styles.close_button} onClick={handleClose}></button>
           
           <div className={styles.login_header}>
             <h2>Welcome Back</h2>
