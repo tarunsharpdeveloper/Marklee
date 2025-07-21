@@ -173,6 +173,10 @@ const MemoizedEditPopup = memo(({
 
   const handleLocalInputChange = (e) => {
     setLocalInputMessage(e.target.value);
+    // Auto-resize the textarea
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
   };
 
   const handleLocalSendMessage = async () => {
@@ -187,6 +191,14 @@ const MemoizedEditPopup = memo(({
       },
     ]);
     setLocalInputMessage("");
+    
+    // Reset textarea height to normal
+    const textarea = document.querySelector(`.${styles.messageInput}`);
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = '44px'; // Reset to min-height
+    }
+    
     setIsSending(true);
 
     try {
@@ -488,19 +500,19 @@ const MemoizedEditPopup = memo(({
               )}
             </div>
             <div className={styles.inputContainer}>
-              <input
-                type="text"
+              <textarea
                 className={styles.messageInput}
                 value={localInputMessage}
                 onChange={handleLocalInputChange}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleLocalSendMessage();
                   }
                 }}
                 placeholder="Type your message..."
                 disabled={isRefreshing}
+                rows={1}
               />
               <button
                 className={styles.sendButton}
@@ -592,6 +604,7 @@ const MemoizedEditPopup = memo(({
 export default function Dashboard() {
   const router = useRouter();
   const [isSavePopupOpen, setSavePopupOpen] = useState(false);
+  const [showSaveAndContinue, setShowSaveAndContinue] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState({
     marketing: false,
     content: false,
@@ -614,6 +627,7 @@ export default function Dashboard() {
   const [newMessage, setNewMessage] = useState("");
   const [editingMessageIndex, setEditingMessageIndex] = useState(null);
   const [editInputValue, setEditInputValue] = useState("");
+  const [sidebarProjectName, setSidebarProjectName] = useState("");
 
   const [folderStructure, setFolderStructure] = useState({});
 
@@ -879,6 +893,34 @@ export default function Dashboard() {
     }
   }, [router]);
 
+  const fetchProjectName = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const { data } = await response.json();
+        if (data && data.data) {
+          const formData = typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+          // Get the project name from the description field (first question)
+          const projectName = formData.description;
+          setSidebarProjectName(projectName);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching project name:", error);
+    }
+  }, []);
+
   useEffect(() => {
     const userData = localStorage.getItem("user");
     if (userData) {
@@ -890,10 +932,11 @@ export default function Dashboard() {
         .toUpperCase();
       setUser({ ...parsedUser, initials });
 
-      // Fetch projects when user data is available
+      // Fetch projects and project name when user data is available
       fetchProjects();
+      fetchProjectName();
     }
-  }, [fetchProjects]);
+  }, [fetchProjects, fetchProjectName]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -1384,7 +1427,7 @@ export default function Dashboard() {
   };
 
   const handleSaveAndContinue = () => {
-    setSavePopupOpen(true);
+    setShowSaveAndContinue(true);
   };
 
   const renderProjectPopup = () => {
@@ -1850,7 +1893,7 @@ export default function Dashboard() {
                   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                 </svg>
-                <span>Library</span>
+                <span>{sidebarProjectName}</span>
               </li>
               <li onClick={() => router.push("/settings")}> 
                 <svg
@@ -1950,16 +1993,14 @@ export default function Dashboard() {
             </button>
           </div> */}
           <section className={`${styles.section} ${styles.greetingSection}`}>
-            {coreMessage && (
-              <div className={styles.coreMessageSection}>
-                <div className={styles.coreMessageContainer}>
-                  <div className={styles.coreMessageHeader}>
-                    <h3>Your Core Marketing Message</h3>
-
+            {showSaveAndContinue ? (
+              <div className={styles.saveAndContinueSection}>
+                <div className={styles.saveAndContinueContainer}>
+                  <div className={styles.saveAndContinueHeader}>
+                    <h3>Save and Continue</h3>
                     <button
-                      onClick={() => fetchCoreMessage(true)}
-                      className={styles.refreshButton}
-                      disabled={isRefreshing}
+                      onClick={() => setShowSaveAndContinue(false)}
+                      className={styles.saveAndContinueBackButton}
                     >
                       <svg
                         width="20"
@@ -1968,127 +2009,177 @@ export default function Dashboard() {
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2"
-                        className={isRefreshing ? styles.spinning : ""}
                       >
-                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 3.4 0 6.3 2.1 7.4 5M22 12c0 4.4-3.6 8-8 8-3.4 0-6.3-2.1-7.4-5" />
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
                       </svg>
                     </button>
                   </div>
-                  <div className={styles.messageContainer}>
-                    {isRefreshing ? (
-                      <MessageSkeleton />
-                    ) : isEditingCoreMessage ? (
-                      <div className={styles.editCoreMessageContainer}>
-                        <textarea
-                          className={styles.editCoreMessageInput}
-                          value={editedCoreMessage}
-                          onChange={(e) => setEditedCoreMessage(e.target.value)}
-                        />
-                        <div className={styles.editCoreMessageActions}>
-                          <button
-                            className={styles.cancelButton}
-                            onClick={() => {
-                              setIsEditingCoreMessage(false);
-                              setEditedCoreMessage("");
-                            }}
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            className={styles.saveButton}
-                            onClick={handleEditCoreMessage}
-                            disabled={
-                              !editedCoreMessage.trim() ||
-                              editedCoreMessage === coreMessage
-                            }
-                          >
-                            Save
-                          </button>
-                        </div>
-                      </div>
-                    ) : showTypewriter ? (
-                      <div className={styles.typewriterContainer}>
-                        <Typewriter
-                          words={[coreMessage]}
-                          loop={1}
-                          cursor
-                          cursorStyle=""
-                          typeSpeed={15}
-                          delaySpeed={500}
-                          onLoopDone={() => {
-                            setTimeout(() => setShowTypewriter(false), 500);
-                          }}
-                        />
-                        <button
-                          className={styles.editButtonCore}
-                          onClick={() => {
-                            setIsEditPopupOpen(true);
-                            setEditedCoreMessage(coreMessage);
-                          }}
-                          aria-label="Edit core message"
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className={styles.fadeIn}>
-                        <p>{coreMessage}</p>
-                        <button
-                          className={styles.editButtonCore}
-                          onClick={() => {
-                            setIsEditPopupOpen(true);
-                            setEditedCoreMessage(coreMessage);
-                          }}
-                          aria-label="Edit core message"
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </button>
-                      </div>
-                    )}
-                                      </div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                  <button
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: '#282ab3',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '0.375rem',
-                      cursor: 'pointer',
-                      fontSize: '0.875rem',
-                      fontWeight: '500'
-                    }}
-                    onClick={handleSaveAndContinue}
-                  >
-                    Save & Continue
-                  </button>
+                  <div className={styles.saveAndContinueContent}>
+                    <h3 className={styles.saveAndContinueTitle}>
+                      Great! Let&apos;s now pinpoint who you&apos;re talking to.
+                    </h3>
+                    <div className={styles.saveAndContinueFeatures}>
+                      <p>You can:</p>
+                      <ul>
+                        <li>Create your own audience profiles</li>
+                        <li>Get AI suggestions based on the information you&apos;ve shared and the Core Message we&apos;ve created together</li>
+                        <li>Edit and refine any audience in a chat window</li>
+                        <li>Refresh suggestions to see new options</li>
+                        <li>Save the ones that fit</li>
+                        <li>Come back and adjust anytime</li>
+                      </ul>
+                    </div>
+                    <p className={styles.saveAndContinueReady}>Ready to go?</p>
+                    <button 
+                      className={styles.saveAndContinueButton}
+                      onClick={() => router.push('/library')}
+                    >
+                      Let&apos;s go!
+                    </button>
+                  </div>
                 </div>
               </div>
+            ) : (
+              coreMessage && (
+                <div className={styles.coreMessageSection}>
+                  <div className={styles.coreMessageContainer}>
+                    <div className={styles.coreMessageHeader}>
+                      <h3>Your Core Marketing Message</h3>
+
+                      <button
+                        onClick={() => fetchCoreMessage(true)}
+                        className={styles.refreshButton}
+                        disabled={isRefreshing}
+                      >
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className={isRefreshing ? styles.spinning : ""}
+                        >
+                          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 3.4 0 6.3 2.1 7.4 5M22 12c0 4.4-3.6 8-8 8-3.4 0-6.3-2.1-7.4-5" />
+                        </svg>
+                      </button>
+                    </div>
+                    <div className={styles.messageContainer}>
+                      {isRefreshing ? (
+                        <MessageSkeleton />
+                      ) : isEditingCoreMessage ? (
+                        <div className={styles.editCoreMessageContainer}>
+                          <textarea
+                            className={styles.editCoreMessageInput}
+                            value={editedCoreMessage}
+                            onChange={(e) => setEditedCoreMessage(e.target.value)}
+                          />
+                          <div className={styles.editCoreMessageActions}>
+                            <button
+                              className={styles.cancelButton}
+                              onClick={() => {
+                                setIsEditingCoreMessage(false);
+                                setEditedCoreMessage("");
+                              }}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              className={styles.saveButton}
+                              onClick={handleEditCoreMessage}
+                              disabled={
+                                !editedCoreMessage.trim() ||
+                                editedCoreMessage === coreMessage
+                              }
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </div>
+                      ) : showTypewriter ? (
+                        <div className={styles.typewriterContainer}>
+                          <Typewriter
+                            words={[coreMessage]}
+                            loop={1}
+                            cursor
+                            cursorStyle=""
+                            typeSpeed={15}
+                            delaySpeed={500}
+                            onLoopDone={() => {
+                              setTimeout(() => setShowTypewriter(false), 500);
+                            }}
+                          />
+                          <button
+                            className={styles.editButtonCore}
+                            onClick={() => {
+                              setIsEditPopupOpen(true);
+                              setEditedCoreMessage(coreMessage);
+                            }}
+                            aria-label="Edit core message"
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className={styles.fadeIn}>
+                          <p>{coreMessage}</p>
+                          <button
+                            className={styles.editButtonCore}
+                            onClick={() => {
+                              setIsEditPopupOpen(true);
+                              setEditedCoreMessage(coreMessage);
+                            }}
+                            aria-label="Edit core message"
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                    <button
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#282ab3',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '0.375rem',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: '500'
+                      }}
+                      onClick={handleSaveAndContinue}
+                    >
+                      Save & Continue
+                    </button>
+                  </div>
+                </div>
+              )
             )}
           </section>
         </div>

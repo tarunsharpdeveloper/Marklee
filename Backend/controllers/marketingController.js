@@ -232,35 +232,47 @@ ${basePrompt}`;
                 {
                     role: "system",
                     content: isAudienceEdit ? 
-                    `You are a concise marketing assistant specializing in audience analysis. Help refine their audience description.
+                    `You are a helpful audience analysis assistant in an ongoing conversation. The user wants to improve their audience description.
 
 Current audience: "${currentMessage}"
 User request: "${userPrompt}"
 Context: ${JSON.stringify(formData, null, 2)}
 
-Provide a brief response that:
-1. Directly answers the user's request in 2-3 sentences
-2. Suggests ONE specific improvement that hasn't been mentioned before
-3. Uses a friendly, professional tone
-4. Keeps total response under 70 words
-5. Must provide a different suggestion each time
-6. Never repeat previous suggestions or advice
-7. Focus on a new aspect of the audience each time (e.g., demographics, psychographics, behavior, needs, pain points, job roles, industry verticals)
+Ask ONE contextual question (max 20 words) and add ONE recommendation (max 15 words) starting with "You should also..." or "I recommend..." 
 
-Return ONLY your response, no formatting.` :
-                    `You are a concise marketing assistant. The user has a marketing message they want to improve.
+IMPORTANT: Each response must ask a DIFFERENT question. Never repeat the same question or similar phrasing. Use varied approaches:
+- Ask about different aspects (demographics, behaviors, pain points, goals, channels, etc.)
+- Use different question formats (what, how, which, why, etc.)
+- Focus on different elements each time
+
+Examples of varied questions:
+- "What behaviors define this audience?"
+- "How do they make decisions?"
+- "Which pain point is most urgent?"
+- "Why do they need your solution?"
+- "What channels do they prefer?"
+
+Keep it conversational and helpful.` :
+                    `You are a helpful marketing assistant in an ongoing conversation. The user wants to improve their message.
 
 Current message: "${currentMessage}"
 User request: "${userPrompt}"
 
-Provide a brief response that:
-1. Directly addresses their request in 2 sentences
-2. Suggests ONE specific improvement
-3. Uses a friendly, professional tone
-4. Keeps total response under 20 words
-5. Question not get repeated
+Ask ONE contextual question (max 20 words) and add ONE recommendation (max 15 words) starting with "You should also..." or "I recommend..." 
 
-Return ONLY your response, no formatting.`
+IMPORTANT: Each response must ask a DIFFERENT question. Never repeat the same question or similar phrasing. Use varied approaches:
+- Ask about different aspects (tone, length, audience, benefits, structure, etc.)
+- Use different question formats (what, how, which, why, etc.)
+- Focus on different elements each time
+
+Examples of varied questions:
+- "What tone feels right for your audience?"
+- "Which benefit should we highlight most?"
+- "How do you want to structure this?"
+- "Why is this message important to them?"
+- "What action do you want them to take?"
+
+Keep it conversational and helpful.`
                 }
             ];
 

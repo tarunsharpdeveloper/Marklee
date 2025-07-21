@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../dashboard/styles.module.css';
 import Image from 'next/image';
@@ -10,6 +10,32 @@ export default function SettingsLayout({ children }) {
   const router = useRouter();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [user, setUser] = useState({ name: '', initials: '' });
+  const [sidebarProjectName, setSidebarProjectName] = useState('');
+
+  const fetchProjectName = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const { data } = await response.json();
+        if (data && data.data) {
+          const formData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+          // Get the project name from the description field (first question)
+          const projectName = formData.description;
+          setSidebarProjectName(projectName);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching project name:', error);
+    }
+  }, []);
 
   // Fix useEffect with router dependency
   useEffect(() => {
@@ -42,6 +68,9 @@ export default function SettingsLayout({ children }) {
             initials: userData.name.split(' ').map(n => n[0]).join('').toUpperCase()
           });
         }
+
+        // Fetch project name
+        fetchProjectName();
       } catch (error) {
         console.error('Error checking auth:', error);
         router.push('/');
@@ -49,7 +78,7 @@ export default function SettingsLayout({ children }) {
     };
 
     checkAuth();
-  }, [router]);
+  }, [router, fetchProjectName]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -91,7 +120,7 @@ export default function SettingsLayout({ children }) {
                   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
                 </svg>
-                <span>Library</span>
+                <span>{sidebarProjectName}</span>
               </li>
               <li className={styles.active}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

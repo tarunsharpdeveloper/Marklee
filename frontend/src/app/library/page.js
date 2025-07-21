@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, memo } from 'react';
+import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../dashboard/styles.module.css';
 import Image from 'next/image';
@@ -108,11 +108,19 @@ const MemoizedEditAudiencePopup = memo(({
             const formattedText = `Title - ${title}\n${description}`;
             setLocalSegment(formattedText);
         }
-    }, []); // Empty dependency array - only run once
+    }, [audience.segment]); // Add audience.segment as dependency
 
     const handleTextAreaChange = (e) => {
         const newValue = e.target.value;
         setLocalSegment(newValue);
+    };
+
+    const handleInputChange = (e) => {
+        setLocalInputMessage(e.target.value);
+        // Auto-resize the textarea
+        const textarea = e.target;
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
     };
 
     const handleLocalSendMessage = async () => {
@@ -120,6 +128,14 @@ const MemoizedEditAudiencePopup = memo(({
 
         setMessages(prev => [...prev, { content: localInputMessage, type: 'user' }]);
         setLocalInputMessage('');
+        
+        // Reset textarea height to normal
+        const textarea = document.querySelector(`.${styles.messageInput}`);
+        if (textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = '44px'; // Reset to min-height
+        }
+        
         setIsRefreshing(true);
 
         try {
@@ -297,18 +313,18 @@ const MemoizedEditAudiencePopup = memo(({
                         )}
                     </div>
                     <div className={styles.inputContainer}>
-                        <input
-                            type="text"
+                        <textarea
                             className={styles.messageInput}
                             value={localInputMessage}
-                            onChange={(e) => setLocalInputMessage(e.target.value)}
+                            onChange={handleInputChange}
                             onKeyDown={(e) => {
-                                if (e.key === "Enter") {
+                                if (e.key === "Enter" && !e.shiftKey) {
                                     e.preventDefault();
                                     handleLocalSendMessage();
                                 }
                             }}
                             placeholder="Type your message..."
+                            style={{height: '44px', minHeight: '44px', maxHeight: '200px', resize: 'none', overflow: 'hidden'}}
                         />
                         <button
                             className={styles.sendButton}
@@ -423,7 +439,7 @@ const Library = () => {
   const [savedAudiences, setSavedAudiences] = useState({});  // briefId -> saved audiences map
 
   // Define all functions before using them
-  const fetchProjects = async () => { 
+  const fetchProjects = useCallback(async () => { 
     try {
       const token = localStorage.getItem('token');
       
@@ -463,7 +479,7 @@ const Library = () => {
     } catch (error) {
       console.error('Error fetching projects:', error);
     }
-  };
+  }, [router]);
   
   const toggleFolder = (folderKey) => {
     setExpandedFolders(prev => {
@@ -1654,7 +1670,7 @@ const Library = () => {
 
   useEffect(() => {
     fetchProjects();
-  }, []);
+  }, [fetchProjects]);
 
   // Add new useEffect to automatically open brief form
   useEffect(() => {
@@ -1736,9 +1752,9 @@ const Library = () => {
     <div className={styles.sections}>
       <section className={`${styles.section} ${styles.librarySection}`}>
         <div className={styles.librarySections}>
-          <div className={`${styles.folderSection} ${!showFolderSection && isMobileView ? styles.hidden : ''}`}>
+          {/* <div className={`${styles.folderSection} ${!showFolderSection && isMobileView ? styles.hidden : ''}`}>
             {renderFolderSection()}
-          </div>
+          </div> */}
           {renderQASection()}
         </div>
       </section>

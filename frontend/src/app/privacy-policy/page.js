@@ -68,7 +68,7 @@ export default function PrivacyPolicy() {
             <li>Generate AI-powered content using OpenAI and LangChain</li>
             <li>Store and manage your marketing projects and briefs</li>
             <li>Personalize your experience (e.g., dark mode preferences)</li>
-            <li>Improve the platform's performance and security</li>
+            <li>Improve the platform&apos;s performance and security</li>
           </ul>
         </div>
 
@@ -118,7 +118,7 @@ export default function PrivacyPolicy() {
 
         <div className={styles.section}>
           <h2>8. Data Deletion Request</h2>
-          <p>To request data deletion, email us at: <strong>privacy@marklee.com</strong> with the subject line "Data Deletion Request". We will confirm and process your request within 7 days.</p>
+          <p>To request data deletion, email us at: <strong>privacy@marklee.com</strong> with the subject line &quot;Data Deletion Request&quot;. We will confirm and process your request within 7 days.</p>
         </div>
 
         <div className={styles.section}>

@@ -48,7 +48,7 @@ export default function DataDeletion() {
               <h3>Method 1: Email Request (Recommended)</h3>
               <p>Send an email to <strong>privacy@marklee.com</strong> with the subject line:</p>
               <div className={styles.emailSubject}>
-                "Data Deletion Request - [Your Email Address]"
+                &quot;Data Deletion Request - [Your Email Address]&quot;
               </div>
               <p>Include the following information in your email:</p>
               <ul>
@@ -65,7 +65,7 @@ export default function DataDeletion() {
               <ol>
                 <li>Log in to your Marklee account</li>
                 <li>Go to Settings → Danger Zone</li>
-                <li>Click "Delete Account"</li>
+                <li>Click &quot;Delete Account&quot;</li>
                 <li>Confirm your decision</li>
               </ol>
             </div>
@@ -136,7 +136,7 @@ export default function DataDeletion() {
           <div className={styles.contact}>
             <p><strong>For Data Deletion Requests:</strong></p>
             <p>Email: <strong>privacy@marklee.com</strong></p>
-            <p>Subject Line: "Data Deletion Request"</p>
+            <p>Subject Line: &quot;Data Deletion Request&quot;</p>
             <p>Response Time: Within 24 hours</p>
             <p>Processing Time: 7 days maximum</p>
           </div>
@@ -156,7 +156,7 @@ export default function DataDeletion() {
 
         <div className={styles.section}>
           <h2>Updates to This Policy</h2>
-          <p>We may update this data deletion policy from time to time. Any changes will be posted on this page with an updated "Last Updated" date.</p>
+          <p>We may update this data deletion policy from time to time. Any changes will be posted on this page with an updated &quot;Last Updated&quot; date.</p>
         </div>
       </div>
     </div>

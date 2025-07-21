@@ -132,7 +132,7 @@ const Navbar = () => {
                 <motion.button
                   className={styles.action_button}
                   onClick={() => {
-                    setIsGetStartedModalOpen(true);
+                   setIsLoginModalOpen(true);
                     setIsMobileMenuOpen(false);
                   }}
                   whileHover={{ scale: 1.05 }}
