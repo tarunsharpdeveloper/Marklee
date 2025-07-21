@@ -6,7 +6,10 @@ import styles from './styles.module.css';
 import PreHomeNavbar from '../components/PreHomeNavbar';
 import WelcomePopup from './components/WelcomePopup';
 
-const STORAGE_KEY = 'marketingAnswers';
+const getStorageKey = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  return `marketingAnswers_${user.id || 'anonymous'}`;
+};
 
 export default function MarketingPage() {
   const router = useRouter();
@@ -57,6 +60,16 @@ export default function MarketingPage() {
   }, []);
 
   useEffect(() => {
+    // Clear any old marketing answers data that might be from a different user
+    const clearOldData = () => {
+      const oldKeys = Object.keys(localStorage).filter(key => 
+        key.startsWith('marketingAnswers') && !key.includes('_')
+      );
+      oldKeys.forEach(key => localStorage.removeItem(key));
+    };
+    
+    clearOldData();
+    
     const fetchFormFields = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -77,7 +90,8 @@ export default function MarketingPage() {
         const data = await response.json();
         setFormFields(data.data);
 
-        const savedAnswers = localStorage.getItem(STORAGE_KEY);
+        const storageKey = getStorageKey();
+        const savedAnswers = localStorage.getItem(storageKey);
         const parsedAnswers = savedAnswers ? JSON.parse(savedAnswers) : {};
 
         const initialAnswers = {};
@@ -86,7 +100,7 @@ export default function MarketingPage() {
         });
 
         setFormAnswers(initialAnswers);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(initialAnswers));
+        localStorage.setItem(storageKey, JSON.stringify(initialAnswers));
       } catch (error) {
         console.error('Error fetching form fields:', error);
         setError(error.message);
@@ -108,7 +122,8 @@ export default function MarketingPage() {
     setFormAnswers(updated);
     
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      const storageKey = getStorageKey();
+      localStorage.setItem(storageKey, JSON.stringify(updated));
     } catch (error) {
       console.error('Error saving answers:', error);
     }

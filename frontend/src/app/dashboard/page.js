@@ -173,6 +173,10 @@ const MemoizedEditPopup = memo(({
 
   const handleLocalInputChange = (e) => {
     setLocalInputMessage(e.target.value);
+    // Auto-resize the textarea
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
   };
 
   const handleLocalSendMessage = async () => {
@@ -187,6 +191,14 @@ const MemoizedEditPopup = memo(({
       },
     ]);
     setLocalInputMessage("");
+    
+    // Reset textarea height to normal
+    const textarea = document.querySelector(`.${styles.messageInput}`);
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = '44px'; // Reset to min-height
+    }
+    
     setIsSending(true);
 
     try {
@@ -488,19 +500,19 @@ const MemoizedEditPopup = memo(({
               )}
             </div>
             <div className={styles.inputContainer}>
-              <input
-                type="text"
+              <textarea
                 className={styles.messageInput}
                 value={localInputMessage}
                 onChange={handleLocalInputChange}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleLocalSendMessage();
                   }
                 }}
                 placeholder="Type your message..."
                 disabled={isRefreshing}
+                rows={1}
               />
               <button
                 className={styles.sendButton}
@@ -528,6 +540,15 @@ const MemoizedEditPopup = memo(({
           <div className={styles.editPopupHeader}>
                         <h2>Edit Core Message</h2>
                     </div>
+                    <div className={styles.editCoreMessageActions}>
+              <button
+                className={styles.saveButton}
+                onClick={handleLocalSave}
+                disabled={!localEditedCoreMessage.trim()}
+              >
+                Save Changes
+              </button>
+            </div>
             <textarea
               className={styles.editCoreMessageInput}
               value={localEditedCoreMessage}
@@ -572,15 +593,7 @@ const MemoizedEditPopup = memo(({
                 Fresh Perspective
               </button>
             </div>
-            <div className={styles.editCoreMessageActions}>
-              <button
-                className={styles.saveButton}
-                onClick={handleLocalSave}
-                disabled={!localEditedCoreMessage.trim()}
-              >
-                Save Changes
-              </button>
-            </div>
+           
           </div>
         </div>
       </div>
@@ -592,6 +605,7 @@ const MemoizedEditPopup = memo(({
 export default function Dashboard() {
   const router = useRouter();
   const [isSavePopupOpen, setSavePopupOpen] = useState(false);
+  const [showSaveAndContinue, setShowSaveAndContinue] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState({
     marketing: false,
     content: false,
@@ -614,6 +628,7 @@ export default function Dashboard() {
   const [newMessage, setNewMessage] = useState("");
   const [editingMessageIndex, setEditingMessageIndex] = useState(null);
   const [editInputValue, setEditInputValue] = useState("");
+  const [sidebarProjectName, setSidebarProjectName] = useState("");
 
   const [folderStructure, setFolderStructure] = useState({});
 
@@ -879,6 +894,34 @@ export default function Dashboard() {
     }
   }, [router]);
 
+  const fetchProjectName = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const { data } = await response.json();
+        if (data && data.data) {
+          const formData = typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+          // Get the project name from the description field (first question)
+          const projectName = formData.description;
+          setSidebarProjectName(projectName);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching project name:", error);
+    }
+  }, []);
+
   useEffect(() => {
     const userData = localStorage.getItem("user");
     if (userData) {
@@ -890,10 +933,11 @@ export default function Dashboard() {
         .toUpperCase();
       setUser({ ...parsedUser, initials });
 
-      // Fetch projects when user data is available
+      // Fetch projects and project name when user data is available
       fetchProjects();
+      fetchProjectName();
     }
-  }, [fetchProjects]);
+  }, [fetchProjects, fetchProjectName]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -1384,7 +1428,7 @@ export default function Dashboard() {
   };
 
   const handleSaveAndContinue = () => {
-    setSavePopupOpen(true);
+    setShowSaveAndContinue(true);
   };
 
   const renderProjectPopup = () => {
@@ -1850,9 +1894,9 @@ export default function Dashboard() {
                   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                 </svg>
-                <span>Library</span>
+                <span>{sidebarProjectName}</span>
               </li>
-              <li>
+              <li onClick={() => router.push("/settings")}> 
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -1900,7 +1944,7 @@ export default function Dashboard() {
               justifyContent: "start",
             }}
           >
-            <button onClick={toggleSidebar} className={styles.toggleButton}>
+            {/* <button onClick={toggleSidebar} className={styles.toggleButton}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="#1A1A1A"
@@ -1910,11 +1954,11 @@ export default function Dashboard() {
               >
                 <path d="M 3 7 A 1.0001 1.0001 0 1 0 3 9 L 27 9 A 1.0001 1.0001 0 1 0 27 7 L 3 7 z M 3 14 A 1.0001 1.0001 0 1 0 3 16 L 27 16 A 1.0001 1.0001 0 1 0 27 14 L 3 14 z M 3 21 A 1.0001 1.0001 0 1 0 3 23 L 27 23 A 1.0001 1.0001 0 1 0 27 21 L 3 21 z" />
               </svg>
-            </button>
+            </button> */}
           </div>
           
           <div >
-            <DarkModeToggle inHeader={true} />
+            {/* <DarkModeToggle inHeader={true} /> */}
             <div className={styles.userProfile}>
               <span className={styles.userName}>{user.name || "Guest"}</span>
               <div className={styles.avatar}>{user.initials || "G"}</div>
@@ -1950,7 +1994,54 @@ export default function Dashboard() {
             </button>
           </div> */}
           <section className={`${styles.section} ${styles.greetingSection}`}>
-            {coreMessage && (
+            {showSaveAndContinue ? (
+              <div className={styles.saveAndContinueSection}>
+                <div className={styles.saveAndContinueContainer}>
+                  <div className={styles.saveAndContinueHeader}>
+                    <h3>Save and Continue</h3>
+                    <button
+                      onClick={() => setShowSaveAndContinue(false)}
+                      className={styles.saveAndContinueBackButton}
+                    >
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className={styles.saveAndContinueContent}>
+                    <h3 className={styles.saveAndContinueTitle}>
+                      Great! Let&apos;s now pinpoint who you&apos;re talking to.
+                    </h3>
+                    <div className={styles.saveAndContinueFeatures}>
+                      <p>You can:</p>
+                      <ul>
+                        <li>Create your own audience profiles</li>
+                        <li>Get AI suggestions based on the information you&apos;ve shared and the Core Message we&apos;ve created together</li>
+                        <li>Edit and refine any audience in a chat window</li>
+                        <li>Refresh suggestions to see new options</li>
+                        <li>Save the ones that fit</li>
+                        <li>Come back and adjust anytime</li>
+                      </ul>
+                    </div>
+                    <p className={styles.saveAndContinueReady}>Ready to go?</p>
+                    <button 
+                      className={styles.saveAndContinueButton}
+                      onClick={() => router.push('/library')}
+                    >
+                      Let&apos;s go!
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              coreMessage && (
               <div className={styles.coreMessageSection}>
                 <div className={styles.coreMessageContainer}>
                   <div className={styles.coreMessageHeader}>
@@ -2089,6 +2180,7 @@ export default function Dashboard() {
                   </button>
                 </div>
               </div>
+              )
             )}
           </section>
         </div>

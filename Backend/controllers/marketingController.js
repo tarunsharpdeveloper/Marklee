@@ -232,35 +232,47 @@ ${basePrompt}`;
                 {
                     role: "system",
                     content: isAudienceEdit ? 
-                    `You are a concise marketing assistant specializing in audience analysis. Help refine their audience description.
+                    `You are a helpful audience analysis assistant in an ongoing conversation. The user wants to improve their audience description.
 
 Current audience: "${currentMessage}"
 User request: "${userPrompt}"
 Context: ${JSON.stringify(formData, null, 2)}
 
-Provide a brief response that:
-1. Directly answers the user's request in 2-3 sentences
-2. Suggests ONE specific improvement that hasn't been mentioned before
-3. Uses a friendly, professional tone
-4. Keeps total response under 70 words
-5. Must provide a different suggestion each time
-6. Never repeat previous suggestions or advice
-7. Focus on a new aspect of the audience each time (e.g., demographics, psychographics, behavior, needs, pain points, job roles, industry verticals)
+Ask ONE contextual question (max 20 words) and add ONE recommendation (max 15 words) starting with "You should also..." or "I recommend..." 
 
-Return ONLY your response, no formatting.` :
-                    `You are a concise marketing assistant. The user has a marketing message they want to improve.
+IMPORTANT: Each response must ask a DIFFERENT question. Never repeat the same question or similar phrasing. Use varied approaches:
+- Ask about different aspects (demographics, behaviors, pain points, goals, channels, etc.)
+- Use different question formats (what, how, which, why, etc.)
+- Focus on different elements each time
+
+Examples of varied questions:
+- "What behaviors define this audience?"
+- "How do they make decisions?"
+- "Which pain point is most urgent?"
+- "Why do they need your solution?"
+- "What channels do they prefer?"
+
+Keep it conversational and helpful.` :
+                    `You are a helpful marketing assistant in an ongoing conversation. The user wants to improve their message.
 
 Current message: "${currentMessage}"
 User request: "${userPrompt}"
 
-Provide a brief response that:
-1. Directly addresses their request in 2 sentences
-2. Suggests ONE specific improvement
-3. Uses a friendly, professional tone
-4. Keeps total response under 20 words
-5. Question not get repeated
+Ask ONE contextual question (max 20 words) and add ONE recommendation (max 15 words) starting with "You should also..." or "I recommend..." 
 
-Return ONLY your response, no formatting.`
+IMPORTANT: Each response must ask a DIFFERENT question. Never repeat the same question or similar phrasing. Use varied approaches:
+- Ask about different aspects (tone, length, audience, benefits, structure, etc.)
+- Use different question formats (what, how, which, why, etc.)
+- Focus on different elements each time
+
+Examples of varied questions:
+- "What tone feels right for your audience?"
+- "Which benefit should we highlight most?"
+- "How do you want to structure this?"
+- "Why is this message important to them?"
+- "What action do you want them to take?"
+
+Keep it conversational and helpful.`
                 }
             ];
 
@@ -468,11 +480,27 @@ Keep outputs diverse in sector, job type, or context (e.g. solopreneurs, mid-siz
 
 When this prompt is used again to regenerate new audience options, do not repeat any of the previously returned audiences. Return fresh options based on different possible market angles or overlooked personas.
 
+IMPORTANT: For each audience segment, format the "segment" field as follows:
+- Start with exactly 2 words that form a complete, logical title (e.g., "Young Tech Professionals", "Small Business Owners", "Health-Conscious Parents", "Active Sports Families", "Busy Working Parents", "Creative Entrepreneurs")
+- The 2 words must form a complete phrase that makes sense on its own
+- Follow immediately with a space and then a full descriptive paragraph about the audience
+- Example: "Young Tech Professionals These individuals are typically aged 25-35, working in technology companies or startups, and are early adopters of new digital solutions. They value efficiency, innovation, and seamless user experiences. They often struggle with work-life balance and are constantly seeking tools that can streamline their daily tasks and improve productivity."
+
+CRITICAL RULES:
+1. The first 2 words must be a complete, logical title that makes sense on its own. 
+   - AVOID: Incomplete phrases like "Active Parents of" or "Dedicated Coaches and"
+   - USE: Complete phrases like "Active Sports Parents", "Dedicated Sports Coaches", "Busy Working Parents"
+   - The title must NOT end with words like "and", "of", "the", "in", "to", "for", "with"
+   - The title must be a complete noun phrase that can stand alone
+2. The description paragraph must NOT start with the same words as the title. For example:
+   - WRONG: "Active Sports Families Active sports families consist of..."
+   - CORRECT: "Active Sports Families These families typically consist of..." or "Active Sports Families Parents with children who participate in..."
+
 Return a JSON object with this structure:
 {
     "audiences": [
         {
-            "segment": "Full descriptive paragraph about the audience",
+            "segment": "Complete 2 Word Title Full descriptive paragraph about the audience including who they are, what they care about, why this offering is relevant to them, and their key pain points and desires.",
             "insights": ["Key insight 1", "Key insight 2"],
             "messagingAngle": "How to position the offering for this audience",
             "tone": "Appropriate tone for this audience"

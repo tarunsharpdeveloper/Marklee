@@ -236,6 +236,17 @@
   display: flex;
   gap: 0.75rem;
   justify-content: center;
+  flex-direction: column;
+}
+
+#google-signin-button {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+#google-signin-button > div {
+  width: 100% !important;
 }
 
 .social_button {
