@@ -12,7 +12,7 @@
 }
 
 .login_modal {
-  background: white;
+  background: var(--background);
   border-radius: 16px;
   width: 90%;
   max-width: 400px;

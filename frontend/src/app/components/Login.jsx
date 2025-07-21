@@ -246,7 +246,12 @@ export const Login = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   if (showSignup) {
-    return <Signup isOpen={true} onClose={handleClose} onBack={() => setShowSignup(false)} />;
+    return <Signup 
+      isOpen={true} 
+      onClose={handleClose} 
+      onBack={() => setShowSignup(false)}
+      onShowLogin={() => setShowSignup(false)}
+    />;
   }
 
   if (showForgotPassword) {

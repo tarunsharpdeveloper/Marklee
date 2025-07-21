@@ -154,6 +154,10 @@ const Navbar = () => {
         isOpen={isGetStartedModalOpen} 
         onClose={() => setIsGetStartedModalOpen(false)} 
         hideBackButton={true}
+        onShowLogin={() => {
+          setIsGetStartedModalOpen(false);
+          setIsLoginModalOpen(true);
+        }}
       />
     </>
   );

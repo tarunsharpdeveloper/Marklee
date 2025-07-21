@@ -192,6 +192,32 @@
   animation: spin 0.8s linear infinite;
 }
 
+.login_link_container {
+  text-align: center;
+  margin-top: 1rem;
+  /* padding-top: 1rem; */
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.login_text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  opacity: 0.8;
+}
+
+.login_link {
+  background: none;
+  border: none;
+  color: #646cff;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+
 .signup_success {
   text-align: center;
   display: flex;

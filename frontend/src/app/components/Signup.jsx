@@ -6,7 +6,7 @@ import { OtpVerification } from './OtpVerification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 
-export const Signup = ({ isOpen, onClose, onBack, hideBackButton = false }) => {
+export const Signup = ({ isOpen, onClose, onBack, hideBackButton = false, onShowLogin }) => {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [formData, setFormData] = useState({
@@ -137,13 +137,7 @@ export const Signup = ({ isOpen, onClose, onBack, hideBackButton = false }) => {
               </svg>
             </button>
             
-            {!hideBackButton && (
-              <button className={styles.back_button} onClick={onBack}>
-                <svg viewBox="0 0 24 24" width="24" height="24">
-                  <path fill="currentColor" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/>
-                </svg>
-              </button>
-            )}
+
             
             <div className={styles.signup_header}>
               <h2>Create Account</h2>
@@ -220,6 +214,18 @@ export const Signup = ({ isOpen, onClose, onBack, hideBackButton = false }) => {
               </motion.button>
             </form>
 
+            <div className={styles.login_link_container}>
+              <p className={styles.login_text}>
+                Already have an account?{' '}
+                <button 
+                  type="button" 
+                  className={styles.login_link}
+                  onClick={onShowLogin}
+                >
+                  Sign in
+                </button>
+              </p>
+            </div>
             
           </div>
         </motion.div>
