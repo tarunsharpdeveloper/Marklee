@@ -2124,7 +2124,7 @@
 .segmentCard h4 {
   font-size: 1rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--foreground);
   margin-bottom: 0.5rem;
   line-height: 1.4;
 }
