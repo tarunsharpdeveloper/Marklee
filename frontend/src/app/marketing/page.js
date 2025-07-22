@@ -220,7 +220,12 @@ export default function MarketingPage() {
       });
 
       if (data.data?.coreMessage) {
-        localStorage.setItem('marketingCoreMessage', data.data.coreMessage);
+        const storedData = {
+          message: data.data.coreMessage,
+          timestamp: Date.now(),
+          context: 'core-message'
+        };
+        localStorage.setItem('marketingCoreMessage', JSON.stringify(storedData));
       }
 
       // Clear the stored project ID since we're done with it

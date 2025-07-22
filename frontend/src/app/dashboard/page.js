@@ -37,16 +37,320 @@ const MemoizedEditPopup = memo(({
   const [editingMessageIndex, setEditingMessageIndex] = useState(null);
   const [editInputValue, setEditInputValue] = useState("");
   const [showMobileEdit, setShowMobileEdit] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState("");
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [isQuestionMode, setIsQuestionMode] = useState(false);
+  const [userAnswers, setUserAnswers] = useState([]);
   const editInputRef = useRef(null);
   const chatContainerRef = useRef(null);
-  const router = useRouter();
+  const router = useRef(null);
+
+  // Store core message in localStorage
+  const storeCoreMessage = (message) => {
+    if (message) {
+      const storedData = {
+        message,
+        timestamp: Date.now(),
+        context: 'core-message'
+      };
+      localStorage.setItem('marketingCoreMessage', JSON.stringify(storedData));
+    }
+  };
+
+  // Get stored core message
+  const getStoredCoreMessage = () => {
+    try {
+      const stored = localStorage.getItem('marketingCoreMessage');
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      console.error('Error parsing stored core message:', error);
+      return null;
+    }
+  };
+
+  // Get contextual question from backend
+  const getContextualQuestion = async (userInput = null) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const stored = getStoredCoreMessage();
+      if (!stored) return;
+
+      // Safety check: stop after 5 questions maximum
+      if (questionIndex >= 5) {
+        await updateCoreMessageWithAnswers();
+        return;
+      }
+
+      const onboardingResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!onboardingResponse.ok) {
+        throw new Error("Failed to fetch onboarding data");
+      }
+
+      const { data } = await onboardingResponse.json();
+      const formData =
+        typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+
+      // Filter out duplicate questions based on content
+      const uniqueUserAnswers = userAnswers.reduce((acc, current) => {
+        const isDuplicate = acc.some(item => 
+          item.question.trim().toLowerCase() === current.question.trim().toLowerCase()
+        );
+        if (!isDuplicate) {
+          acc.push(current);
+        }
+        return acc;
+      }, []);
+
+      console.log('Sending to backend - Original userAnswers:', userAnswers.length);
+      console.log('Sending to backend - Filtered userAnswers:', uniqueUserAnswers.length);
+      console.log('Question index:', questionIndex);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/get-contextual-question`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            formData,
+            currentMessage: stored.message,
+            questionIndex,
+            userAnswers: uniqueUserAnswers,
+            userInput
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to get contextual question");
+      }
+
+      const responseData = await response.json();
+      
+      if (responseData.success) {
+        if (responseData.data.question && !responseData.data.completed) {
+          // Show the question
+          setCurrentQuestion(responseData.data.question);
+          setIsQuestionMode(true);
+          
+          // If it's a greeting response, add it to chat
+          if (responseData.data.isGreeting && userInput) {
+            setMessages((prev) => [
+              ...prev,
+              {
+                content: userInput,
+                type: "user",
+              },
+              {
+                content: responseData.data.question,
+                type: "ai",
+              },
+            ]);
+          }
+        } else {
+          // No more questions, update core message with all answers
+          await updateCoreMessageWithAnswers();
+        }
+      }
+    } catch (error) {
+      console.error("Error getting contextual question:", error);
+      // Fallback: if there's an error, try to update with current answers
+      if (userAnswers.length > 0) {
+        await updateCoreMessageWithAnswers();
+      }
+    }
+  };
+
+  // Update core message with all collected answers
+  const updateCoreMessageWithAnswers = async () => {
+    try {
+      setIsRefreshing(true);
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const stored = getStoredCoreMessage();
+      if (!stored) return;
+
+      // Add completion message to chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          content: "Analyzing your responses and refining your core message...",
+          type: "ai",
+        },
+      ]);
+
+      const onboardingResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!onboardingResponse.ok) {
+        throw new Error("Failed to fetch onboarding data");
+      }
+
+      const { data } = await onboardingResponse.json();
+      const formData =
+        typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+
+      // Filter out duplicate questions based on content
+      const uniqueUserAnswers = userAnswers.reduce((acc, current) => {
+        const isDuplicate = acc.some(item => 
+          item.question.trim().toLowerCase() === current.question.trim().toLowerCase()
+        );
+        if (!isDuplicate) {
+          acc.push(current);
+        }
+        return acc;
+      }, []);
+
+      console.log('Updating core message - Original userAnswers:', userAnswers.length);
+      console.log('Updating core message - Filtered userAnswers:', uniqueUserAnswers.length);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/update-with-answers`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            formData,
+            currentMessage: stored.message,
+            userAnswers: uniqueUserAnswers
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update core message");
+      }
+
+      const responseData = await response.json();
+
+      if (responseData.success) {
+        const newMessage = responseData.data.coreMessage;
+        setCoreMessage(newMessage);
+        setEditedCoreMessage(newMessage);
+        storeCoreMessage(newMessage);
+        
+        // Update the final message in chat
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          // Replace the processing message with the completion message
+          const answerText = userAnswers.length === 1 ? 'answer' : 'answers';
+          newMessages[newMessages.length - 1] = {
+            content: `Thank you for your responses. I've refined your core message based on your answers. Here's the updated version:`,
+            type: "ai",
+          };
+          return newMessages;
+        });
+
+        // Save to database
+        await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ coreMessage: newMessage }),
+          }
+        );
+
+        setShowTypewriter(true);
+        setIsQuestionMode(false);
+        setCurrentQuestion("");
+        setQuestionIndex(0);
+        setUserAnswers([]);
+      }
+    } catch (error) {
+      console.error("Error updating core message with answers:", error);
+      // Show error message in chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          content: "I encountered an error while refining your core message. Please try again.",
+          type: "ai",
+        },
+      ]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Handle answer to contextual question
+  const handleQuestionAnswer = async () => {
+    if (!localInputMessage.trim()) return;
+
+    const answer = localInputMessage.trim();
+    
+    // Add question and answer to chat
+    setMessages((prev) => [
+      ...prev,
+      {
+        content: currentQuestion,
+        type: "ai",
+      },
+      {
+        content: answer,
+        type: "user",
+      },
+    ]);
+
+    // Store the answer
+    setUserAnswers((prev) => [...prev, { question: currentQuestion, answer }]);
+    
+    setLocalInputMessage("");
+    const nextQuestionIndex = questionIndex + 1;
+    setQuestionIndex(nextQuestionIndex);
+    setIsQuestionMode(false);
+    setCurrentQuestion("");
+
+    // Get next question after a short delay - AI will decide when to stop
+    setTimeout(() => {
+      getContextualQuestion();
+    }, 500);
+  };
+
+  // Initialize when popup opens
+  useEffect(() => {
+    if (isOpen) {
+      console.log("Initializing edit popup with:", editedCoreMessage);
+      setLocalEditedCoreMessage(editedCoreMessage || coreMessage);
+      setLocalInputMessage("");
+      
+      // Start question flow if no conversation exists
+      if (messages.length === 0) {
+        getContextualQuestion();
+      }
+    }
+  }, [isOpen, editedCoreMessage, coreMessage]);
 
   // Modified useEffect to scroll only on user messages
   useEffect(() => {
     if (chatContainerRef.current && messages.length > 0 && messages[messages.length - 1].type === 'ai') {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [messages]); // Will only trigger when messages array changes
+  }, [messages]);
 
   // Add effect to show edit view when AI responds
   useEffect(() => {
@@ -55,9 +359,213 @@ const MemoizedEditPopup = memo(({
     }
   }, [messages]);
 
+  // Focus management for edit input
+  useEffect(() => {
+    if (editingMessageIndex !== null && editInputRef.current) {
+      editInputRef.current.focus();
+    }
+  }, [editingMessageIndex]);
+
+  const handleLocalInputChange = (e) => {
+    setLocalInputMessage(e.target.value);
+    // Auto-resize the textarea
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+  };
+
+  const handleLocalSendMessage = async () => {
+    if (isQuestionMode) {
+      handleQuestionAnswer();
+      return;
+    }
+
+    if (!localInputMessage.trim()) return;
+
+    const userInput = localInputMessage.trim();
+    setLocalInputMessage("");
+    
+    // Reset textarea height to normal
+    const textarea = document.querySelector(`.${styles.messageInput}`);
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = '44px'; // Reset to min-height
+    }
+    
+    setIsSending(true);
+
+    try {
+      // Check if this is a greeting or general conversation
+      const greetingKeywords = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'how are you', 'thanks', 'thank you', 'ok', 'okay', 'yes', 'no', 'sure', 'alright'];
+      const isGreeting = greetingKeywords.some(keyword => 
+        userInput.toLowerCase().includes(keyword.toLowerCase())
+      );
+
+      if (isGreeting && messages.length === 0) {
+        // Handle greeting and start question flow
+        await getContextualQuestion(userInput);
+      } else {
+        // Regular chat flow
+        // Add user message to chat
+        setMessages((prev) => [
+          ...prev,
+          {
+            content: userInput,
+            type: "user",
+          },
+        ]);
+
+        const token = localStorage.getItem("token");
+        if (!token) {
+          router.push("/");
+          return;
+        }
+
+        // First get the onboarding data
+        const onboardingResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!onboardingResponse.ok) {
+          throw new Error("Failed to fetch onboarding data");
+        }
+
+        const { data } = await onboardingResponse.json();
+        const formData =
+          typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+
+        // Now make the chat request with the form data
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              formData,
+              currentMessage: isOpen ? editedCoreMessage : coreMessage,
+              userPrompt: userInput,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to send message");
+        }
+
+        const responseData = await response.json();
+
+        if (responseData.success) {
+          // Add AI response to chat
+          setMessages((prev) => [
+            ...prev,
+            {
+              content: responseData.data.chatResponse,
+            type: "ai",
+            },
+          ]);
+
+          // Update both core message states to keep them in sync
+          const newMessage = responseData.data.coreMessage;
+          setCoreMessage(newMessage);
+          setEditedCoreMessage(newMessage);
+          
+          // Store the updated message
+          storeCoreMessage(newMessage);
+
+          // Show typewriter effect for the update
+          setShowTypewriter(true);
+
+          // Save the updated message to the database
+          await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ coreMessage: newMessage }),
+            }
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      // Show error message in chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          content: "Sorry, I encountered an error. Please try again.",
+          type: "ai",
+        },
+      ]);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleLocalEditSubmit = async (index) => {
+    if (!editInputValue.trim()) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/edit-message`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            messageIndex: index,
+            newContent: editInputValue,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to edit message");
+      }
+
+      // Update messages array with edited message
+      setMessages((prevMessages) => {
+        const newMessages = [...prevMessages];
+        newMessages[index] = {
+          ...newMessages[index],
+          content: editInputValue,
+        };
+        return newMessages;
+      });
+
+      // Clear edit state
+      setEditingMessageIndex(null);
+      setEditInputValue("");
+    } catch (error) {
+      console.error("Error editing message:", error);
+    }
+  };
+
+  const handleStartEditing = (index, content) => {
+    setEditingMessageIndex(index);
+    setEditInputValue(content);
+  };
+
+  const handleCancelEditing = () => {
+    setEditingMessageIndex(null);
+    setEditInputValue("");
+  };
+
   const handleLocalOptionClick = async (optionType) => {
     try {
-      // setIsRefreshing(true);
       const token = localStorage.getItem("token");
       if (!token) return;
 
@@ -155,199 +663,6 @@ const MemoizedEditPopup = memo(({
     }
   };
 
-  // Initialize local state when popup opens
-  useEffect(() => {
-    if (isOpen) {
-      console.log("Initializing edit popup with:", editedCoreMessage);
-      setLocalEditedCoreMessage(editedCoreMessage || coreMessage);
-      setLocalInputMessage("");
-    }
-  }, [isOpen, editedCoreMessage, coreMessage]);
-
-  // Focus management for edit input
-  useEffect(() => {
-    if (editingMessageIndex !== null && editInputRef.current) {
-      editInputRef.current.focus();
-    }
-  }, [editingMessageIndex]);
-
-  const handleLocalInputChange = (e) => {
-    setLocalInputMessage(e.target.value);
-    // Auto-resize the textarea
-    const textarea = e.target;
-    textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
-  };
-
-  const handleLocalSendMessage = async () => {
-    if (!localInputMessage.trim()) return;
-
-    // Add user message to chat
-    setMessages((prev) => [
-      ...prev,
-      {
-        content: localInputMessage,
-        type: "user",
-      },
-    ]);
-    setLocalInputMessage("");
-    
-    // Reset textarea height to normal
-    const textarea = document.querySelector(`.${styles.messageInput}`);
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = '44px'; // Reset to min-height
-    }
-    
-    setIsSending(true);
-
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        router.push("/");
-        return;
-      }
-
-      // First get the onboarding data
-      const onboardingResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!onboardingResponse.ok) {
-        throw new Error("Failed to fetch onboarding data");
-      }
-
-      const { data } = await onboardingResponse.json();
-      const formData =
-        typeof data.data === "string" ? JSON.parse(data.data) : data.data;
-
-      // Now make the chat request with the form data
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            formData,
-            currentMessage: isOpen ? editedCoreMessage : coreMessage,
-            userPrompt: localInputMessage,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to send message");
-      }
-
-      const responseData = await response.json();
-
-      if (responseData.success) {
-        // Add AI response to chat
-        setMessages((prev) => [
-          ...prev,
-          {
-            content: responseData.data.chatResponse,
-            type: "ai",
-          },
-        ]);
-
-        // Update both core message states to keep them in sync
-        const newMessage = responseData.data.coreMessage;
-        setCoreMessage(newMessage);
-        setEditedCoreMessage(newMessage);
-
-        // Show typewriter effect for the update
-        setShowTypewriter(true);
-        // setTimeout(() => setShowTypewriter(false), 1000);
-
-        // Save the updated message to the database
-        await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ coreMessage: newMessage }),
-          }
-        );
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-      // Show error message in chat
-      setMessages((prev) => [
-        ...prev,
-        {
-          content: "Sorry, I encountered an error. Please try again.",
-          type: "ai",
-        },
-      ]);
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const handleLocalEditSubmit = async (index) => {
-    if (!editInputValue.trim()) return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/edit-message`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            messageIndex: index,
-            newContent: editInputValue,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to edit message");
-      }
-
-      // Update messages array with edited message
-      setMessages((prevMessages) => {
-        const newMessages = [...prevMessages];
-        newMessages[index] = {
-          ...newMessages[index],
-          content: editInputValue,
-        };
-        return newMessages;
-      });
-
-      // Clear edit state
-      setEditingMessageIndex(null);
-      setEditInputValue("");
-    } catch (error) {
-      console.error("Error editing message:", error);
-    }
-  };
-
-  const handleStartEditing = (index, content) => {
-    setEditingMessageIndex(index);
-    setEditInputValue(content);
-  };
-
-  const handleCancelEditing = () => {
-    setEditingMessageIndex(null);
-    setEditInputValue("");
-  };
-
   const handleLocalSave = async () => {
     if (!localEditedCoreMessage.trim()) return;
 
@@ -372,6 +687,7 @@ const MemoizedEditPopup = memo(({
 
       setCoreMessage(localEditedCoreMessage);
       setEditedCoreMessage(localEditedCoreMessage);
+      storeCoreMessage(localEditedCoreMessage);
       onClose();
       setShowTypewriter(true);
     } catch (error) {
@@ -379,6 +695,15 @@ const MemoizedEditPopup = memo(({
     } finally {
       setIsRefreshing(false);
     }
+  };
+
+  // Reset question state when popup closes
+  const handleClose = () => {
+    setCurrentQuestion("");
+    setQuestionIndex(0);
+    setIsQuestionMode(false);
+    setUserAnswers([]);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -392,7 +717,7 @@ const MemoizedEditPopup = memo(({
               <h2>Message Assistant</h2>
               <button
                 className={styles.editPopupCloseButton}
-                onClick={onClose}
+                onClick={handleClose}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -493,13 +818,45 @@ const MemoizedEditPopup = memo(({
                   )}
                 </div>
               ))}
-              {isRefreshing && (
-                <div className={styles.aiMessage}>
-                  <MessageSkeleton />
-                </div>
-              )}
+              
             </div>
+            {/* Current Question Display */}
+            {isQuestionMode && currentQuestion && (
+              <div className={styles.currentQuestionSection}>
+                <div className={styles.currentQuestionHeader}>
+                  <span className={styles.questionIcon}>❓</span>
+                  <span className={styles.questionText}>Refining your message</span>
+                  <button 
+                    className={styles.skipQuestionsButton}
+                    onClick={async () => {
+                      if (userAnswers.length > 0) {
+                        await updateCoreMessageWithAnswers();
+                      } else {
+                        setIsQuestionMode(false);
+                        setCurrentQuestion("");
+                      }
+                    }}
+                  >
+                    {userAnswers.length > 0 ? "Complete & Refine" : "Skip Questions"}
+                  </button>
+                </div>
+                <div className={styles.questionProgress}>
+                  <div className={styles.progressBar}>
+                    <div 
+                      className={styles.progressFill} 
+                      style={{ width: `${Math.min((userAnswers.length / 3) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                  <div className={styles.progressText}>
+                    {userAnswers.length > 0 ? `${userAnswers.length} answers collected` : "Getting started..."}
+                  </div>
+                </div>
+                <p className={styles.currentQuestionText}>{currentQuestion}</p>
+              </div>
+            )}
+
             <div className={styles.inputContainer}>
+              
               <textarea
                 className={styles.messageInput}
                 value={localInputMessage}
@@ -510,7 +867,7 @@ const MemoizedEditPopup = memo(({
                     handleLocalSendMessage();
                   }
                 }}
-                placeholder="Type your message..."
+                placeholder={isQuestionMode ? "Type your answer..." : "Type your message..."}
                 disabled={isRefreshing}
                 rows={1}
               />
@@ -519,7 +876,7 @@ const MemoizedEditPopup = memo(({
                 onClick={handleLocalSendMessage}
                 disabled={!localInputMessage.trim() || isRefreshing}
               >
-                Send
+                {isQuestionMode ? "Answer" : "Send"}
               </button>
             </div>
           </div>
@@ -738,6 +1095,18 @@ export default function Dashboard() {
     }
   };
 
+  // Store core message in localStorage
+  const storeCoreMessage = (message) => {
+    if (message) {
+      const storedData = {
+        message,
+        timestamp: Date.now(),
+        context: 'core-message'
+      };
+      localStorage.setItem('marketingCoreMessage', JSON.stringify(storedData));
+    }
+  };
+
   const fetchCoreMessage = async (shouldRefresh = false) => {
     try {
       setIsRefreshing(true);
@@ -797,9 +1166,11 @@ export default function Dashboard() {
         );
 
         setCoreMessage(marketingData.data.coreMessage);
+        storeCoreMessage(marketingData.data.coreMessage);
         setShowTypewriter(true);
       } else if (data && data.core_message) {
         setCoreMessage(data.core_message);
+        storeCoreMessage(data.core_message);
       }
     } catch (error) {
       console.error("Error fetching core message:", error);
@@ -1179,10 +1550,12 @@ export default function Dashboard() {
         const newMessage = responseData.data.coreMessage;
         setCoreMessage(newMessage);
         setEditedCoreMessage(newMessage);
+        
+        // Store the updated message
+        storeCoreMessage(newMessage);
 
         // Show typewriter effect for the update
         setShowTypewriter(true);
-        // setTimeout(() => setShowTypewriter(false), 1000);
 
         // Save the updated message to the database
         await fetch(
@@ -2047,7 +2420,7 @@ export default function Dashboard() {
                   <div className={styles.coreMessageHeader}>
                     <h3>Your Core Marketing Message</h3>
 
-                    <button
+                    {/* <button
                       onClick={() => fetchCoreMessage(true)}
                       className={styles.refreshButton}
                       disabled={isRefreshing}
@@ -2063,7 +2436,7 @@ export default function Dashboard() {
                       >
                         <path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 3.4 0 6.3 2.1 7.4 5M22 12c0 4.4-3.6 8-8 8-3.4 0-6.3-2.1-7.4-5" />
                       </svg>
-                    </button>
+                    </button> */}
                   </div>
                   <div className={styles.messageContainer}>
                     {isRefreshing ? (

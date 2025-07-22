@@ -13,6 +13,8 @@ router.get('/form', marketingController.getFormFields);
 // Generate marketing content
 router.post('/generate', marketingController.generateMarketingContent);
 router.post('/generate-with-prompt', marketingController.generateMarketingContentWithPrompt);
+router.post('/get-contextual-question', marketingController.getContextualQuestion);
+router.post('/update-with-answers', marketingController.updateWithAnswers);
 router.post('/generate-from-audience', marketingController.generateFromAudience);
 router.post('/generate-suggested-audiences', marketingController.generateSuggestedAudiences);
 

@@ -326,6 +326,208 @@ Return only the updated message, no explanations or additional text.`
         }
     }
 
+    // Get contextual question based on stored core message
+    async getContextualQuestion(req, res) {
+        try {
+            const { formData, currentMessage, questionIndex, userAnswers, userInput } = req.body;
+
+            // Validate required fields
+            if (!formData || !currentMessage) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Missing required fields'
+                });
+            }
+
+            // Check if user input is a greeting or general conversation
+            if (userInput) {
+                const greetingKeywords = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'how are you', 'thanks', 'thank you', 'ok', 'okay', 'yes', 'no', 'sure', 'alright'];
+                const isGreeting = greetingKeywords.some(keyword => 
+                    userInput.toLowerCase().includes(keyword.toLowerCase())
+                );
+
+                if (isGreeting) {
+                    // Respond to greeting and start the question flow
+                    const greetingResponse = await chatModel.invoke([
+                        {
+                            role: "system",
+                            content: `You are a Brand Message Assistant. The user has greeted you. Respond professionally and briefly, then ask your first question to help refine their core marketing message.
+
+Current core message: "${currentMessage}"
+Business context: ${JSON.stringify(formData, null, 2)}
+
+IMPORTANT: This is question 1 of maximum 5 questions. Be brief, focused, and professional. Include both a brief response to their greeting and your first question about improving their message.`
+                        },
+                        {
+                            role: "user",
+                            content: userInput
+                        }
+                    ]);
+
+                    return res.status(200).json({
+                        success: true,
+                        data: {
+                            question: greetingResponse.content.trim(),
+                            isGreeting: true
+                        }
+                    });
+                }
+            }
+
+            // Safety check: stop after 5 questions maximum
+            if (questionIndex >= 5) {
+                console.log(`Question index ${questionIndex} reached maximum limit of 5, stopping questions`);
+                return res.status(200).json({
+                    success: true,
+                    data: {
+                        question: null,
+                        completed: true
+                    }
+                });
+            }
+
+            // Generate contextual questions based on the core message content
+            const messages = [
+                {
+                    role: "system",
+                    content: `You are a Brand Message Assistant. Analyze the current core message and ask ONE specific question to improve it.
+
+Current core message: "${currentMessage}"
+Previous answers: ${JSON.stringify(userAnswers, null, 2)}
+Business context: ${JSON.stringify(formData, null, 2)}
+Current question number: ${questionIndex + 1} of 5
+
+PREVIOUS QUESTIONS ASKED (DO NOT repeat any of these):
+${userAnswers.map((answer, index) => `${index + 1}. ${answer.question}`).join('\n')}
+
+INSTRUCTIONS:
+1. Analyze the current core message carefully
+2. Identify the weakest or most unclear aspect of the message
+3. Ask ONE specific question that will help improve that aspect
+4. Make the question relevant to the specific content and context of the current message
+5. Focus on: clarity, audience targeting, value proposition, tone, call-to-action, or message structure
+6. Do NOT ask any question that appears in the PREVIOUS QUESTIONS list above
+
+QUESTION EXAMPLES (but make them specific to the current message):
+- If the message is vague: "Which specific aspect of [topic] should be highlighted more clearly?"
+- If the message lacks audience focus: "Who specifically would benefit most from [message content]?"
+- If the message is generic: "What unique aspect of [message content] sets it apart?"
+- If the message lacks emotion: "What emotional response should [message content] create?"
+- If the message lacks action: "What specific action should someone take after learning about [message content]?"
+
+CRITICAL RULES:
+- Ask only ONE question
+- Make it specific to the current message content
+- Do NOT repeat any previous question
+- If this is question 5, respond with "COMPLETE"
+- Return only the question text or "COMPLETE", no explanations
+
+Return only the question text or "COMPLETE", no explanations or additional formatting.`
+                }
+            ];
+
+            const response = await chatModel.invoke(messages);
+            const question = response.content.trim();
+
+            // Check if AI wants to complete
+            if (question.toLowerCase().includes('complete')) {
+                console.log('AI determined enough information collected, completing question flow');
+                return res.status(200).json({
+                    success: true,
+                    data: {
+                        question: null,
+                        completed: true
+                    }
+                });
+            }
+
+            console.log('Generated contextual question:', question);
+
+            return res.status(200).json({
+                success: true,
+                data: {
+                    question: question
+                }
+            });
+
+            // Check if we should stop
+            if (questionIndex >= 5 || userAnswers.length >= 3) {
+                console.log('Stopping questions - Index:', questionIndex, 'Answers:', userAnswers.length);
+                return res.status(200).json({
+                    success: true,
+                    data: {
+                        question: null,
+                        completed: true
+                    }
+                });
+            }
+
+        } catch (error) {
+            console.error('Error getting contextual question:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Error getting contextual question'
+            });
+        }
+    }
+
+    // Update core message with all collected answers
+    async updateWithAnswers(req, res) {
+        try {
+            const { formData, currentMessage, userAnswers } = req.body;
+
+            // Validate required fields
+            if (!formData || !currentMessage || !userAnswers || userAnswers.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Missing required fields'
+                });
+            }
+
+            // Create a comprehensive prompt to update the core message
+            const messages = [
+                {
+                    role: "system",
+                    content: `You are an expert marketing copywriter. Update the core message based on the user's answers to improve its effectiveness.
+
+Original core message: "${currentMessage}"
+User answers: ${JSON.stringify(userAnswers, null, 2)}
+Business context: ${JSON.stringify(formData, null, 2)}
+
+Instructions:
+1. Analyze all the user's answers to understand their needs and preferences
+2. Update the core message to incorporate these insights
+3. Make it more targeted, compelling, and effective
+4. Keep the same core meaning but enhance clarity, tone, and impact
+5. Ensure it's still concise (max 3 sentences)
+6. Make it more specific to their audience and goals
+
+Return only the updated core message, no explanations or additional text.`
+                }
+            ];
+
+            const response = await chatModel.invoke(messages);
+            const updatedMessage = response.content.trim();
+
+            console.log('Updated core message:', updatedMessage);
+            console.log('User answers used:', userAnswers.length);
+
+            return res.status(200).json({
+                success: true,
+                data: {
+                    coreMessage: updatedMessage
+                }
+            });
+
+        } catch (error) {
+            console.error('Error updating core message with answers:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Error updating core message'
+            });
+        }
+    }
+
     async generateFromAudience(req, res) {
         try {
             const { labelName, whoTheyAre, whatTheyWant, whatTheyStruggle, additionalInfo, projectId, projectName } = req.body;
