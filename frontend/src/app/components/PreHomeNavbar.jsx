@@ -71,7 +71,7 @@ const PreHomeNavbar = () => {
 
           {/* Navigation Menu */}
           <div className={`${styles.preHomeNavLinks} ${isMobileMenuOpen ? styles.preHomeShow : ''}`}>
-            <motion.a
+            {/* <motion.a
               className={styles.preHomeNavLink}
               href="#about"
               whileHover={{ scale: 1.05 }}
@@ -102,7 +102,7 @@ const PreHomeNavbar = () => {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               FAQ
-            </motion.a>
+            </motion.a> */}
             
             <DarkModeToggle />
             
