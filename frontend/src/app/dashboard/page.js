@@ -1062,6 +1062,14 @@ export default function Dashboard() {
   const [coreMessageSeen, setCoreMessageSeen] = useState(false);
   const [showProjects, setShowProjects] = useState(false);
   const [onboardingData, setOnboardingData] = useState(null);
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [showStepForm, setShowStepForm] = useState(false);
+  const [originalFormFields, setOriginalFormFields] = useState(null);
+  const [isLoadingFormFields, setIsLoadingFormFields] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [totalSteps] = useState(2);
+  const [formAnswers, setFormAnswers] = useState({});
+  const [isFormLoading, setIsFormLoading] = useState(false);
 
   const handleEditCoreMessage = async () => {
     try {
@@ -1095,6 +1103,107 @@ export default function Dashboard() {
       console.error("Error updating core message:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Function to update form data in database
+  const updateFormDataInDB = async (updatedData) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      console.log('Sending data to update endpoint:', updatedData);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/update`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ 
+            data: JSON.stringify(updatedData)
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update form data in database: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('Database update successful:', result);
+      return result;
+    } catch (error) {
+      console.error("Error updating form data:", error);
+      throw error;
+    }
+  };
+
+  // Function to refresh form data from database
+  const refreshFormData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      console.log('Refreshing form data from database...');
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const { data } = await response.json();
+        console.log('Fresh data from database:', data);
+        
+        // Update the onboarding data
+        setOnboardingData(data);
+        
+        // Clear any local form changes to show fresh data
+        setFormAnswers({});
+        
+        console.log('Form data refreshed from database');
+      } else {
+        console.error('Failed to refresh form data:', response.status);
+      }
+    } catch (error) {
+      console.error('Error refreshing form data:', error);
+    }
+  };
+
+  // Fetch original form fields from marketing API
+  const fetchOriginalFormFields = async () => {
+    try {
+      setIsLoadingFormFields(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/form`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch form fields');
+      }
+
+      const data = await response.json();
+      setOriginalFormFields(data.data);
+      console.log('Fetched original form fields:', data.data);
+    } catch (error) {
+      console.error('Error fetching original form fields:', error);
+    } finally {
+      setIsLoadingFormFields(false);
     }
   };
 
@@ -1196,6 +1305,21 @@ export default function Dashboard() {
     fetchCoreMessage();
   }, []); // Empty dependency array means this runs once on mount
 
+  // Refresh form data when onboardingData changes
+  useEffect(() => {
+    if (onboardingData && onboardingData.data) {
+      try {
+        const parsedData = typeof onboardingData.data === "string" ? JSON.parse(onboardingData.data) : onboardingData.data;
+        if (parsedData.formFields && parsedData.formAnswers) {
+          // Clear any local form changes when new data is loaded
+          setFormAnswers({});
+        }
+      } catch (error) {
+        console.error('Error parsing onboarding data:', error);
+      }
+    }
+  }, [onboardingData]);
+
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("token");
@@ -1226,6 +1350,9 @@ export default function Dashboard() {
             .join("")
             .toUpperCase(),
         });
+
+        // Fetch original form fields for the form
+        await fetchOriginalFormFields();
       } catch (error) {
         console.error("Error checking auth:", error);
         window.location.href = '/';
@@ -2181,6 +2308,18 @@ export default function Dashboard() {
         setIsEditPopupOpen(false);
   };
 
+  const handleNextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePreviousStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
   return (
     <div className={styles.container}>
       {renderProjectPopup()}
@@ -2401,7 +2540,616 @@ export default function Dashboard() {
               Create New Project
             </button>
           </div> */}
-          <section className={`${styles.section} ${styles.greetingSection}`}>
+                    <section className={`${styles.section} ${styles.greetingSection}`}>
+            {/* Welcome Section */}
+            {showWelcome && !showStepForm && !showSaveAndContinue && !showProjects && (
+              <div className={styles.welcomeSection}>
+                <div className={styles.welcomeContainer}>
+                  <div className={styles.welcomeContent}>
+                    <h1 className={styles.welcomeTitle}>Welcome to Marklee</h1>
+                    <p className={styles.welcomeSubtitle}>
+                      Your AI-powered marketing companion that helps you create compelling messages and reach your target audience effectively.
+                    </p>
+                    <button 
+                      className={styles.getStartedButton}
+                      onClick={() => {
+                        setShowWelcome(false);
+                        setShowStepForm(true);
+                      }}
+                    >
+                      <span>Get Started</span>
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step Form Section */}
+            {showStepForm && !showSaveAndContinue && !showProjects && (
+              <div className={styles.stepFormSection}>
+                <div className={styles.stepFormContainer}>
+                  <div className={styles.stepFormHeader}>
+                    <h3>Let's Get Started</h3>
+                    <div className={styles.stepProgress}>
+                      <div className={styles.stepProgressBar}>
+                        <div 
+                          className={styles.stepProgressFill} 
+                          style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                        ></div>
+                      </div>
+                      <div className={styles.stepProgressText}>
+                        <span className={currentStep >= 1 ? styles.stepCompleted : styles.stepPending}>
+                          {currentStep > 1 ? 'Discovery Complete' : 'Discovery Questionnaire'}
+                        </span>
+                        <span className={currentStep >= 2 ? styles.stepCompleted : styles.stepCurrent}>
+                          {currentStep >= 2 ? 'Core Message Complete' : 'Core Message'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Step 1: Discovery Questionnaire */}
+                  {currentStep === 1 && (
+                    <div className={styles.discoveryStep}>
+                      <div className={styles.discoveryContent}>
+                        <h4>Discovery Questionnaire</h4>
+                        <p>We've already collected your business information and goals. Here's what we know about your business:</p>
+                        
+                        <div className={styles.discoverySummary}>
+                          {(() => {
+                            console.log('Dashboard - onboardingData:', onboardingData);
+                            // Use onboardingData from database instead of localStorage
+                            if (onboardingData && onboardingData.data) {
+                              try {
+                                const parsedData = typeof onboardingData.data === "string" ? JSON.parse(onboardingData.data) : onboardingData.data;
+                                console.log('Dashboard - parsedData:', parsedData);
+                                
+                                // Check if it's the new format with form fields and answers
+                                if (parsedData.formFields && parsedData.formAnswers) {
+                                  const { formAnswers } = parsedData;
+                                  
+                                  // Show the key answers
+                                  const keyFields = [
+                                    { key: 'description', label: 'Business/Product Name' },
+                                    { key: 'industry', label: 'Industry' },
+                                    { key: 'coreAudience', label: 'Core Audience' },
+                                    { key: 'outcome', label: 'Outcome/Benefit' },
+                                    { key: 'problemSolved', label: 'Problem Solved' },
+                                    { key: 'targetMarket', label: 'Target Market' }
+                                  ];
+
+                                  return keyFields.map((field, index) => {
+                                    const value = formAnswers[field.key];
+                                    if (!value) return null;
+                                    
+                                    return (
+                                      <div key={index} className={styles.summaryItem}>
+                                        <span className={styles.summaryLabel}>{field.label}:</span>
+                                        <span className={styles.summaryValue}>{value}</span>
+                                      </div>
+                                    );
+                                  });
+                                } else {
+                                  // Fallback for old data format
+                                  const keyFields = [
+                                    { key: 'description', label: 'Business/Product Name' },
+                                    { key: 'industry', label: 'Industry' },
+                                    { key: 'coreAudience', label: 'Core Audience' },
+                                    { key: 'outcome', label: 'Outcome/Benefit' },
+                                    { key: 'problemSolved', label: 'Problem Solved' },
+                                    { key: 'targetMarket', label: 'Target Market' }
+                                  ];
+
+                                  return keyFields.map((field, index) => {
+                                    const value = parsedData[field.key];
+                                    if (!value) return null;
+                                    
+                                    return (
+                                      <div key={index} className={styles.summaryItem}>
+                                        <span className={styles.summaryLabel}>{field.label}:</span>
+                                        <span className={styles.summaryValue}>{value}</span>
+                                      </div>
+                                    );
+                                  });
+                                }
+                              } catch (error) {
+                                console.error('Error parsing stored form data:', error);
+                              }
+                            }
+                            
+                            // Fallback if no stored data
+                            return (
+                              <>
+                          <div className={styles.summaryItem}>
+                            <span className={styles.summaryLabel}>Business Type:</span>
+                            <span className={styles.summaryValue}>Technology Company</span>
+                          </div>
+                          <div className={styles.summaryItem}>
+                            <span className={styles.summaryLabel}>Target Audience:</span>
+                            <span className={styles.summaryValue}>Small to Medium Businesses</span>
+                          </div>
+                          <div className={styles.summaryItem}>
+                            <span className={styles.summaryLabel}>Primary Goal:</span>
+                            <span className={styles.summaryValue}>Increase Brand Awareness</span>
+                          </div>
+                          <div className={styles.summaryItem}>
+                            <span className={styles.summaryLabel}>Key Message:</span>
+                            <span className={styles.summaryValue}>Innovative solutions for modern businesses</span>
+                          </div>
+                              </>
+                            );
+                          })()}
+                        </div>
+                        
+                        <div className={styles.discoveryActions}>
+                        <div className={styles.discoveryNote}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 16v-4M12 8h.01"></path>
+                          </svg>
+                            <span>Your discovery questionnaire has been completed. You can review and edit this information anytime.</span>
+                          </div>
+                        </div>
+                        
+                        {/* Full Form Section - Always Visible */}
+                        <div className={styles.fullFormSection}>
+                          <h5>Edit All Questions</h5>
+                          <div className={styles.fullFormContainer}>
+                            {isLoadingFormFields ? (
+                              <div className={styles.loadingMessage}>
+                                <p>Loading form questions...</p>
+                              </div>
+                            ) : (() => {
+                              // Use onboardingData from database instead of localStorage
+                              if (onboardingData && onboardingData.data) {
+                                try {
+                                  const parsedData = typeof onboardingData.data === "string" ? JSON.parse(onboardingData.data) : onboardingData.data;
+                                  console.log('Form - parsedData:', parsedData);
+                                  
+                                  // Use original form fields from marketing API if available, otherwise use stored ones
+                                  const formFieldsToUse = originalFormFields?.fields || parsedData.formFields;
+                                  
+                                  if (formFieldsToUse && parsedData.formAnswers) {
+                                    
+                                    return (
+                                      <>
+                                        {formFieldsToUse.map((field, index) => (
+                                          <div key={index} className={styles.formField}>
+                                            <label htmlFor={field.nameKey}>
+                                              {field.title}
+                                              {(field.nameKey === 'description' || 
+                                                field.nameKey === 'productSummary' ||
+                                                field.nameKey === 'coreAudience' ||
+                                                field.nameKey === 'outcome') && (
+                                                <span className={styles.requiredIndicator}>*</span>
+                                              )}
+                                            </label>
+                                            <textarea
+                                              id={field.nameKey}
+                                              value={formAnswers[field.nameKey] !== undefined ? formAnswers[field.nameKey] : (parsedData.formAnswers[field.nameKey] || '')}
+                                              onChange={(e) => {
+                                                const newValue = e.target.value;
+                                                console.log(`Updating ${field.nameKey} from "${formAnswers[field.nameKey]}" to "${newValue}"`);
+                                                setFormAnswers(prev => {
+                                                  const updated = {
+                                                    ...prev,
+                                                    [field.nameKey]: newValue
+                                                  };
+                                                  console.log('Updated formAnswers:', updated);
+                                                  return updated;
+                                                });
+                                              }}
+                                              placeholder={field.placeholder}
+                                              className={styles.formTextarea}
+                                            />
+                                            {field.guidance && (
+                                              <small className={styles.fieldGuidance}>{field.guidance}</small>
+                                            )}
+                                          </div>
+                                        ))}
+                                        <div className={styles.formActions}>
+                                          <button
+                                            className={styles.saveFormButton}
+                                            onClick={async () => {
+                                              setIsFormLoading(true);
+                                              try {
+                                                console.log('Current formAnswers state:', formAnswers);
+                                                console.log('Current parsedData:', parsedData);
+                                                
+                                                // Merge current database data with form changes
+                                                const updatedData = {
+                                                  ...parsedData,
+                                                  formAnswers: {
+                                                    ...parsedData.formAnswers,
+                                                    ...formAnswers
+                                                  }
+                                                };
+                                                
+                                                console.log('Original formAnswers:', parsedData.formAnswers);
+                                                console.log('New formAnswers from form:', formAnswers);
+                                                console.log('Merged formAnswers:', updatedData.formAnswers);
+                                                
+                                                // First, update the database with new form data
+                                                await updateFormDataInDB(updatedData);
+                                                console.log('Form data updated in database successfully');
+                                                
+                                                // Then generate new core message based on updated data
+                                                const token = localStorage.getItem("token");
+                                                
+                                                // Flatten the data structure to match what the marketing API expects
+                                                const flattenedData = {
+                                                  ...updatedData,
+                                                  ...updatedData.formAnswers // Spread the formAnswers to make them top-level
+                                                };
+                                                
+                                                console.log('Sending flattened data to marketing API:', flattenedData);
+                                                
+                                                const marketingResponse = await fetch(
+                                                  `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate?refresh=true`,
+                                                  {
+                                                    method: "POST",
+                                                    headers: {
+                                                      "Content-Type": "application/json",
+                                                      Authorization: `Bearer ${token}`,
+                                                    },
+                                                    body: JSON.stringify(flattenedData),
+                                                  }
+                                                );
+
+                                                console.log('Marketing API response status:', marketingResponse.status);
+                                                
+                                                if (!marketingResponse.ok) {
+                                                  const errorText = await marketingResponse.text();
+                                                  console.error('Marketing API error response:', errorText);
+                                                  throw new Error(`Failed to generate new core message: ${errorText}`);
+                                                }
+
+                                                const marketingData = await marketingResponse.json();
+                                                console.log('New core message generated:', marketingData.data.coreMessage);
+
+                                                // Update the core message in database
+                                                await fetch(
+                                                  `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
+                                                  {
+                                                    method: "POST",
+                                                    headers: {
+                                                      "Content-Type": "application/json",
+                                                      Authorization: `Bearer ${token}`,
+                                                    },
+                                                    body: JSON.stringify({
+                                                      coreMessage: marketingData.data.coreMessage,
+                                                    }),
+                                                  }
+                                                );
+
+                                                // Update local state
+                                                setCoreMessage(marketingData.data.coreMessage);
+                                                setEditedCoreMessage(marketingData.data.coreMessage);
+                                                storeCoreMessage(marketingData.data.coreMessage);
+                                                
+                                                // Clear local form state after successful save
+                                                setFormAnswers({});
+                                                
+                                                // Update local onboardingData to reflect changes
+                                                setOnboardingData(prev => ({
+                                                  ...prev,
+                                                  data: JSON.stringify(updatedData),
+                                                  core_message: marketingData.data.coreMessage
+                                                }));
+                                                
+                                                // Refresh data from database to ensure we have the latest
+                                                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second for DB update
+                                                await refreshFormData();
+                                                
+                                                console.log('All updates completed successfully');
+                                              } catch (error) {
+                                                console.error('Error saving form and generating core message:', error);
+                                                alert('Error: ' + error.message);
+                                              } finally {
+                                                setIsFormLoading(false);
+                                              }
+                                            }}
+                                            disabled={isFormLoading}
+                                          >
+                                            {isFormLoading ? 'Saving & Generating New Core Message...' : 'Save Changes & Generate New Core Message'}
+                                          </button>
+                                        </div>
+                                      </>
+                                    );
+                                  } else {
+                                    // Fallback: use original form fields if available, otherwise show basic form fields
+                                    const fallbackFormFields = originalFormFields?.fields || [
+                                      { nameKey: 'description', title: 'Business/Product Name', placeholder: 'Enter your business or product name' },
+                                      { nameKey: 'industry', title: 'Industry', placeholder: 'What industry are you in?' },
+                                      { nameKey: 'coreAudience', title: 'Core Audience', placeholder: 'Who is your target audience?' },
+                                      { nameKey: 'outcome', title: 'Outcome/Benefit', placeholder: 'What benefit do you provide?' },
+                                      { nameKey: 'problemSolved', title: 'Problem Solved', placeholder: 'What problem do you solve?' },
+                                      { nameKey: 'targetMarket', title: 'Target Market', placeholder: 'Describe your target market' }
+                                    ];
+                                    
+                                    return (
+                                      <>
+                                        {fallbackFormFields.map((field, index) => (
+                                          <div key={index} className={styles.formField}>
+                                            <label htmlFor={field.nameKey}>
+                                              {field.title}
+                                              <span className={styles.requiredIndicator}>*</span>
+                                            </label>
+                                            <textarea
+                                              id={field.nameKey}
+                                              value={formAnswers[field.nameKey] !== undefined ? formAnswers[field.nameKey] : (parsedData[field.nameKey] || '')}
+                                              onChange={(e) => {
+                                                setFormAnswers(prev => ({
+                                                  ...prev,
+                                                  [field.nameKey]: e.target.value
+                                                }));
+                                              }}
+                                              placeholder={field.placeholder}
+                                              className={styles.formTextarea}
+                                            />
+                                          </div>
+                                        ))}
+                                        <div className={styles.formActions}>
+                                          <button
+                                            className={styles.saveFormButton}
+                                            onClick={async () => {
+                                              setIsFormLoading(true);
+                                              try {
+                                                const updatedData = {
+                                                  ...parsedData,
+                                                  ...formAnswers
+                                                };
+                                                
+                                                // First, update the database with new form data
+                                                await updateFormDataInDB(updatedData);
+                                                console.log('Form data updated in database successfully');
+                                                
+                                                // Then generate new core message based on updated data
+                                                const token = localStorage.getItem("token");
+                                                
+                                                // Flatten the data structure to match what the marketing API expects
+                                                const flattenedData = {
+                                                  ...updatedData,
+                                                  ...updatedData.formAnswers // Spread the formAnswers to make them top-level
+                                                };
+                                                
+                                                console.log('Sending flattened data to marketing API:', flattenedData);
+                                                
+                                                const marketingResponse = await fetch(
+                                                  `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate?refresh=true`,
+                                                  {
+                                                    method: "POST",
+                                                    headers: {
+                                                      "Content-Type": "application/json",
+                                                      Authorization: `Bearer ${token}`,
+                                                    },
+                                                    body: JSON.stringify(flattenedData),
+                                                  }
+                                                );
+
+                                                console.log('Marketing API response status:', marketingResponse.status);
+                                                
+                                                if (!marketingResponse.ok) {
+                                                  const errorText = await marketingResponse.text();
+                                                  console.error('Marketing API error response:', errorText);
+                                                  throw new Error(`Failed to generate new core message: ${errorText}`);
+                                                }
+
+                                                const marketingData = await marketingResponse.json();
+                                                console.log('New core message generated:', marketingData.data.coreMessage);
+
+                                                // Update the core message in database
+                                                await fetch(
+                                                  `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
+                                                  {
+                                                    method: "POST",
+                                                    headers: {
+                                                      "Content-Type": "application/json",
+                                                      Authorization: `Bearer ${token}`,
+                                                    },
+                                                    body: JSON.stringify({
+                                                      coreMessage: marketingData.data.coreMessage,
+                                                    }),
+                                                  }
+                                                );
+
+                                                // Update local state
+                                                setCoreMessage(marketingData.data.coreMessage);
+                                                setEditedCoreMessage(marketingData.data.coreMessage);
+                                                storeCoreMessage(marketingData.data.coreMessage);
+                                                
+                                                // Clear local form state after successful save
+                                                setFormAnswers({});
+                                                
+                                                // Update local onboardingData to reflect changes
+                                                setOnboardingData(prev => ({
+                                                  ...prev,
+                                                  data: JSON.stringify(updatedData),
+                                                  core_message: marketingData.data.coreMessage
+                                                }));
+                                                
+                                                // Refresh data from database to ensure we have the latest
+                                                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second for DB update
+                                                await refreshFormData();
+                                                
+                                                console.log('All updates completed successfully');
+                                              } catch (error) {
+                                                console.error('Error saving form and generating core message:', error);
+                                                alert('Error: ' + error.message);
+                                              } finally {
+                                                setIsFormLoading(false);
+                                              }
+                                            }}
+                                            disabled={isFormLoading}
+                                          >
+                                            {isFormLoading ? 'Saving & Generating New Core Message...' : 'Save Changes & Generate New Core Message'}
+                                          </button>
+                                        </div>
+                                      </>
+                                    );
+                                  }
+                                } catch (error) {
+                                  console.error('Error parsing stored form data:', error);
+                                  return <p>Error loading form data: {error.message}</p>;
+                                }
+                              }
+                              return <p>No form data available. Please complete the onboarding process first.</p>;
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Step 2: Core Message */}
+                  {currentStep === 2 && (
+                    <div className={styles.coreMessageSection}>
+                      <div className={styles.coreMessageContainer}>
+                        <div className={styles.coreMessageHeader}>
+                          <h3>Your Core Marketing Message</h3>
+                        </div>
+                        <div className={styles.messageContainer}>
+                          {isRefreshing ? (
+                            <MessageSkeleton />
+                          ) : isEditingCoreMessage ? (
+                            <div className={styles.editCoreMessageContainer}>
+                              <textarea
+                                className={styles.editCoreMessageInput}
+                                value={editedCoreMessage}
+                                onChange={(e) => setEditedCoreMessage(e.target.value)}
+                              />
+                              <div className={styles.editCoreMessageActions}>
+                                <button
+                                  className={styles.cancelButton}
+                                  onClick={() => {
+                                    setIsEditingCoreMessage(false);
+                                    setEditedCoreMessage("");
+                                  }}
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  className={styles.saveButton}
+                                  onClick={handleEditCoreMessage}
+                                  disabled={
+                                    !editedCoreMessage.trim() ||
+                                    editedCoreMessage === coreMessage
+                                  }
+                                >
+                                  Save
+                                </button>
+                              </div>
+                            </div>
+                          ) : showTypewriter ? (
+                            <div className={styles.typewriterContainer}>
+                              <Typewriter
+                                words={[coreMessage]}
+                                loop={1}
+                                cursor
+                                cursorStyle=""
+                                typeSpeed={15}
+                                delaySpeed={500}
+                                onLoopDone={() => {
+                                  setTimeout(() => setShowTypewriter(false), 500);
+                                }}
+                              />
+                              <button
+                                className={styles.editButtonCore}
+                                onClick={() => {
+                                  setIsEditPopupOpen(true);
+                                  setEditedCoreMessage(coreMessage);
+                                }}
+                                aria-label="Edit core message"
+                              >
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                              </button>
+                            </div>
+                          ) : (
+                            <div className={styles.fadeIn}>
+                              <p>{coreMessage}</p>
+                              <button
+                                className={styles.editButtonCore}
+                                onClick={() => {
+                                  setIsEditPopupOpen(true);
+                                  setEditedCoreMessage(coreMessage);
+                                }}
+                                aria-label="Edit core message"
+                              >
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Step Navigation Buttons */}
+                  <div className={styles.stepNavigation}>
+                    <button
+                      className={`${styles.stepButton} ${styles.previousButton}`}
+                      onClick={handlePreviousStep}
+                      disabled={currentStep === 1}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                      </svg>
+                      <span>Previous</span>
+                    </button>
+                    
+                    <button
+                      className={`${styles.stepButton} ${styles.nextButton}`}
+                      onClick={currentStep === totalSteps ? handleSaveAndContinue : handleNextStep}
+                    >
+                      <span>{currentStep === totalSteps ? 'Save & Continue' : 'Next'}</span>
+                      {currentStep < totalSteps && (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Save and Continue Section */}
             {showSaveAndContinue ? (
               <div className={styles.saveAndContinueSection}>
                 <div className={styles.saveAndContinueContainer}>
@@ -2451,150 +3199,10 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-            ) : (
-              coreMessage && !onboardingData?.core_message_seen && !showProjects && !showSaveAndContinue && (
-              <div className={styles.coreMessageSection}>
-                <div className={styles.coreMessageContainer}>
-                  <div className={styles.coreMessageHeader}>
-                    <h3>Your Core Marketing Message</h3>
-
-                    {/* <button
-                      onClick={() => fetchCoreMessage(true)}
-                      className={styles.refreshButton}
-                      disabled={isRefreshing}
-                    >
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className={isRefreshing ? styles.spinning : ""}
-                      >
-                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 3.4 0 6.3 2.1 7.4 5M22 12c0 4.4-3.6 8-8 8-3.4 0-6.3-2.1-7.4-5" />
-                      </svg>
-                    </button> */}
-                  </div>
-                  <div className={styles.messageContainer}>
-                    {isRefreshing ? (
-                      <MessageSkeleton />
-                    ) : isEditingCoreMessage ? (
-                      <div className={styles.editCoreMessageContainer}>
-                        <textarea
-                          className={styles.editCoreMessageInput}
-                          value={editedCoreMessage}
-                          onChange={(e) => setEditedCoreMessage(e.target.value)}
-                        />
-                        <div className={styles.editCoreMessageActions}>
-                          <button
-                            className={styles.cancelButton}
-                            onClick={() => {
-                              setIsEditingCoreMessage(false);
-                              setEditedCoreMessage("");
-                            }}
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            className={styles.saveButton}
-                            onClick={handleEditCoreMessage}
-                            disabled={
-                              !editedCoreMessage.trim() ||
-                              editedCoreMessage === coreMessage
-                            }
-                          >
-                            Save
-                          </button>
-                        </div>
-                      </div>
-                    ) : showTypewriter ? (
-                      <div className={styles.typewriterContainer}>
-                        <Typewriter
-                          words={[coreMessage]}
-                          loop={1}
-                          cursor
-                          cursorStyle=""
-                          typeSpeed={15}
-                          delaySpeed={500}
-                          onLoopDone={() => {
-                            setTimeout(() => setShowTypewriter(false), 500);
-                          }}
-                        />
-                        <button
-                          className={styles.editButtonCore}
-                          onClick={() => {
-                            setIsEditPopupOpen(true);
-                            setEditedCoreMessage(coreMessage);
-                          }}
-                          aria-label="Edit core message"
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className={styles.fadeIn}>
-                        <p>{coreMessage}</p>
-                        <button
-                          className={styles.editButtonCore}
-                          onClick={() => {
-                            setIsEditPopupOpen(true);
-                            setEditedCoreMessage(coreMessage);
-                          }}
-                          aria-label="Edit core message"
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </button>
-                      </div>
-                    )}
-                                      </div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                  <button
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: '#282ab3',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '0.375rem',
-                      cursor: 'pointer',
-                      fontSize: '0.875rem',
-                      fontWeight: '500'
-                    }}
-                    onClick={handleSaveAndContinue}
-                  >
-                    Save & Continue
-                  </button>
-                </div>
-              </div>
-              )
-            )}
+            ) : null}
 
             {/* Show projects when "Let's go!" has been clicked OR core message has been seen */}
+            {/* 
             {(showProjects || onboardingData?.core_message_seen) ? (
               <div className={styles.projectsSection}>
                 <div className={styles.projectsContainer}>
@@ -2714,6 +3322,7 @@ export default function Dashboard() {
                 </div>
               </div>
             ) : null}
+            */}
 
           </section>
         </div>

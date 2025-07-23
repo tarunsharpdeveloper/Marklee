@@ -67,6 +67,32 @@ class OnboardingController {
     }
   }
 
+  updateOnboardingData = async (req, res) => {
+    try {
+      const { data } = req.body;
+      console.log('Updating onboarding data for user:', req.user.id);
+      console.log('Data to update:', data);
+      
+      const user = await UserOnboarding.create({
+        userId: req.user.id,
+        data: data,
+        coreMessage: null // Keep existing core message
+      });
+      
+      res.status(200).json({
+        success: true,
+        message: 'Onboarding data updated successfully',
+        data: user
+      });
+    } catch (error) {
+      console.error('Error updating onboarding data:', error);  
+      res.status(500).json({
+        message: 'Failed to update onboarding data',
+        error: error.message
+      });
+    }
+  }
+
   updateCoreMessage = async (req, res) => {
     try {
       const { coreMessage } = req.body;
