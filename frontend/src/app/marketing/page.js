@@ -101,10 +101,26 @@ export default function MarketingPage() {
             try {
               const parsedData = typeof onboardingData.data.data === "string" ? JSON.parse(onboardingData.data.data) : onboardingData.data.data;
               
-              // Check if it's the new format with form fields and answers
-              if (parsedData.formFields && parsedData.formAnswers) {
+              console.log('Marketing form - parsedData:', parsedData);
+              console.log('Marketing form - parsedData type:', typeof parsedData);
+              console.log('Marketing form - isArray:', Array.isArray(parsedData));
+              
+              // Handle both array and object formats
+              let formAnswersToUse;
+              
+              if (Array.isArray(parsedData)) {
+                // If it's an array, it might be the form fields directly
+                console.log('Marketing form - Data is array, using empty answers');
+                formAnswersToUse = {};
+              } else if (parsedData && typeof parsedData === 'object' && parsedData.formAnswers) {
+                // If it's an object with formAnswers
+                formAnswersToUse = parsedData.formAnswers;
+                console.log('Marketing form - Found formAnswers in object:', formAnswersToUse);
+              }
+              
+              if (formAnswersToUse) {
                 // Use stored answers from database
-                setFormAnswers(parsedData.formAnswers);
+                setFormAnswers(formAnswersToUse);
                 console.log('Loaded stored form data from database for editing');
                 return;
               }

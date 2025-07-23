@@ -1064,12 +1064,12 @@ export default function Dashboard() {
   const [onboardingData, setOnboardingData] = useState(null);
   const [showWelcome, setShowWelcome] = useState(true);
   const [showStepForm, setShowStepForm] = useState(false);
-  const [originalFormFields, setOriginalFormFields] = useState(null);
-  const [isLoadingFormFields, setIsLoadingFormFields] = useState(false);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [totalSteps] = useState(2);
-  const [formAnswers, setFormAnswers] = useState({});
   const [isFormLoading, setIsFormLoading] = useState(false);
+  const [formAnswers, setFormAnswers] = useState({});
+  const [showFormSuccess, setShowFormSuccess] = useState(false);
 
   const handleEditCoreMessage = async () => {
     try {
@@ -1125,7 +1125,7 @@ export default function Dashboard() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ 
-            data: JSON.stringify(updatedData)
+            data: updatedData
           }),
         }
       );
@@ -1180,32 +1180,7 @@ export default function Dashboard() {
     }
   };
 
-  // Fetch original form fields from marketing API
-  const fetchOriginalFormFields = async () => {
-    try {
-      setIsLoadingFormFields(true);
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/form`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch form fields');
-      }
-
-      const data = await response.json();
-      setOriginalFormFields(data.data);
-      console.log('Fetched original form fields:', data.data);
-    } catch (error) {
-      console.error('Error fetching original form fields:', error);
-    } finally {
-      setIsLoadingFormFields(false);
-    }
-  };
 
   // Store core message in localStorage
   const storeCoreMessage = (message) => {
@@ -1240,6 +1215,7 @@ export default function Dashboard() {
       }
 
       const { data } = await onboardingResponse.json();
+      console.log('Fetched onboarding data from database:', data);
       setOnboardingData(data);
 
       if (shouldRefresh && data) {
@@ -1311,8 +1287,9 @@ export default function Dashboard() {
       try {
         const parsedData = typeof onboardingData.data === "string" ? JSON.parse(onboardingData.data) : onboardingData.data;
         if (parsedData.formFields && parsedData.formAnswers) {
-          // Clear any local form changes when new data is loaded
-          setFormAnswers({});
+          // Load form answers from database data
+          setFormAnswers(parsedData.formAnswers);
+          console.log('Loaded form answers from database:', parsedData.formAnswers);
         }
       } catch (error) {
         console.error('Error parsing onboarding data:', error);
@@ -1351,8 +1328,7 @@ export default function Dashboard() {
             .toUpperCase(),
         });
 
-        // Fetch original form fields for the form
-        await fetchOriginalFormFields();
+
       } catch (error) {
         console.error("Error checking auth:", error);
         window.location.href = '/';
@@ -2706,22 +2682,61 @@ export default function Dashboard() {
                         {/* Full Form Section - Always Visible */}
                         <div className={styles.fullFormSection}>
                           <h5>Edit All Questions</h5>
+                          <button 
+                            onClick={() => {
+                              console.log('Manual refresh - onboardingData:', onboardingData);
+                              console.log('Manual refresh - onboardingData.data:', onboardingData?.data);
+                              console.log('Manual refresh - typeof onboardingData.data:', typeof onboardingData?.data);
+                              
+                              if (onboardingData && onboardingData.data) {
+                                try {
+                                  const parsedData = typeof onboardingData.data === "string" ? JSON.parse(onboardingData.data) : onboardingData.data;
+                                  console.log('Manual refresh - parsedData:', parsedData);
+                                  console.log('Manual refresh - parsedData keys:', Object.keys(parsedData || {}));
+                                  console.log('Manual refresh - parsedData.formFields:', parsedData.formFields);
+                                  console.log('Manual refresh - parsedData.formAnswers:', parsedData.formAnswers);
+                                } catch (error) {
+                                  console.error('Manual refresh - Error parsing data:', error);
+                                }
+                              } else {
+                                console.log('Manual refresh - No onboardingData or onboardingData.data');
+                              }
+                            }}
+                            style={{ marginBottom: '10px', padding: '5px 10px' }}
+                          >
+                            Debug: Check Data
+                          </button>
+                          {showFormSuccess && (
+                            <div className={styles.successMessage}>
+                              <p>✅ Form updated successfully! Core message has been regenerated.</p>
+                            </div>
+                          )}
                           <div className={styles.fullFormContainer}>
-                            {isLoadingFormFields ? (
-                              <div className={styles.loadingMessage}>
-                                <p>Loading form questions...</p>
-                              </div>
-                            ) : (() => {
+                            {(() => {
                               // Use onboardingData from database instead of localStorage
                               if (onboardingData && onboardingData.data) {
                                 try {
                                   const parsedData = typeof onboardingData.data === "string" ? JSON.parse(onboardingData.data) : onboardingData.data;
                                   console.log('Form - parsedData:', parsedData);
+                                  console.log('Form - onboardingData:', onboardingData);
                                   
-                                  // Use original form fields from marketing API if available, otherwise use stored ones
-                                  const formFieldsToUse = originalFormFields?.fields || parsedData.formFields;
+                                  // Handle both array and object formats
+                                  let formFieldsToUse, formAnswersToUse;
                                   
-                                  if (formFieldsToUse && parsedData.formAnswers) {
+                                  if (Array.isArray(parsedData)) {
+                                    // If it's an array, it might be the form fields directly
+                                    formFieldsToUse = parsedData;
+                                    formAnswersToUse = {};
+                                  } else if (parsedData && typeof parsedData === 'object') {
+                                    // If it's an object, look for formFields and formAnswers
+                                    formFieldsToUse = parsedData.formFields;
+                                    formAnswersToUse = parsedData.formAnswers;
+                                  }
+                                  
+                                  console.log('Form - formFieldsToUse:', formFieldsToUse);
+                                  console.log('Form - formAnswersToUse:', formAnswersToUse);
+                                  
+                                  if (formFieldsToUse && formAnswersToUse) {
                                     
                                     return (
                                       <>
@@ -2738,7 +2753,7 @@ export default function Dashboard() {
                                             </label>
                                             <textarea
                                               id={field.nameKey}
-                                              value={formAnswers[field.nameKey] !== undefined ? formAnswers[field.nameKey] : (parsedData.formAnswers[field.nameKey] || '')}
+                                              value={formAnswers[field.nameKey] !== undefined ? formAnswers[field.nameKey] : (formAnswersToUse?.[field.nameKey] || '')}
                                               onChange={(e) => {
                                                 const newValue = e.target.value;
                                                 console.log(`Updating ${field.nameKey} from "${formAnswers[field.nameKey]}" to "${newValue}"`);
@@ -2768,16 +2783,18 @@ export default function Dashboard() {
                                                 console.log('Current formAnswers state:', formAnswers);
                                                 console.log('Current parsedData:', parsedData);
                                                 
-                                                // Merge current database data with form changes
+                                                // Update form answers while keeping the existing structure
                                                 const updatedData = {
-                                                  ...parsedData,
+                                                  formFields: formFieldsToUse,
                                                   formAnswers: {
-                                                    ...parsedData.formAnswers,
+                                                    ...(formAnswersToUse || {}),
                                                     ...formAnswers
-                                                  }
+                                                  },
+                                                  welcomeMessage: parsedData.welcomeMessage || '',
+                                                  footerMessage: parsedData.footerMessage || ''
                                                 };
                                                 
-                                                console.log('Original formAnswers:', parsedData.formAnswers);
+                                                console.log('Original formAnswers:', formAnswersToUse || {});
                                                 console.log('New formAnswers from form:', formAnswers);
                                                 console.log('Merged formAnswers:', updatedData.formAnswers);
                                                 
@@ -2839,21 +2856,21 @@ export default function Dashboard() {
                                                 setEditedCoreMessage(marketingData.data.coreMessage);
                                                 storeCoreMessage(marketingData.data.coreMessage);
                                                 
-                                                // Clear local form state after successful save
-                                                setFormAnswers({});
-                                                
                                                 // Update local onboardingData to reflect changes
                                                 setOnboardingData(prev => ({
                                                   ...prev,
-                                                  data: JSON.stringify(updatedData),
+                                                  data: updatedData,
                                                   core_message: marketingData.data.coreMessage
                                                 }));
                                                 
-                                                // Refresh data from database to ensure we have the latest
-                                                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second for DB update
-                                                await refreshFormData();
+                                                // Update formAnswers state with the latest saved data
+                                                setFormAnswers(updatedData.formAnswers);
                                                 
-                                                console.log('All updates completed successfully');
+                                                // Show success message
+                                                setShowFormSuccess(true);
+                                                setTimeout(() => setShowFormSuccess(false), 3000);
+                                                
+                                                console.log('Form updated successfully!');
                                               } catch (error) {
                                                 console.error('Error saving form and generating core message:', error);
                                                 alert('Error: ' + error.message);
@@ -2869,8 +2886,13 @@ export default function Dashboard() {
                                       </>
                                     );
                                   } else {
-                                    // Fallback: use original form fields if available, otherwise show basic form fields
-                                    const fallbackFormFields = originalFormFields?.fields || [
+                                    console.log('Form - Using fallback fields because:');
+                                    console.log('  - formFieldsToUse:', formFieldsToUse);
+                                    console.log('  - formAnswersToUse:', formAnswersToUse);
+                                    console.log('  - formFieldsToUse && formAnswersToUse:', formFieldsToUse && formAnswersToUse);
+                                    
+                                    // Fallback: show basic form fields if data structure is different
+                                    const fallbackFormFields = [
                                       { nameKey: 'description', title: 'Business/Product Name', placeholder: 'Enter your business or product name' },
                                       { nameKey: 'industry', title: 'Industry', placeholder: 'What industry are you in?' },
                                       { nameKey: 'coreAudience', title: 'Core Audience', placeholder: 'Who is your target audience?' },
@@ -2889,7 +2911,7 @@ export default function Dashboard() {
                                             </label>
                                             <textarea
                                               id={field.nameKey}
-                                              value={formAnswers[field.nameKey] !== undefined ? formAnswers[field.nameKey] : (parsedData[field.nameKey] || '')}
+                                              value={formAnswers[field.nameKey] !== undefined ? formAnswers[field.nameKey] : (formAnswersToUse?.[field.nameKey] || '')}
                                               onChange={(e) => {
                                                 setFormAnswers(prev => ({
                                                   ...prev,
@@ -2970,21 +2992,21 @@ export default function Dashboard() {
                                                 setEditedCoreMessage(marketingData.data.coreMessage);
                                                 storeCoreMessage(marketingData.data.coreMessage);
                                                 
-                                                // Clear local form state after successful save
-                                                setFormAnswers({});
-                                                
                                                 // Update local onboardingData to reflect changes
                                                 setOnboardingData(prev => ({
                                                   ...prev,
-                                                  data: JSON.stringify(updatedData),
+                                                  data: updatedData,
                                                   core_message: marketingData.data.coreMessage
                                                 }));
                                                 
-                                                // Refresh data from database to ensure we have the latest
-                                                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second for DB update
-                                                await refreshFormData();
+                                                // Update formAnswers state with the latest saved data
+                                                setFormAnswers(updatedData.formAnswers);
                                                 
-                                                console.log('All updates completed successfully');
+                                                // Show success message
+                                                setShowFormSuccess(true);
+                                                setTimeout(() => setShowFormSuccess(false), 3000);
+                                                
+                                                console.log('Form updated successfully!');
                                               } catch (error) {
                                                 console.error('Error saving form and generating core message:', error);
                                                 alert('Error: ' + error.message);

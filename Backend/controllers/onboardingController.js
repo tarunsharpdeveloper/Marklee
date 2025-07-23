@@ -27,6 +27,8 @@ class OnboardingController {
     try {
       const metadata = await UserOnboarding.findByUserId(req.user.id);
       
+      console.log('getOnboardingData - metadata:', metadata);
+      
     if (!metadata) {
       return res.status(404).json({
         message: 'Onboarding data not found'
@@ -48,9 +50,12 @@ class OnboardingController {
   createOnboardingUser = async (req, res) => {
     try {
       const { data, coreMessage } = req.body;
+      // Check if data is already a string or needs to be stringified
+      const dataToStore = typeof data === 'string' ? data : JSON.stringify(data);
+      
       const user = await UserOnboarding.create({
         userId: req.user.id,
-        data,
+        data: dataToStore,
         coreMessage
       });
       res.status(201).json({
@@ -72,10 +77,15 @@ class OnboardingController {
       const { data } = req.body;
       console.log('Updating onboarding data for user:', req.user.id);
       console.log('Data to update:', data);
+      console.log('Data type:', typeof data);
+      console.log('Data stringified:', JSON.stringify(data));
+      
+      // Check if data is already a string or needs to be stringified
+      const dataToStore = typeof data === 'string' ? data : JSON.stringify(data);
       
       const user = await UserOnboarding.create({
         userId: req.user.id,
-        data: data,
+        data: dataToStore,
         coreMessage: null // Keep existing core message
       });
       
