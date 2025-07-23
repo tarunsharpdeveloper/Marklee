@@ -1752,9 +1752,9 @@ const Library = () => {
     <div className={styles.sections}>
       <section className={`${styles.section} ${styles.librarySection}`}>
         <div className={styles.librarySections}>
-          {/* <div className={`${styles.folderSection} ${!showFolderSection && isMobileView ? styles.hidden : ''}`}>
+          <div className={`${styles.folderSection} ${!showFolderSection && isMobileView ? styles.hidden : ''}`}>
             {renderFolderSection()}
-          </div> */}
+          </div>
           {renderQASection()}
         </div>
       </section>

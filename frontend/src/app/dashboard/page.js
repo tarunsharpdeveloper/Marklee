@@ -2595,7 +2595,7 @@ export default function Dashboard() {
             )}
 
             {/* Show projects when "Let's go!" has been clicked OR core message has been seen */}
-            {(showProjects || onboardingData?.core_message_seen) && (
+            {(showProjects || onboardingData?.core_message_seen) ? (
               <div className={styles.projectsSection}>
                 <div className={styles.projectsContainer}>
                   <div className={styles.projectsHeader}>
@@ -2604,7 +2604,19 @@ export default function Dashboard() {
                       className={styles.createProjectButton}
                       onClick={() => setIsProjectPopupOpen(true)}
                     >
-                      Create New Project
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                      <span>Create New Project</span>
                     </button>
                   </div>
                   <div className={styles.projectsList}>
@@ -2612,34 +2624,96 @@ export default function Dashboard() {
                       projects.map((project) => (
                         <div key={project.id} className={styles.projectCard}>
                           <div className={styles.projectInfo}>
-                            <h4>{project.name}</h4>
-                            <span className={styles.projectStatus}>
-                              {project.status}
-                            </span>
+                            <div className={styles.projectHeader}>
+                              <div className={styles.projectIcon}>
+                                <svg
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                  <polyline points="9 22 9 12 15 12 15 22" />
+                                </svg>
+                              </div>
+                              <h4>{project.name}</h4>
+                            </div>
+                            <div className={styles.projectMeta}>
+                              <span className={styles.projectStatus}>
+                                {project.status}
+                              </span>
+                              <span className={styles.projectDate}>
+                                Created {new Date(project.createdAt || Date.now()).toLocaleDateString()}
+                              </span>
+                            </div>
                           </div>
                           <button
                             className={styles.viewProjectButton}
                             onClick={() => router.push('/library')}
                           >
-                            View Project
+                            <span>View Library</span>
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
                           </button>
                         </div>
                       ))
                     ) : (
                       <div className={styles.noProjects}>
-                        <p>No projects yet. Create your first project to get started!</p>
+                        <div className={styles.noProjectsIcon}>
+                          <svg
+                            width="64"
+                            height="64"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                            <polyline points="9 22 9 12 15 12 15 22" />
+                          </svg>
+                        </div>
+                        <h3>No projects yet</h3>
+                        <p>Create your first project to get started with your marketing journey!</p>
                         <button
                           className={styles.createFirstProjectButton}
                           onClick={() => setIsProjectPopupOpen(true)}
                         >
-                          Create Your First Project
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M12 5v14M5 12h14" />
+                          </svg>
+                          <span>Create Your First Project</span>
                         </button>
                       </div>
                     )}
                   </div>
                 </div>
               </div>
-            )}
+            ) : null}
 
           </section>
         </div>
