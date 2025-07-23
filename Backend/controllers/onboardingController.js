@@ -83,6 +83,22 @@ class OnboardingController {
       });
     }
   }
+
+  markCoreMessageSeen = async (req, res) => {
+    try {
+      await UserOnboarding.markCoreMessageSeen(req.user.id);
+      res.status(200).json({
+        success: true,
+        message: 'Core message marked as seen'
+      });
+    } catch (error) {
+      console.error('Error marking core message as seen:', error);
+      res.status(500).json({
+        message: 'Failed to mark core message as seen',
+        error: error.message
+      });
+    }
+  }
 }
 
 export default new OnboardingController(); 

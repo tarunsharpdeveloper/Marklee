@@ -12,5 +12,6 @@ router.post('/create', validateRequest(authSchema.onboarding), auth, onboardingC
 router.get('/get', auth, onboardingController.getOnboardingData);
 router.post('/user', auth, onboardingController.createOnboardingUser);
 router.post('/core-message', auth, onboardingController.updateCoreMessage);
+router.post('/core-message-seen', auth, onboardingController.markCoreMessageSeen);
 
 export default router; 

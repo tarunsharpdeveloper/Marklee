@@ -244,3 +244,7 @@ CREATE TABLE IF NOT EXISTS user_onboarding (
 -- Add core_message column to user_onboarding table if it doesn't exist
 ALTER TABLE user_onboarding
 ADD COLUMN IF NOT EXISTS core_message TEXT;
+
+-- Add core_message_seen column to user_onboarding table if it doesn't exist
+ALTER TABLE user_onboarding
+ADD COLUMN IF NOT EXISTS core_message_seen BOOLEAN DEFAULT FALSE;

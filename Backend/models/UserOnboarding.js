@@ -49,6 +49,21 @@ class UserOnboarding {
     }
   }
 
+  static async markCoreMessageSeen(userId) {
+    try {
+      const query = `
+        UPDATE user_onboarding 
+        SET core_message_seen = TRUE
+        WHERE user_id = ?
+      `;
+
+      await db.execute(query, [userId]);
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   static async findByUserId(userId) {
     try {
       const [metadata] = await db.execute(

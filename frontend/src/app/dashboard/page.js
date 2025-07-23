@@ -1059,6 +1059,9 @@ export default function Dashboard() {
   };
 
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
+  const [coreMessageSeen, setCoreMessageSeen] = useState(false);
+  const [showProjects, setShowProjects] = useState(false);
+  const [onboardingData, setOnboardingData] = useState(null);
 
   const handleEditCoreMessage = async () => {
     try {
@@ -1128,6 +1131,7 @@ export default function Dashboard() {
       }
 
       const { data } = await onboardingResponse.json();
+      setOnboardingData(data);
 
       if (shouldRefresh && data) {
         const formData =
@@ -1171,6 +1175,15 @@ export default function Dashboard() {
       } else if (data && data.core_message) {
         setCoreMessage(data.core_message);
         storeCoreMessage(data.core_message);
+      }
+
+      // Check if core message has been seen
+      if (data && typeof data.core_message_seen === 'boolean') {
+        setCoreMessageSeen(data.core_message_seen);
+        // If core message has been seen in database, show projects directly
+        if (data.core_message_seen) {
+          setShowProjects(true);
+        }
       }
     } catch (error) {
       console.error("Error fetching core message:", error);
@@ -1800,8 +1813,30 @@ export default function Dashboard() {
     }
   };
 
-  const handleSaveAndContinue = () => {
-    setShowSaveAndContinue(true);
+  const handleSaveAndContinue = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      // Mark core message as seen
+      await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message-seen`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setCoreMessageSeen(true);
+      setShowSaveAndContinue(true);
+    } catch (error) {
+      console.error("Error marking core message as seen:", error);
+      // Still show the save and continue section even if marking as seen fails
+      setShowSaveAndContinue(true);
+    }
   };
 
   const renderProjectPopup = () => {
@@ -2406,7 +2441,10 @@ export default function Dashboard() {
                     <p className={styles.saveAndContinueReady}>Ready to go?</p>
                     <button 
                       className={styles.saveAndContinueButton}
-                      onClick={() => router.push('/library')}
+                      onClick={() => {
+                        setShowSaveAndContinue(false);
+                        setShowProjects(true);
+                      }}
                     >
                       Let&apos;s go!
                     </button>
@@ -2414,7 +2452,7 @@ export default function Dashboard() {
                 </div>
               </div>
             ) : (
-              coreMessage && (
+              coreMessage && !onboardingData?.core_message_seen && !showProjects && !showSaveAndContinue && (
               <div className={styles.coreMessageSection}>
                 <div className={styles.coreMessageContainer}>
                   <div className={styles.coreMessageHeader}>
@@ -2555,9 +2593,57 @@ export default function Dashboard() {
               </div>
               )
             )}
+
+            {/* Show projects when "Let's go!" has been clicked OR core message has been seen */}
+            {(showProjects || onboardingData?.core_message_seen) && (
+              <div className={styles.projectsSection}>
+                <div className={styles.projectsContainer}>
+                  <div className={styles.projectsHeader}>
+                    <h3>Your Projects</h3>
+                    <button
+                      className={styles.createProjectButton}
+                      onClick={() => setIsProjectPopupOpen(true)}
+                    >
+                      Create New Project
+                    </button>
+                  </div>
+                  <div className={styles.projectsList}>
+                    {projects.length > 0 ? (
+                      projects.map((project) => (
+                        <div key={project.id} className={styles.projectCard}>
+                          <div className={styles.projectInfo}>
+                            <h4>{project.name}</h4>
+                            <span className={styles.projectStatus}>
+                              {project.status}
+                            </span>
+                          </div>
+                          <button
+                            className={styles.viewProjectButton}
+                            onClick={() => router.push('/library')}
+                          >
+                            View Project
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className={styles.noProjects}>
+                        <p>No projects yet. Create your first project to get started!</p>
+                        <button
+                          className={styles.createFirstProjectButton}
+                          onClick={() => setIsProjectPopupOpen(true)}
+                        >
+                          Create Your First Project
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
           </section>
         </div>
-      </main>
+      </main> 
     </div>
   );
 }

@@ -4403,3 +4403,193 @@
     font-size: 0.85rem;
   }
 }
+
+/* Projects Section Styles */
+.projectsSection {
+  padding: 2rem;
+  background: var(--card-bg);
+  border-radius: 24px;
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  margin-bottom: 2rem;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.projectsContainer {
+  max-width: 100%;
+}
+
+.projectsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.projectsHeader h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.createProjectButton {
+  background: linear-gradient(135deg, #282ab3 0%, #1e40af 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.createProjectButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(40, 42, 179, 0.3);
+}
+
+.projectsList {
+  display: grid;
+  gap: 1rem;
+}
+
+.projectCard {
+  background: var(--background);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.projectCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-color: #282ab3;
+}
+
+.projectInfo {
+  flex: 1;
+}
+
+.projectInfo h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0 0 0.5rem 0;
+}
+
+.projectStatus {
+  background: #e5e7eb;
+  color: #374151;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.viewProjectButton {
+  background: #282ab3;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.875rem;
+}
+
+.viewProjectButton:hover {
+  background: #1e40af;
+  transform: translateY(-1px);
+}
+
+.noProjects {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: var(--background);
+  border: 2px dashed var(--card-border);
+  border-radius: 16px;
+}
+
+.noProjects p {
+  color: var(--foreground);
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.8;
+}
+
+.createFirstProjectButton {
+  background: linear-gradient(135deg, #282ab3 0%, #1e40af 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.createFirstProjectButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(40, 42, 179, 0.3);
+}
+
+@media (max-width: 768px) {
+  .projectsSection {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .projectsHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .projectsHeader h3 {
+    font-size: 1.25rem;
+  }
+
+  .projectCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .viewProjectButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .projectsSection {
+    padding: 1rem;
+  }
+
+  .projectsHeader h3 {
+    font-size: 1.125rem;
+  }
+
+  .projectCard {
+    padding: 1rem;
+  }
+
+  .noProjects {
+    padding: 2rem 1rem;
+  }
+}
