@@ -8,6 +8,12 @@ class UserOnboarding {
     coreMessage = null
   }) {
     try {
+      console.log('=== USER ONBOARDING CREATE ===');
+      console.log('User ID:', userId);
+      console.log('Data length:', data ? data.length : 0);
+      console.log('Data preview:', data ? data.substring(0, 200) + '...' : 'null');
+      console.log('Core message:', coreMessage);
+
       const query = `
         INSERT INTO user_onboarding (
           user_id, data, core_message
@@ -17,11 +23,16 @@ class UserOnboarding {
           core_message = VALUES(core_message)
       `;
 
+      console.log('SQL Query:', query);
+      console.log('Query parameters:', [userId, data ? data.substring(0, 100) + '...' : 'null', coreMessage]);
+
       const [result] = await db.execute(query, [
         userId,
         data,
         coreMessage
       ]);
+
+      console.log('Database result:', result);
 
       return {
         id: result.insertId,
@@ -30,6 +41,7 @@ class UserOnboarding {
         coreMessage
       };
     } catch (error) {
+      console.error('Error in UserOnboarding.create:', error);
       throw error;
     }
   }

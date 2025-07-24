@@ -50,14 +50,30 @@ class OnboardingController {
   createOnboardingUser = async (req, res) => {
     try {
       const { data, coreMessage } = req.body;
+      console.log('=== ONBOARDING CREATE REQUEST ===');
+      console.log('User ID:', req.user.id);
+      console.log('Data received:', data);
+      console.log('Data type:', typeof data);
+      console.log('Data length:', data ? data.length : 0);
+      console.log('Core message:', coreMessage);
+      
       // Check if data is already a string or needs to be stringified
       const dataToStore = typeof data === 'string' ? data : JSON.stringify(data);
+      console.log('Data to store:', dataToStore);
+      console.log('Data to store length:', dataToStore.length);
       
       const user = await UserOnboarding.create({
         userId: req.user.id,
         data: dataToStore,
         coreMessage
       });
+      
+      console.log('User onboarding created successfully:', {
+        id: user.id,
+        userId: user.userId,
+        dataLength: user.data ? user.data.length : 0
+      });
+      
       res.status(201).json({
         success: true,
         message: 'Onboarding user created successfully',
