@@ -4,30 +4,33 @@ import { pool as db } from '../config/database.js';
 class UserOnboarding {
   static async create({
     userId,
+    projectId = null,
     data,
     coreMessage = null
   }) {
     try {
       console.log('=== USER ONBOARDING CREATE ===');
       console.log('User ID:', userId);
+      console.log('Project ID:', projectId);
       console.log('Data length:', data ? data.length : 0);
       console.log('Data preview:', data ? data.substring(0, 200) + '...' : 'null');
       console.log('Core message:', coreMessage);
 
       const query = `
         INSERT INTO user_onboarding (
-          user_id, data, core_message
-        ) VALUES (?, ?, ?)
+          user_id, project_id, data, core_message
+        ) VALUES (?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           data = VALUES(data),
           core_message = VALUES(core_message)
       `;
 
       console.log('SQL Query:', query);
-      console.log('Query parameters:', [userId, data ? data.substring(0, 100) + '...' : 'null', coreMessage]);
+      console.log('Query parameters:', [userId, projectId, data ? data.substring(0, 100) + '...' : 'null', coreMessage]);
 
       const [result] = await db.execute(query, [
         userId,
+        projectId,
         data,
         coreMessage
       ]);
@@ -37,6 +40,7 @@ class UserOnboarding {
       return {
         id: result.insertId,
         userId,
+        projectId,
         data,
         coreMessage
       };
@@ -84,6 +88,19 @@ class UserOnboarding {
       );
       return metadata[0] || null;
     } catch (error) {
+      throw error;
+    }
+  }
+
+  static async findByUserIdAndProject(userId, projectId) {
+    try {
+      const [rows] = await db.execute(
+        'SELECT * FROM user_onboarding WHERE user_id = ? AND project_id = ?',
+        [userId, projectId]
+      );
+      return rows[0] || null;
+    } catch (error) {
+      console.error('Error in UserOnboarding.findByUserIdAndProject:', error);
       throw error;
     }
   }

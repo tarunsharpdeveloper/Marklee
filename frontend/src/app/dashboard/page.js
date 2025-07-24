@@ -2159,7 +2159,24 @@ export default function Dashboard() {
           <h2>Your Projects</h2>
           <button 
             className={styles.createProjectButton}
-            onClick={() => setIsProjectPopupOpen(true)}
+            onClick={() => {
+              // Clear any existing project context
+              localStorage.removeItem('currentProjectId');
+              
+              // Clear form fields to trigger loading state (same as Get Started)
+              setFormFields(null);
+              setMarketingFormAnswers({});
+              setCoreMessage('');
+              
+              // Show the step form directly (same as Get Started)
+              setShowStepForm(true);
+              setCurrentStep(1);
+              setShowProjects(false);
+              setShowWelcome(false);
+              setShowSaveAndContinue(false);
+              
+              console.log('Create New Project clicked - opening discovery questionnaire with loading state');
+            }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 5v14M5 12h14" />
@@ -2197,8 +2214,8 @@ export default function Dashboard() {
                           console.log('Project ID:', project.id);
                           console.log('Fetching saved onboarding data for project...');
                           
-                          // Fetch the saved onboarding data
-                          const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`, {
+                          // Fetch the saved onboarding data for this specific project
+                          const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${project.id}`, {
                             headers: {
                               'Authorization': `Bearer ${token}`
                             }
@@ -2209,9 +2226,11 @@ export default function Dashboard() {
 
                           if (response.ok) {
                             const result = await response.json();
-                            console.log('Fetched onboarding data:', result);
+                                                      console.log('Fetched onboarding data:', result);
+                          console.log('Project ID being fetched:', project.id);
+                          console.log('Full response data:', JSON.stringify(result, null, 2));
 
-                            if (result.data && result.data.data) {
+                          if (result.data && result.data.data) {
                               try {
                                 // Parse the saved data
                                 const savedData = JSON.parse(result.data.data);
@@ -2635,7 +2654,8 @@ export default function Dashboard() {
                },
                body: JSON.stringify({
                  data: JSON.stringify(formDataWithQuestions),
-                 coreMessage: null // Don't generate core message yet
+                 coreMessage: null, // Don't generate core message yet
+                 projectId: localStorage.getItem('currentProjectId') || null
                })
              });
 
@@ -2769,7 +2789,8 @@ export default function Dashboard() {
                },
                body: JSON.stringify({
                  data: JSON.stringify(formDataWithQuestions),
-                 coreMessage: data.data?.coreMessage
+                 coreMessage: data.data?.coreMessage,
+                 projectId: projectId // Use the projectId from the current context
                }),
              });
 
@@ -3059,10 +3080,9 @@ export default function Dashboard() {
             {/* Step Form Section */}
             {showStepForm && !showSaveAndContinue && !showProjects && (
               <div className={styles.stepFormSection}>
+                
                 <div className={styles.stepFormContainer}>
-                  <div className={styles.stepFormHeader}>
-                    <div className={styles.stepFormHeaderTop}>
-                      <button 
+                <button 
                         className={styles.backToProjectsButton}
                         onClick={() => {
                           setShowStepForm(false);
@@ -3073,8 +3093,12 @@ export default function Dashboard() {
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M19 12H5M12 19l-7-7 7-7" />
                         </svg>
-                        Back to Projects
+                      
                       </button>
+                  <div className={styles.stepFormHeader}>
+                  
+                    <div className={styles.stepFormHeaderTop}>
+                      
                       <h3>
                         {localStorage.getItem('currentProjectId') ? 
                           `Project: ${projects?.find(p => p.id == localStorage.getItem('currentProjectId'))?.name || 'Unknown Project'}` : 
@@ -3101,8 +3125,7 @@ export default function Dashboard() {
                       <div className={styles.discoveryContent}>
                         <h4>Discovery Questionnaire</h4>
                         <p>Tell us about your business so we can create your perfect marketing message</p>
-                        
-                        {isMarketingFormLoading && (
+                       {isMarketingFormLoading && (
                           <div className={styles.loadingOverlay}>
                             <div className={styles.loadingContainer}>
                               <div className={styles.loader}></div>
@@ -3120,6 +3143,9 @@ export default function Dashboard() {
                                                  field.nameKey === 'productSummary' ||
                                                  field.nameKey === 'coreAudience' ||
                                                  field.nameKey === 'outcome';
+                                
+                                // Debug: Log the field value
+                                console.log(`Field ${field.nameKey}:`, marketingFormAnswers[field.nameKey]);
                                     
                                     return (
                                   <div key={index} className={styles.inputGroup}>
@@ -3171,10 +3197,12 @@ export default function Dashboard() {
                         )}
                         
                         {!formFields && !isMarketingFormLoading && (
-                          <div className={styles.loadingContainer}>
-                            <div className={styles.loader}></div>
-                            <p className={styles.loadingMessage}>Loading questionnaire...</p>
-                        </div>
+                          <div className={styles.formContainer}>
+                            <div className={styles.formLoaderContainer}>
+                              <div className={styles.formLoader}></div>
+                              <p className={styles.formLoadingMessage}>{loadingMessage}</p>
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>

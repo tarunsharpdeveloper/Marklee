@@ -25,45 +25,110 @@ class OnboardingController {
 
   getOnboardingData = async (req, res) => {
     try {
-      const metadata = await UserOnboarding.findByUserId(req.user.id);
+      const { projectId } = req.query;
+      console.log('getOnboardingData - projectId:', projectId);
+      
+      const metadata = await UserOnboarding.findByUserIdAndProject(req.user.id, projectId);
       
       console.log('getOnboardingData - metadata:', metadata);
       
-    if (!metadata) {
-      return res.status(404).json({
-        message: 'Onboarding data not found'
-      });
-    }
+      if (!metadata || !metadata.data) {
+        return res.status(404).json({
+          message: 'Onboarding data not found'
+        });
+      }
 
-    res.status(200).json({
-      data: metadata
-    });
-  } catch (error) {
-    console.error('Error fetching onboarding data:', error);
-    res.status(500).json({
-      message: 'Failed to fetch onboarding data',
-      error: error.message
-    });
+      // Parse the stored data
+      let allData;
+      try {
+        allData = JSON.parse(metadata.data);
+      } catch (parseError) {
+        console.error('Error parsing onboarding data:', parseError);
+        return res.status(500).json({
+          message: 'Error parsing onboarding data'
+        });
+      }
+
+      // Return project-specific data if projectId is provided
+      if (projectId && allData[`project_${projectId}`]) {
+        console.log(`Found project-specific data for project_${projectId}:`, allData[`project_${projectId}`]);
+        return res.status(200).json({
+          data: {
+            ...metadata,
+            data: JSON.stringify(allData[`project_${projectId}`])
+          }
+        });
+      } else if (projectId) {
+        console.log(`No project-specific data found for project_${projectId}`);
+        console.log('Available keys in allData:', Object.keys(allData));
+      }
+
+      // Return general data if no projectId or project not found
+      if (allData.general) {
+        return res.status(200).json({
+          data: {
+            ...metadata,
+            data: JSON.stringify(allData.general)
+          }
+        });
+      }
+
+      // Return all data if no specific project requested
+      res.status(200).json({
+        data: metadata
+      });
+    } catch (error) {
+      console.error('Error fetching onboarding data:', error);
+      res.status(500).json({
+        message: 'Failed to fetch onboarding data',
+        error: error.message
+      });
     }
   }
 
   createOnboardingUser = async (req, res) => {
     try {
-      const { data, coreMessage } = req.body;
+      const { data, coreMessage, projectId } = req.body;
       console.log('=== ONBOARDING CREATE REQUEST ===');
       console.log('User ID:', req.user.id);
+      console.log('Project ID:', projectId);
       console.log('Data received:', data);
       console.log('Data type:', typeof data);
       console.log('Data length:', data ? data.length : 0);
       console.log('Core message:', coreMessage);
       
-      // Check if data is already a string or needs to be stringified
-      const dataToStore = typeof data === 'string' ? data : JSON.stringify(data);
-      console.log('Data to store:', dataToStore);
+      // Get existing onboarding data
+      let existingData = {};
+      const existingOnboarding = await UserOnboarding.findByUserId(req.user.id);
+      
+      if (existingOnboarding && existingOnboarding.data) {
+        try {
+          existingData = JSON.parse(existingOnboarding.data);
+        } catch (parseError) {
+          console.log('Could not parse existing data, starting fresh');
+          existingData = {};
+        }
+      }
+      
+      // Parse the new data
+      const newProjectData = typeof data === 'string' ? JSON.parse(data) : data;
+      
+      // Add/update project-specific data
+      if (projectId) {
+        existingData[`project_${projectId}`] = newProjectData;
+      } else {
+        // For backward compatibility, store general data
+        existingData.general = newProjectData;
+      }
+      
+      // Stringify the combined data
+      const dataToStore = JSON.stringify(existingData);
+      console.log('Combined data to store:', dataToStore);
       console.log('Data to store length:', dataToStore.length);
       
       const user = await UserOnboarding.create({
         userId: req.user.id,
+        projectId: projectId || null,
         data: dataToStore,
         coreMessage
       });
@@ -71,6 +136,7 @@ class OnboardingController {
       console.log('User onboarding created successfully:', {
         id: user.id,
         userId: user.userId,
+        projectId: projectId,
         dataLength: user.data ? user.data.length : 0
       });
       
