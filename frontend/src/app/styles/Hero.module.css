@@ -119,10 +119,7 @@
   background: rgba(255, 255, 255, 0.15);
 }
 
-/* Smooth Scrolling */
-html {
-  scroll-behavior: smooth;
-}
+  
 
 /* About Section Styles */
 .about_section {

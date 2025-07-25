@@ -346,6 +346,7 @@ const MemoizedEditPopup = memo(({
         getContextualQuestion();
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, editedCoreMessage, coreMessage]);
 
   // Modified useEffect to scroll only on user messages
@@ -1293,6 +1294,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchCoreMessage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array means this runs once on mount
 
   // Cleanup timeout on unmount
@@ -2349,7 +2351,7 @@ export default function Dashboard() {
                       console.log('Current step set to:', savedStep);
                     }}
                   >
-                    Open Library
+                    Open Library  
                   </button>
                 </div>
               </div>
@@ -3734,7 +3736,7 @@ export default function Dashboard() {
                           </svg>
                         </div>
                         <h3>Setup Complete!</h3>
-                        <p>Your core marketing message has been created successfully. You're now ready to start creating content and reaching your audience.</p>
+                        <p>Your core marketing message has been created successfully. You&apos;re now ready to start creating content and reaching your audience.</p>
                         <div className={styles.completeActions}>
                           <button 
                             className={styles.completeButton}
