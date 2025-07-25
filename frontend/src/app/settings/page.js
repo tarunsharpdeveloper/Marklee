@@ -26,25 +26,29 @@ export default function Settings() {
       try {
         const token = localStorage.getItem('token');
         if (!token) {
-          router.push('/');
+          console.log('No token found, redirecting to dashboard');
+          router.push('/dashboard');
           return;
         }
 
-        const userData = JSON.parse(localStorage.getItem('user'));
+        const userData = localStorage.getItem('user');
         if (!userData) {
-          router.push('/');
+          console.log('No user data found, redirecting to dashboard');
+          router.push('/dashboard');
           return;
         }
 
-        setUser(userData);
+        const parsedUserData = JSON.parse(userData);
+        setUser(parsedUserData);
         setFormData(prev => ({
           ...prev,
-          name: userData.name || '',
-          email: userData.email || ''
+          name: parsedUserData.name || '',
+          email: parsedUserData.email || ''
         }));
       } catch (error) {
         console.error('Error checking auth:', error);
-        router.push('/');
+        // Instead of redirecting to root, redirect to dashboard
+        router.push('/dashboard');
       } finally {
         setLoading(false);
       }

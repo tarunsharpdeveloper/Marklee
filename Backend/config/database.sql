@@ -240,7 +240,6 @@ CREATE TABLE IF NOT EXISTS user_onboarding (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
 -- Add core_message column to user_onboarding table if it doesn't exist
 ALTER TABLE user_onboarding
 ADD COLUMN IF NOT EXISTS core_message TEXT;
@@ -248,3 +247,8 @@ ADD COLUMN IF NOT EXISTS core_message TEXT;
 -- Add core_message_seen column to user_onboarding table if it doesn't exist
 ALTER TABLE user_onboarding
 ADD COLUMN IF NOT EXISTS core_message_seen BOOLEAN DEFAULT FALSE;
+
+-- Add current_form_step column to user_onboarding table if it doesn't exist
+ALTER TABLE user_onboarding
+ADD COLUMN IF NOT EXISTS current_form_step INT DEFAULT 1;
+

@@ -22,7 +22,7 @@ const MessageSkeleton = () => (
 const MemoizedEditPopup = memo(({ 
   isOpen, 
   messages, 
-  setMessages,
+  setMessages, 
   editedCoreMessage,
   coreMessage,
   setCoreMessage,
@@ -1066,13 +1066,16 @@ export default function Dashboard() {
   const [showProjects, setShowProjects] = useState(false);
   const [hasExistingProjects, setHasExistingProjects] = useState(false);
   const [onboardingData, setOnboardingData] = useState(null);
-  const [showWelcome, setShowWelcome] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false); // Changed from true to false
   const [showStepForm, setShowStepForm] = useState(false);
   const [formFields, setFormFields] = useState(null);
   const [marketingFormAnswers, setMarketingFormAnswers] = useState({});
   const [isMarketingFormLoading, setIsMarketingFormLoading] = useState(false);
   const [marketingError, setMarketingError] = useState(null);
   const [loadingMessage, setLoadingMessage] = useState('');
+
+  // Add loading state for initial project check
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [totalSteps] = useState(3);
@@ -1440,13 +1443,31 @@ export default function Dashboard() {
           setShowProjects(true);
           setShowWelcome(false);
           setShowStepForm(false);
+          setIsInitialLoading(false); // Stop loading when projects found
+        } else {
+          // No existing projects, show welcome section immediately
+          setShowWelcome(true);
+          setShowProjects(false);
+          setShowStepForm(false);
+          setIsInitialLoading(false); // Stop loading when no projects found
         }
       } else {
         console.error("Failed to fetch projects:", response.status);
+        // On error, show welcome section as fallback
+        setShowWelcome(true);
+        setShowProjects(false);
+        setShowStepForm(false);
+        setIsInitialLoading(false); // Stop loading on error
       }
     } catch (error) {
       console.error("Error fetching projects:", error);
+      // On error, show welcome section as fallback
+      setShowWelcome(true);
+      setShowProjects(false);
+      setShowStepForm(false);
+      setIsInitialLoading(false); // Stop loading on error
     }
+    // Remove the finally block since we're setting loading to false in each condition
   }, [router]);
 
   const fetchProjectName = useCallback(async () => {
@@ -2156,7 +2177,7 @@ export default function Dashboard() {
     return (
       <div className={styles.projectsSection}>
         <div className={styles.projectsHeader}>
-          <h2>Your Projects</h2>
+          <h2>Your Library</h2>
           <button 
             className={styles.createProjectButton}
             onClick={() => {
@@ -2181,7 +2202,7 @@ export default function Dashboard() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 5v14M5 12h14" />
             </svg>
-            Create New Project
+            Create New Library
           </button>
         </div>
         
@@ -2197,7 +2218,7 @@ export default function Dashboard() {
                   </div>
                   <div className={styles.projectInfo}>
                     <h3 className={styles.projectName}>{project.name}</h3>
-                    <span className={styles.projectStatus}>{project.status || 'Active'}</span>
+                  
                   </div>
                 </div>
                 <div className={styles.projectActions}>
@@ -2226,11 +2247,11 @@ export default function Dashboard() {
 
                           if (response.ok) {
                             const result = await response.json();
-                                                      console.log('Fetched onboarding data:', result);
-                          console.log('Project ID being fetched:', project.id);
-                          console.log('Full response data:', JSON.stringify(result, null, 2));
+                            console.log('Fetched onboarding data:', result);
+                            console.log('Project ID being fetched:', project.id);
+                            console.log('Full response data:', JSON.stringify(result, null, 2));
 
-                          if (result.data && result.data.data) {
+                            if (result.data && result.data.data) {
                               try {
                                 // Parse the saved data
                                 const savedData = JSON.parse(result.data.data);
@@ -2264,6 +2285,26 @@ export default function Dashboard() {
                                   // If data format is not as expected, use default form
                                   await fetchFormFields();
                                 }
+
+                                // Store the project-specific core message if it exists
+                                if (result.data.core_message) {
+                                  console.log('Found project-specific core message:', result.data.core_message);
+                                  // Store in localStorage for later use
+                                  const coreMessageData = {
+                                    message: result.data.core_message,
+                                    timestamp: Date.now(),
+                                    context: 'project-specific-core-message',
+                                    projectId: project.id
+                                  };
+                                  localStorage.setItem('projectCoreMessage', JSON.stringify(coreMessageData));
+                                  // Also set in state for immediate use
+                                  setCoreMessage(result.data.core_message);
+                                } else {
+                                  console.log('No project-specific core message found');
+                                  // Clear any existing core message
+                                  localStorage.removeItem('projectCoreMessage');
+                                  setCoreMessage('');
+                                }
                               } catch (parseError) {
                                 console.error('Error parsing saved data:', parseError);
                                 // If parsing fails, use default form
@@ -2293,18 +2334,22 @@ export default function Dashboard() {
                         await fetchFormFields();
                       }
                       
+                      // Load the current step for this project
+                      const savedStep = await loadCurrentStep(project.id);
+                      console.log('Loaded saved step for project:', savedStep);
+                      
                       // Hide projects and show step form
                       setShowProjects(false);
                       setShowWelcome(false);
                       setShowSaveAndContinue(false);
                       setShowStepForm(true);
-                      setCurrentStep(1); // Start from step 1 (discovery form)
+                      setCurrentStep(savedStep); // Start from the saved step
                       
                       console.log('Step form should now be visible');
-                      console.log('Current step set to:', 1);
+                      console.log('Current step set to:', savedStep);
                     }}
                   >
-                    Open Project
+                    Open Library
                   </button>
                 </div>
               </div>
@@ -2531,20 +2576,137 @@ export default function Dashboard() {
         setIsEditPopupOpen(false);
   };
 
+  // Function to clear project-specific data
+  const clearProjectSpecificData = () => {
+    localStorage.removeItem('projectCoreMessage');
+    localStorage.removeItem('currentProjectId');
+    setCoreMessage('');
+    setShowTypewriter(false);
+     fetchProjects()
+  };
+
   const handleNextStep = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
+    const nextStep = currentStep + 1;
+    
+    if (nextStep <= totalSteps) {
+      setCurrentStep(nextStep);
+      // Save the current step to database
+      saveCurrentStep(nextStep);
     }
+    
+    // If we're moving FROM step 1 TO step 2 (Discovery Questionnaire to Core Message)
+    if (currentStep === 1 && nextStep === 2) {
+      // Check if we have a project-specific core message stored
+      const projectCoreMessage = localStorage.getItem('projectCoreMessage');
+      if (projectCoreMessage) {
+        try {
+          const coreMessageData = JSON.parse(projectCoreMessage);
+          console.log('Loading project-specific core message:', coreMessageData.message);
+          setCoreMessage(coreMessageData.message);
+          setShowTypewriter(true); // Show typewriter effect for the core message
+        } catch (error) {
+          console.error('Error parsing project core message:', error);
+          // If parsing fails, try to fetch core message from backend
+          fetchCoreMessage();
+        }
+      } else {
+        console.log('No project-specific core message found, fetching from backend');
+        // If no project-specific message, fetch from backend
+        fetchCoreMessage();
+      }
+    }
+    
+    // If we're moving FROM step 2 TO step 3 (Core Message to Complete)
+    if (currentStep === 2 && nextStep === 3) {
+      setShowStepForm(false);
+      setShowProjects(true);
+      // Clear project-specific data when returning to projects
+      clearProjectSpecificData();
+      // Fetch latest projects to ensure we have the most recent data
+      fetchProjects();
+    }
+    
     // If we're on the last step, hide the step form and show projects
-    if (currentStep === totalSteps - 1) {
+    if (nextStep > totalSteps) {
       setShowStepForm(false);
       setShowProjects(true);
     }
   };
 
+  // Function to save current step to database
+  const saveCurrentStep = async (step) => {
+    try {
+      const token = localStorage.getItem('token');
+      const currentProjectId = localStorage.getItem('currentProjectId');
+      
+      if (!token || !currentProjectId) {
+        console.log('No token or project ID, skipping step save');
+        return;
+      }
+
+      console.log('Saving current step:', step, 'for project:', currentProjectId);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/current-step`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          projectId: currentProjectId,
+          currentStep: step
+        })
+      });
+
+      if (response.ok) {
+        console.log('Current step saved successfully:', step);
+      } else {
+        console.error('Failed to save current step');
+      }
+    } catch (error) {
+      console.error('Error saving current step:', error);
+    }
+  };
+
+  // Function to load current step from database
+  const loadCurrentStep = async (projectId) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token || !projectId) {
+        console.log('No token or project ID, using default step 1');
+        return 1;
+      }
+
+      console.log('Loading current step for project:', projectId);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/current-step?projectId=${projectId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const step = data.data?.currentStep || 1;
+        console.log('Loaded current step:', step);
+        return step;
+      } else {
+        console.error('Failed to load current step, using default step 1');
+        return 1;
+      }
+    } catch (error) {
+      console.error('Error loading current step:', error);
+      return 1;
+    }
+  };
+
   const handlePreviousStep = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      const previousStep = currentStep - 1;
+      setCurrentStep(previousStep);
+      // Save the current step to database
+      saveCurrentStep(previousStep);
     }
   };
 
@@ -2605,11 +2767,62 @@ export default function Dashboard() {
     const updated = { ...marketingFormAnswers, [name]: value };
     setMarketingFormAnswers(updated);
     
-    // Auto-save the form data as user types (debounced)
-    clearTimeout(autoSaveTimeout.current);
-    autoSaveTimeout.current = setTimeout(() => {
-      saveFormData(updated);
-    }, 2000); // Save after 2 seconds of no typing
+    // Check if we're opening an existing project
+    const currentProjectId = localStorage.getItem('currentProjectId');
+    const isOpeningExistingProject = currentProjectId && currentProjectId !== 'null' && currentProjectId !== 'undefined';
+    
+    if (isOpeningExistingProject) {
+      // Auto-save form changes immediately for existing projects
+      clearTimeout(autoSaveTimeout.current);
+      autoSaveTimeout.current = setTimeout(async () => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) return;
+
+          const formDataWithQuestions = {
+            formFields: formFields.fields,
+            formAnswers: updated,
+            welcomeMessage: formFields.welcomeMessage,
+            footerMessage: formFields.footerMessage
+          };
+
+          console.log('🔄 Auto-saving form changes for existing project:', {
+            projectId: currentProjectId,
+            formAnswers: updated
+          });
+          
+          // Save updated form data to onboarding for the existing project
+          const saveResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/user`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              data: JSON.stringify(formDataWithQuestions),
+              coreMessage: null, // Don't update core message yet
+              projectId: currentProjectId
+            })
+          });
+
+          if (saveResponse.ok) {
+            const saveResult = await saveResponse.json();
+            console.log('✅ Form changes auto-saved successfully for existing project:', saveResult.message);
+          } else {
+            const errorText = await saveResponse.text();
+            console.error('❌ Failed to auto-save form changes:', errorText);
+          }
+        } catch (error) {
+          console.error('❌ Error auto-saving form changes:', error);
+        }
+      }, 2000); // Save after 2 seconds of no typing
+    } else {
+      // Auto-save the form data as user types (debounced) for new projects
+      clearTimeout(autoSaveTimeout.current);
+      autoSaveTimeout.current = setTimeout(() => {
+        saveFormData(updated);
+      }, 2000); // Save after 2 seconds of no typing
+    }
   };
 
   const handleMarketingSubmit = async (e) => {
@@ -2633,6 +2846,127 @@ export default function Dashboard() {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No authentication token found');
 
+      // Check if we're opening an existing project
+      const currentProjectId = localStorage.getItem('currentProjectId');
+      const isOpeningExistingProject = currentProjectId && currentProjectId !== 'null' && currentProjectId !== 'undefined';
+
+      console.log('Is opening existing project:', isOpeningExistingProject);
+      console.log('Current project ID:', currentProjectId);
+
+      if (isOpeningExistingProject) {
+        // We're opening an existing project - don't create/update projects, just generate core message
+        console.log('Opening existing project - skipping project creation/update');
+        
+        // Check if the project name (description) has changed and update it if needed
+        const currentProjectName = projects?.find(p => p.id == currentProjectId)?.name;
+        const newProjectName = marketingFormAnswers.description?.trim();
+        
+        if (currentProjectName && newProjectName && currentProjectName !== newProjectName) {
+          console.log('Project name changed from:', currentProjectName, 'to:', newProjectName);
+          
+          // Update the project name in the database
+          const updateProjectResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/project/${currentProjectId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              projectName: newProjectName
+            })
+          });
+          
+          if (updateProjectResponse.ok) {
+            console.log('Project name updated successfully');
+            // Refresh projects to get updated data
+            await fetchProjects();
+            // Restore step form state after fetching projects
+            setShowStepForm(true);
+            setShowProjects(false);
+          } else {
+            console.error('Failed to update project name');
+          }
+        }
+        
+        // Generate marketing content for existing project (form data is already auto-saved)
+        console.log('🚀 Generating core message for existing project:', {
+          projectId: currentProjectId,
+          projectName: newProjectName || marketingFormAnswers.description
+        });
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            ...marketingFormAnswers,
+            projectId: currentProjectId,
+            projectName: newProjectName || marketingFormAnswers.description
+          })
+        });
+
+        if (!response.ok) {
+          clearInterval(loadingInterval);
+          throw new Error('Failed to generate marketing content');
+        }
+
+        const data = await response.json();
+        console.log('✅ Core message generated successfully:', data.data?.coreMessage?.substring(0, 100) + '...');
+        clearInterval(loadingInterval);
+
+        // Save the core message to onboarding for the existing project
+        const formDataWithQuestions = {
+          formFields: formFields.fields,
+          formAnswers: marketingFormAnswers,
+          welcomeMessage: formFields.welcomeMessage,
+          footerMessage: formFields.footerMessage
+        };
+
+        console.log('💾 Saving core message to database for project:', currentProjectId);
+
+        const coreMessageSaveResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/user`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            data: JSON.stringify(formDataWithQuestions),
+            coreMessage: data.data?.coreMessage,
+            projectId: currentProjectId
+          }),
+        });
+
+        if (coreMessageSaveResponse.ok) {
+          console.log('✅ Core message saved successfully for existing project');
+        } else {
+          console.error('❌ Failed to save core message');
+        }
+
+        if (data.data?.coreMessage) {
+          const storedData = {
+            message: data.data.coreMessage,
+            timestamp: Date.now(),
+            context: 'core-message'
+          };
+          localStorage.setItem('marketingCoreMessage', JSON.stringify(storedData));
+        }
+
+        // Update local state and advance to next step
+        setCoreMessage(data.data?.coreMessage || '');
+        setShowTypewriter(true);
+        setCurrentStep(2); // Move to step 2 (Core Message)
+        setShowStepForm(true); // Ensure step form stays visible
+        
+        // Save the current step to database
+        await saveCurrentStep(2);
+        
+        return; // Exit early - no project creation/update needed
+      }
+
+      // Original logic for new project creation (only runs when NOT opening existing project)
       // First, save the updated form data to database
       const formDataWithQuestions = {
         formFields: formFields.fields,
@@ -2645,19 +2979,19 @@ export default function Dashboard() {
       console.log('Sending form data to onboarding API:', formDataWithQuestions);
       console.log('Form data JSON string:', JSON.stringify(formDataWithQuestions));
 
-                   // Save updated form data to onboarding
-             const saveResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/user`, {
-               method: 'POST',
-               headers: {
-                 'Content-Type': 'application/json',
-                 'Authorization': `Bearer ${token}`
-               },
-               body: JSON.stringify({
-                 data: JSON.stringify(formDataWithQuestions),
-                 coreMessage: null, // Don't generate core message yet
-                 projectId: localStorage.getItem('currentProjectId') || null
-               })
-             });
+      // Save updated form data to onboarding
+      const saveResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          data: JSON.stringify(formDataWithQuestions),
+          coreMessage: null, // Don't generate core message yet
+          projectId: localStorage.getItem('currentProjectId') || null
+        })
+      });
 
       if (!saveResponse.ok) {
         const errorText = await saveResponse.text();
@@ -2780,19 +3114,19 @@ export default function Dashboard() {
         coreMessage: data.data?.coreMessage
       };
 
-                   // Save both form data and core message to onboarding
-             await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/user`, {
-               method: "POST",
-               headers: {
-                 "Content-Type": "application/json",
-                 "Authorization": `Bearer ${token}`,
-               },
-               body: JSON.stringify({
-                 data: JSON.stringify(formDataWithQuestions),
-                 coreMessage: data.data?.coreMessage,
-                 projectId: projectId // Use the projectId from the current context
-               }),
-             });
+      // Save both form data and core message to onboarding
+      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          data: JSON.stringify(formDataWithQuestions),
+          coreMessage: data.data?.coreMessage,
+          projectId: projectId // Use the projectId from the current context
+        }),
+      });
 
       if (data.data?.coreMessage) {
         const storedData = {
@@ -2817,7 +3151,80 @@ export default function Dashboard() {
     } finally {
       setIsMarketingFormLoading(false);
       setLoadingMessage('');
-      clearInterval(loadingInterval);
+    }
+  };
+
+  // Function to test form data update
+  const testFormDataUpdate = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const currentProjectId = localStorage.getItem('currentProjectId');
+      
+      if (!token || !currentProjectId) {
+        console.error('No token or project ID found for testing');
+        return;
+      }
+
+      console.log('=== TESTING FORM DATA UPDATE ===');
+      console.log('Project ID:', currentProjectId);
+      console.log('Current form answers:', marketingFormAnswers);
+
+      const formDataWithQuestions = {
+        formFields: formFields.fields,
+        formAnswers: marketingFormAnswers,
+        welcomeMessage: formFields.welcomeMessage,
+        footerMessage: formFields.footerMessage
+      };
+
+      console.log('Form data to save:', formDataWithQuestions);
+
+      const saveResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          data: JSON.stringify(formDataWithQuestions),
+          coreMessage: null,
+          projectId: currentProjectId
+        })
+      });
+
+      console.log('Save response status:', saveResponse.status);
+      
+      if (saveResponse.ok) {
+        const saveResult = await saveResponse.json();
+        console.log('Save result:', saveResult);
+        
+        // Test fetching the data back
+        const fetchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${currentProjectId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (fetchResponse.ok) {
+          const fetchResult = await fetchResponse.json();
+          console.log('Fetched data after save:', fetchResult);
+          
+          if (fetchResult.data && fetchResult.data.data) {
+            try {
+              const parsedData = JSON.parse(fetchResult.data.data);
+              console.log('Parsed fetched data:', parsedData);
+              console.log('Form answers in fetched data:', parsedData.formAnswers);
+            } catch (parseError) {
+              console.error('Error parsing fetched data:', parseError);
+            }
+          }
+        }
+      } else {
+        const errorText = await saveResponse.text();
+        console.error('Save error:', errorText);
+      }
+
+    } catch (error) {
+      console.error('Error testing form data update:', error);
     }
   };
 
@@ -2930,20 +3337,7 @@ export default function Dashboard() {
                 </svg>
                 <span>Home</span>
               </li>
-              <li onClick={() => router.push("/library")}>
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                </svg>
-                <span>Library</span>
-              </li>
+             
               <li onClick={() => router.push("/settings")}> 
                 <svg
                   viewBox="0 0 24 24"
@@ -3051,6 +3445,7 @@ export default function Dashboard() {
                     <p className={styles.welcomeSubtitle}>
                       Your AI-powered marketing companion that helps you create compelling messages and reach your target audience effectively.
                     </p>
+                    <div className={styles.welcomeButtonContainer}>
                     <button 
                       className={styles.getStartedButton}
                       onClick={() => {
@@ -3072,6 +3467,7 @@ export default function Dashboard() {
                         <path d="M5 12h14M12 5l7 7-7 7" />
                       </svg>
                     </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3087,12 +3483,11 @@ export default function Dashboard() {
                         onClick={() => {
                           setShowStepForm(false);
                           setShowProjects(true);
-                          localStorage.removeItem('currentProjectId');
+                          // Clear project-specific data when going back to projects
+                          clearProjectSpecificData();
                         }}
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
+                        Back to folder
                       
                       </button>
                   <div className={styles.stepFormHeader}>
@@ -3107,11 +3502,11 @@ export default function Dashboard() {
                       </h3>
                       </div>
                     <Stepper activeStep={currentStep - 1} alternativeLabel sx={{ width: '100%', maxWidth: 600, margin: '0 auto' }}>
-                      <Step>
+                      <Step >
                         <StepLabel>Discovery Questionnaire</StepLabel>
                       </Step>
                       <Step>
-                        <StepLabel>Core Message</StepLabel>
+                        <StepLabel >Core Message</StepLabel>
                       </Step>
                       <Step>
                         <StepLabel>Complete</StepLabel>
@@ -3119,12 +3514,17 @@ export default function Dashboard() {
                     </Stepper>
                   </div>
                   
-                  {/* Step 1: Discovery Questionnaire */}
+                  {/* Step 1: Discovery Questionnaire */} 
                   {currentStep === 1 && (
                     <div className={styles.discoveryStep}>
                       <div className={styles.discoveryContent}>
                         <h4>Discovery Questionnaire</h4>
-                        <p>Tell us about your business so we can create your perfect marketing message</p>
+                        <p>
+                          {localStorage.getItem('currentProjectId') ? 
+                            'Review and update your project details to regenerate your core marketing message' : 
+                            'Tell us about your business so we can create your perfect marketing message'
+                          }
+                        </p>
                        {isMarketingFormLoading && (
                           <div className={styles.loadingOverlay}>
                             <div className={styles.loadingContainer}>
@@ -3166,6 +3566,9 @@ export default function Dashboard() {
                                             {field.guidance && (
                                       <small className={styles.guidance}>{field.guidance}</small>
                                             )}
+                                            {localStorage.getItem('currentProjectId') && (
+                                      <small className={styles.readOnlyIndicator}>*Changes will be saved to this project and core message will be regenerated</small>
+                                            )}
                                           </div>
                                 );
                               })}
@@ -3176,9 +3579,12 @@ export default function Dashboard() {
                                   className={styles.continueButton}
                                   disabled={isMarketingFormLoading}
                                 >
-                                  {isMarketingFormLoading ? 'Generating Core Message...' : 'Save & Generate Core Message'}
-                                          </button>
-                                        </div>
+                                  {isMarketingFormLoading ? 'Generating Core Message...' : 
+                                   localStorage.getItem('currentProjectId') ? 'Save Changes & Generate Core Message' : 'Save & Generate Core Message'}
+                                </button>
+                                
+                               
+                              </div>
 
                               {marketingError && (
                                 <div className={styles.error}>
@@ -3189,8 +3595,10 @@ export default function Dashboard() {
                               {/* Auto-save indicator */}
                               {isAutoSaving && (
                                 <div className={styles.autoSaveIndicator}>
-                                  <span>Saving...</span>
-                                        </div>
+                                  <span>
+                                    {localStorage.getItem('currentProjectId') ? 'Saving changes to project...' : 'Saving...'}
+                                  </span>
+                                </div>
                               )}
                             </form>
                           </div>

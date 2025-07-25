@@ -895,6 +895,10 @@
   display: none;
 }
 
+.stepLabel {
+  color: var(--foreground);
+}
+
 .greetingSection {
   width: 100%;
   position: relative;
@@ -905,6 +909,7 @@
   justify-content: center;
   flex-direction: column;
   padding: 2rem 1rem;
+  border: none;
 }
 
 .greetingContainer {
@@ -915,7 +920,7 @@
   /* padding: 2rem; */
   padding-top: 3rem;
   background: white;
-  border-radius: 12px;
+  /* border-radius: 12px; */
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
@@ -953,10 +958,6 @@
   width: fit-content;
 }
 
-.createProjectButton:hover {
-  background: #6c63e6;
-  transform: translateY(-2px);
-}
 
 .backgroundPattern {
   position: absolute;
@@ -4418,7 +4419,7 @@
 /* Projects Section Styles */
 .projectsSection {
   padding: 2.5rem;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  background: var(--background);
   border-radius: 28px;
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -4435,7 +4436,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(40, 42, 179, 0.3), transparent);
+  background: var(--background);
 }
 
 .projectsContainer {
@@ -4465,7 +4466,7 @@
 }
 
 .createProjectButton {
-  background: linear-gradient(135deg, #282ab3 0%, #1e40af 100%);
+  background: #004AAD;
   color: white;
   border: none;
   padding: 0.875rem 1.75rem;
@@ -4489,26 +4490,10 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: #004AAD;
   transition: left 0.5s;
 }
 
-.createProjectButton:hover::before {
-  left: 100%;
-}
-
-.createProjectButton:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(40, 42, 179, 0.4);
-}
-
-.createProjectButton svg {
-  transition: transform 0.3s ease;
-}
-
-.createProjectButton:hover svg {
-  transform: rotate(90deg);
-}
 
 .projectsList {
   display: grid;
@@ -4708,7 +4693,7 @@
 }
 
 .createFirstProjectButton {
-  background: linear-gradient(135deg, #282ab3 0%, #1e40af 100%);
+  background: #004AAD;
   color: white;
   border: none;
   padding: 1.25rem 2.5rem;
@@ -4833,7 +4818,7 @@
   background: var(--card);
   border-radius: 20px;
   padding: 3rem 2rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); */
   border: 1px solid var(--border);
 }
 
@@ -4856,7 +4841,7 @@
 }
 
 .getStartedButton {
-  background: linear-gradient(135deg, #282ab3 0%, #1e40af 100%);
+  background: #004AAD;
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -4878,23 +4863,31 @@
 
 /* Step Form Styles */
 .stepFormSection {
-  max-width: 800px;
+  max-width: 1300px;
   margin: 0 auto;
   padding: 2rem;
 }
-
+.welcomeButtonContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2rem;
+}
 .stepFormContainer {
   background: var(--card);
   border-radius: 20px;
   padding: 2rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--border);
+  /* width: 100%; */
 }
 
 .stepFormHeader {
   text-align: center;
   margin-bottom: 2rem;
 }
+.stepFormHeader span {
+  color: var(--foreground);
+}
+
 
 .stepFormHeader h3 {
   font-size: 1.75rem;
@@ -4951,6 +4944,7 @@
   font-weight: 600;
   color: var(--foreground);
   margin-bottom: 1rem;
+  text-align: start;
 }
 
 .discoveryContent p {
@@ -4958,6 +4952,7 @@
   opacity: 0.8;
   line-height: 1.6;
   margin-bottom: 1.5rem;
+  text-align: start;
 }
 
 .discoverySummary {
@@ -5193,6 +5188,16 @@
   cursor: not-allowed;
   transform: none;
 }
+.css-12eb3rq-MuiStepLabel-label.Mui-active {
+  color: var(--foreground);
+}
+.css-12eb3rq-MuiStepLabel-label {
+  color: var(--foreground);
+}
+.css-12eb3rq-MuiStepLabel-label.Mui-completed {
+  color: var(--foreground);
+}
+
 
 .successMessage {
   background: #d4edda;
@@ -5215,8 +5220,8 @@
   background: var(--background);
   color: var(--foreground);
   border-radius: 30px;
-  padding: 3rem;
-  margin-top: 2rem;
+  padding: 0rem;
+  /* margin-top: 2rem; */
 
 }
 
@@ -5224,6 +5229,7 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  justify-content: flex-start;
 }
 
 .formLoaderContainer {
@@ -5595,7 +5601,7 @@
 .projectsHeader h2 {
   font-size: 2rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--foreground);
   margin: 0;
 }
 
@@ -5603,7 +5609,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #004AAD;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -5615,10 +5621,7 @@
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
-.createProjectButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-}
+
 
 .projectsGrid {
   display: grid;
@@ -5627,7 +5630,7 @@
 }
 
 .projectCard {
-  background: white;
+  background: var(--background);
   border-radius: 16px;
   padding: 1.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -5653,7 +5656,7 @@
 .projectIcon {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #004AAD;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -5662,9 +5665,12 @@
 }
 
 .projectInfo {
+  color: var(--foreground);
   flex: 1;
 }
-
+.projectInfo h3 {
+  color: var(--foreground);
+}
 .projectName {
   font-size: 1.25rem;
   font-weight: 600;
@@ -5684,7 +5690,7 @@
 }
 
 .projectActionButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #004AAD;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -5730,7 +5736,7 @@
 }
 
 .createFirstProjectButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #004AAD;
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -5745,4 +5751,12 @@
 .createFirstProjectButton:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.readOnlyIndicator {
+  color: #666;
+  font-style: italic;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  display: block;
 }

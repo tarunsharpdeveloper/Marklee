@@ -15,4 +15,8 @@ router.post('/update', auth, onboardingController.updateOnboardingData);
 router.post('/core-message', auth, onboardingController.updateCoreMessage);
 router.post('/core-message-seen', auth, onboardingController.markCoreMessageSeen);
 
+// Get and update current form step
+router.get('/current-step', auth, onboardingController.getCurrentFormStep);
+router.post('/current-step', auth, onboardingController.updateCurrentFormStep);
+
 export default router; 
