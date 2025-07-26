@@ -33,7 +33,8 @@ const MemoizedEditPopup = memo(({
   setIsSending,
   showTypewriter,
   setShowTypewriter,
-  onClose 
+  onClose,
+  currentStep = 1
 }) => {
   const [localInputMessage, setLocalInputMessage] = useState("");
   const [localEditedCoreMessage, setLocalEditedCoreMessage] = useState("");
@@ -72,13 +73,64 @@ const MemoizedEditPopup = memo(({
   };
 
   // Get contextual question from backend
-  const getContextualQuestion = async (userInput = null) => {
+  const getContextualQuestion = async (userInput = null, currentStep = 1) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const stored = getStoredCoreMessage();
-      if (!stored) return;
+      // Get current project ID
+      const currentProjectId = localStorage.getItem('currentProjectId');
+      console.log('getContextualQuestion - Current project ID:', currentProjectId);
+      
+      // Only include projectId if it's a valid value (not null, undefined, or empty string)
+      const url = currentProjectId && currentProjectId !== 'null' && currentProjectId !== 'undefined' && currentProjectId.trim() !== ''
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${currentProjectId}`
+        : `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`;
+      
+      // Fetch onboarding data to get project-specific core message
+      const onboardingResponse = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!onboardingResponse.ok) {
+        console.log('getContextualQuestion - Failed to fetch onboarding data, continuing with basic flow');
+        const errorText = await onboardingResponse.text();
+        console.log('getContextualQuestion - Error response:', errorText);
+        console.log('getContextualQuestion - Response status:', onboardingResponse.status);
+        console.log('getContextualQuestion - Response URL:', onboardingResponse.url);
+      }
+
+      const { data } = await onboardingResponse.json();
+      console.log('getContextualQuestion - Fetched data:', data);
+      console.log('getContextualQuestion - Data structure:', {
+        hasData: !!data,
+        dataKeys: data ? Object.keys(data) : 'null',
+        hasCoreMessage: !!(data && data.core_message),
+        coreMessageLength: data && data.core_message ? data.core_message.length : 0,
+        hasDataField: !!(data && data.data),
+        dataFieldType: data && data.data ? typeof data.data : 'null'
+      });
+      
+      // Get project-specific core message from the fetched data
+      const projectCoreMessage = data?.core_message;
+      console.log('getContextualQuestion - Project core message:', projectCoreMessage ? projectCoreMessage.substring(0, 100) + '...' : 'null');
+      
+      // If no core message found, show a helpful message
+      if (!projectCoreMessage || projectCoreMessage.trim() === '') {
+        console.log('getContextualQuestion - No core message found, showing helpful message');
+        setMessages((prev) => [
+          ...prev,
+          {
+            content: "I don't see a core message yet. Please generate your core message first, then I can help you refine it with contextual questions.",
+            type: "ai",
+          },
+        ]);
+        return;
+      }
+
+      console.log('getContextualQuestion - Using project-specific core message:', projectCoreMessage.substring(0, 100) + '...');
 
       // Safety check: stop after 5 questions maximum
       if (questionIndex >= 5) {
@@ -86,22 +138,21 @@ const MemoizedEditPopup = memo(({
         return;
       }
 
-      const onboardingResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!onboardingResponse.ok) {
-        throw new Error("Failed to fetch onboarding data");
+      // Prepare form data - create basic structure if data is missing
+      let formData;
+      if (!data || !data.data || data.data === null) {
+        console.log('No form data found, creating basic structure for contextual questions');
+        formData = {
+          formFields: [],
+          formAnswers: {},
+          welcomeMessage: "Welcome to your marketing journey!",
+          footerMessage: "Thank you for completing the questionnaire."
+        };
+      } else {
+        formData = typeof data.data === "string" ? JSON.parse(data.data) : data.data;
       }
 
-      const { data } = await onboardingResponse.json();
-      const formData =
-        typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+      console.log('getContextualQuestion - Prepared formData:', formData);
 
       // Filter out duplicate questions based on content
       const uniqueUserAnswers = userAnswers.reduce((acc, current) => {
@@ -114,9 +165,13 @@ const MemoizedEditPopup = memo(({
         return acc;
       }, []);
 
-      console.log('Sending to backend - Original userAnswers:', userAnswers.length);
-      console.log('Sending to backend - Filtered userAnswers:', uniqueUserAnswers.length);
-      console.log('Question index:', questionIndex);
+      console.log('getContextualQuestion - Sending request with:', {
+        formData: !!formData,
+        currentMessage: projectCoreMessage ? projectCoreMessage.substring(0, 50) + '...' : 'null',
+        questionIndex,
+        userAnswersCount: uniqueUserAnswers.length,
+        userInput
+      });
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/get-contextual-question`,
@@ -128,7 +183,7 @@ const MemoizedEditPopup = memo(({
           },
           body: JSON.stringify({
             formData,
-            currentMessage: stored.message,
+            currentMessage: projectCoreMessage, // Use project-specific core message
             questionIndex,
             userAnswers: uniqueUserAnswers,
             userInput
@@ -137,17 +192,23 @@ const MemoizedEditPopup = memo(({
       );
 
       if (!response.ok) {
-        throw new Error("Failed to get contextual question");
+        const errorText = await response.text();
+        console.error('getContextualQuestion - Response not ok:', response.status, errorText);
+        setMessages((prev) => [
+          ...prev,
+          {
+            content: `Sorry, I couldn't generate a question. (Error: ${response.status}) Please try again.`,
+            type: "ai",
+          },
+        ]);
+        return;
       }
 
       const responseData = await response.json();
-      
       if (responseData.success) {
         if (responseData.data.question && !responseData.data.completed) {
-          // Show the question
           setCurrentQuestion(responseData.data.question);
           setIsQuestionMode(true);
-          
           // If it's a greeting response, add it to chat
           if (responseData.data.isGreeting && userInput) {
             setMessages((prev) => [
@@ -169,6 +230,20 @@ const MemoizedEditPopup = memo(({
       }
     } catch (error) {
       console.error("Error getting contextual question:", error);
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        currentStep,
+        hasProjectId: !!localStorage.getItem('currentProjectId'),
+        hasToken: !!localStorage.getItem('token')
+      });
+      setMessages((prev) => [
+        ...prev,
+        {
+          content: `Sorry, something went wrong while generating a question. (${error.message})`,
+          type: "ai",
+        },
+      ]);
       // Fallback: if there's an error, try to update with current answers
       if (userAnswers.length > 0) {
         await updateCoreMessageWithAnswers();
@@ -183,8 +258,9 @@ const MemoizedEditPopup = memo(({
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const stored = getStoredCoreMessage();
-      if (!stored) return;
+      // Get current project ID
+      const currentProjectId = localStorage.getItem('currentProjectId');
+      console.log('updateCoreMessageWithAnswers - Current project ID:', currentProjectId);
 
       // Add completion message to chat
       setMessages((prev) => [
@@ -195,20 +271,31 @@ const MemoizedEditPopup = memo(({
         },
       ]);
 
-      const onboardingResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      // Only include projectId if it's a valid value (not null, undefined, or empty string)
+      const url = currentProjectId && currentProjectId !== 'null' && currentProjectId !== 'undefined' && currentProjectId.trim() !== ''
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${currentProjectId}`
+        : `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`;
+
+      const onboardingResponse = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!onboardingResponse.ok) {
         throw new Error("Failed to fetch onboarding data");
       }
 
       const { data } = await onboardingResponse.json();
+      
+      // Get project-specific core message
+      const projectCoreMessage = data.core_message;
+      if (!projectCoreMessage) {
+        throw new Error("No core message found for this project");
+      }
+
+      console.log('updateCoreMessageWithAnswers - Using project-specific core message:', projectCoreMessage.substring(0, 100) + '...');
+      
       const formData =
         typeof data.data === "string" ? JSON.parse(data.data) : data.data;
 
@@ -236,7 +323,7 @@ const MemoizedEditPopup = memo(({
           },
           body: JSON.stringify({
             formData,
-            currentMessage: stored.message,
+            currentMessage: projectCoreMessage, // Use project-specific core message
             userAnswers: uniqueUserAnswers
           }),
         }
@@ -266,7 +353,7 @@ const MemoizedEditPopup = memo(({
           return newMessages;
         });
 
-        // Save to database
+        // Save to database with project ID
         await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
           {
@@ -275,7 +362,10 @@ const MemoizedEditPopup = memo(({
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ coreMessage: newMessage }),
+            body: JSON.stringify({ 
+              coreMessage: newMessage,
+              projectId: currentProjectId 
+            }),
           }
         );
 
@@ -330,7 +420,7 @@ const MemoizedEditPopup = memo(({
 
     // Get next question after a short delay - AI will decide when to stop
     setTimeout(() => {
-      getContextualQuestion();
+      getContextualQuestion(null, currentStep);
     }, 500);
   };
 
@@ -338,16 +428,18 @@ const MemoizedEditPopup = memo(({
   useEffect(() => {
     if (isOpen) {
       console.log("Initializing edit popup with:", editedCoreMessage);
+      console.log("Current step:", currentStep);
       setLocalEditedCoreMessage(editedCoreMessage || coreMessage);
       setLocalInputMessage("");
       
       // Start question flow if no conversation exists
       if (messages.length === 0) {
-        getContextualQuestion();
+        console.log("Starting contextual question flow with currentStep:", currentStep);
+        getContextualQuestion(null, currentStep);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, editedCoreMessage, coreMessage]);
+  }, [isOpen, editedCoreMessage, coreMessage, currentStep]);
 
   // Modified useEffect to scroll only on user messages
   useEffect(() => {
@@ -407,7 +499,7 @@ const MemoizedEditPopup = memo(({
 
       if (isGreeting && messages.length === 0) {
         // Handle greeting and start question flow
-        await getContextualQuestion(userInput);
+        await getContextualQuestion(userInput, currentStep);
       } else {
         // Regular chat flow
         // Add user message to chat
@@ -425,21 +517,32 @@ const MemoizedEditPopup = memo(({
           return;
         }
 
+        // Get current project ID
+        const currentProjectId = localStorage.getItem('currentProjectId');
+        console.log('handleLocalSendMessage - Current project ID:', currentProjectId);
+
+        // Only include projectId if it's a valid value (not null, undefined, or empty string)
+        const url = currentProjectId && currentProjectId !== 'null' && currentProjectId !== 'undefined' && currentProjectId.trim() !== ''
+          ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${currentProjectId}`
+          : `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`;
+
         // First get the onboarding data
-        const onboardingResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const onboardingResponse = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!onboardingResponse.ok) {
           throw new Error("Failed to fetch onboarding data");
         }
 
         const { data } = await onboardingResponse.json();
+        
+        // Get project-specific core message
+        const projectCoreMessage = data.core_message;
+        console.log('handleLocalSendMessage - Using project-specific core message:', projectCoreMessage ? projectCoreMessage.substring(0, 100) + '...' : 'null');
+        
         const formData =
           typeof data.data === "string" ? JSON.parse(data.data) : data.data;
 
@@ -454,7 +557,7 @@ const MemoizedEditPopup = memo(({
             },
             body: JSON.stringify({
               formData,
-              currentMessage: isOpen ? editedCoreMessage : coreMessage,
+              currentMessage: projectCoreMessage || (isOpen ? editedCoreMessage : coreMessage), // Use project-specific core message if available
               userPrompt: userInput,
             }),
           }
@@ -488,6 +591,7 @@ const MemoizedEditPopup = memo(({
           setShowTypewriter(true);
 
           // Save the updated message to the database
+          const currentProjectId = localStorage.getItem('currentProjectId');
           await fetch(
             `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
             {
@@ -496,7 +600,10 @@ const MemoizedEditPopup = memo(({
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
               },
-              body: JSON.stringify({ coreMessage: newMessage }),
+              body: JSON.stringify({ 
+                coreMessage: newMessage,
+                projectId: currentProjectId 
+              }),
             }
           );
         }
@@ -573,20 +680,31 @@ const MemoizedEditPopup = memo(({
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const onboardingResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      // Get current project ID
+      const currentProjectId = localStorage.getItem('currentProjectId');
+      console.log('handleLocalOptionClick - Current project ID:', currentProjectId);
+
+      // Only include projectId if it's a valid value (not null, undefined, or empty string)
+      const url = currentProjectId && currentProjectId !== 'null' && currentProjectId !== 'undefined' && currentProjectId.trim() !== ''
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${currentProjectId}`
+        : `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`;
+
+      const onboardingResponse = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!onboardingResponse.ok) {
         throw new Error("Failed to fetch onboarding data");
       }
 
       const { data } = await onboardingResponse.json();
+      
+      // Get project-specific core message
+      const projectCoreMessage = data.core_message;
+      console.log('handleLocalOptionClick - Using project-specific core message:', projectCoreMessage ? projectCoreMessage.substring(0, 100) + '...' : 'null');
+      
       const formData =
         typeof data.data === "string" ? JSON.parse(data.data) : data.data;
 
@@ -625,7 +743,7 @@ const MemoizedEditPopup = memo(({
           },
           body: JSON.stringify({
             formData,
-            currentMessage: localEditedCoreMessage,
+            currentMessage: projectCoreMessage || localEditedCoreMessage, // Use project-specific core message if available
             userPrompt: modificationPrompt,
           }),
         }
@@ -647,7 +765,7 @@ const MemoizedEditPopup = memo(({
         setCoreMessage(newMessage);
         setEditedCoreMessage(newMessage);
 
-        // Save to database
+        // Save to database with project ID
         await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
           {
@@ -656,7 +774,10 @@ const MemoizedEditPopup = memo(({
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ coreMessage: newMessage }),
+            body: JSON.stringify({ 
+              coreMessage: newMessage,
+              projectId: currentProjectId 
+            }),
           }
         );
       }
@@ -673,6 +794,7 @@ const MemoizedEditPopup = memo(({
     try {
       setIsRefreshing(true);
       const token = localStorage.getItem("token");
+      const currentProjectId = localStorage.getItem('currentProjectId');
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
         {
@@ -681,7 +803,10 @@ const MemoizedEditPopup = memo(({
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ coreMessage: localEditedCoreMessage }),
+          body: JSON.stringify({ 
+            coreMessage: localEditedCoreMessage,
+            projectId: currentProjectId 
+          }),
         }
       );
 
@@ -1022,16 +1147,12 @@ export default function Dashboard() {
   // Add loading state
   const [isLoading, setIsLoading] = useState(false);
   const loadingMessages = useMemo(() => [
-    "Thinking about the best approach...",
-    "Analyzing your request in detail...",
-    "Consulting my AI colleagues...",
-    "Working on a personalized solution...",
-    "Generating some creative ideas...",
-    "Putting the finishing touches on your response...",
-    "Almost ready with something great...",
-    "Just a few more calculations...",
-    "Cross-checking for accuracy...",
-    "Preparing your tailored answer...",
+   "Analyzing your inputs...",
+    "Generating your marketing content...",
+    "Crafting your brand message...",
+    "Shaping content to fit your audience...",
+    "Finalizing your personalized copy."
+
   ], []);
 
   useEffect(() => {
@@ -1089,11 +1210,21 @@ export default function Dashboard() {
   const handleEditCoreMessage = async () => {
     try {
       if (!isEditPopupOpen) {
+        // Clear chat messages to ensure project-specific chat
+        setMessages([]);
+        
+        // Simple approach: just open the popup and let getContextualQuestion handle everything
+        console.log('handleEditCoreMessage - Opening edit popup');
         setEditedCoreMessage(coreMessage);
         setIsEditPopupOpen(true);
       } else {
+        // Save the edited message to the current project
         setIsLoading(true);
         const token = localStorage.getItem("token");
+        const currentProjectId = localStorage.getItem('currentProjectId');
+        
+        console.log('Saving edited core message for project:', currentProjectId);
+        
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
           {
@@ -1102,7 +1233,10 @@ export default function Dashboard() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ coreMessage: editedCoreMessage }),
+            body: JSON.stringify({ 
+              coreMessage: editedCoreMessage,
+              projectId: currentProjectId 
+            }),
           }
         );
 
@@ -1163,18 +1297,27 @@ export default function Dashboard() {
   const refreshFormData = async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) {
+        console.log('No token found, skipping refreshFormData');
+        return;
+      }
 
-      console.log('Refreshing form data from database...');
+      // Get current project ID
+      const currentProjectId = localStorage.getItem('currentProjectId');
+      console.log('Refreshing form data from database for project:', currentProjectId);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      // Only include projectId if it's a valid value (not null, undefined, or empty string)
+      const url = currentProjectId && currentProjectId !== 'null' && currentProjectId !== 'undefined' && currentProjectId.trim() !== ''
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${currentProjectId}`
+        : `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`;
+
+      console.log('Making request to:', url);
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
         const { data } = await response.json();
@@ -1188,10 +1331,17 @@ export default function Dashboard() {
         
         console.log('Form data refreshed from database');
       } else {
-        console.error('Failed to refresh form data:', response.status);
+        const errorText = await response.text();
+        console.error('Failed to refresh form data:', response.status, errorText);
+        console.log('Response headers:', response.headers);
+        console.log('Response URL:', response.url);
+        
+        // Don't throw error, just log it and continue
+        console.log('Continuing without refreshing form data due to error');
       }
     } catch (error) {
       console.error('Error refreshing form data:', error);
+      console.log('Continuing without refreshing form data due to error');
     }
   };
 
@@ -1216,14 +1366,20 @@ export default function Dashboard() {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const onboardingResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      // Get current project ID for debugging
+      const currentProjectId = localStorage.getItem('currentProjectId');
+      console.log('fetchCoreMessage - Current project ID:', currentProjectId);
+      
+      // Only include projectId if it's a valid value (not null, undefined, or empty string)
+      const url = currentProjectId && currentProjectId !== 'null' && currentProjectId !== 'undefined' && currentProjectId.trim() !== ''
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${currentProjectId}`
+        : `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`;
+      
+      const onboardingResponse = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!onboardingResponse.ok) {
         throw new Error("Failed to fetch onboarding data");
@@ -1231,9 +1387,19 @@ export default function Dashboard() {
 
       const { data } = await onboardingResponse.json();
       console.log('Fetched onboarding data from database:', data);
+      console.log('Data structure:', {
+        hasData: !!data,
+        hasDataField: !!(data && data.data),
+        dataType: data && data.data ? typeof data.data : 'null',
+        dataValue: data && data.data ? (typeof data.data === 'string' ? data.data.substring(0, 100) + '...' : 'object') : 'null'
+      });
       setOnboardingData(data);
 
-      if (shouldRefresh && data) {
+      // Check if we have valid onboarding data (not just empty structure)
+      const hasValidData = data && data.data && data.data !== null;
+      console.log('Has valid onboarding data:', hasValidData);
+
+      if (shouldRefresh && hasValidData) {
         const formData =
           typeof data.data === "string" ? JSON.parse(data.data) : data.data;
 
@@ -1265,6 +1431,7 @@ export default function Dashboard() {
             },
             body: JSON.stringify({
               coreMessage: marketingData.data.coreMessage,
+              projectId: currentProjectId,
             }),
           }
         );
@@ -1292,10 +1459,8 @@ export default function Dashboard() {
     }
   };
 
-  useEffect(() => {
-    fetchCoreMessage();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array means this runs once on mount
+  // Removed unnecessary fetchCoreMessage call on mount
+  // Core message will be loaded when needed (e.g., when opening edit popup)
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -1702,23 +1867,55 @@ export default function Dashboard() {
         return;
       }
 
+      // Get current project ID
+      const currentProjectId = localStorage.getItem('currentProjectId');
+      console.log('handleSendMessage - Current project ID:', currentProjectId);
+
+      // Only include projectId if it's a valid value (not null, undefined, or empty string)
+      const url = currentProjectId && currentProjectId !== 'null' && currentProjectId !== 'undefined' && currentProjectId.trim() !== ''
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${currentProjectId}`
+        : `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`;
+
       // First get the onboarding data
-      const onboardingResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const onboardingResponse = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!onboardingResponse.ok) {
         throw new Error("Failed to fetch onboarding data");
       }
 
       const { data } = await onboardingResponse.json();
-      const formData =
-        typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+      console.log('handleSendMessage - Fetched data:', data);
+      console.log('handleSendMessage - Current step:', currentStep);
+      
+      // Check if we have valid onboarding data OR if user is on step 2 or higher (which means Discovery Questionnaire is completed)
+      if ((!data || !data.data || data.data === null) && currentStep < 2) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            content: "Please complete the Discovery Questionnaire first.",
+            type: "ai",
+          },
+        ]);
+        return;
+      }
+      
+      // If we're on step 2 or higher but don't have form data, create a basic structure
+      let formData;
+      if (!data || !data.data || data.data === null) {
+        console.log('No form data found, but user is on step', currentStep, '- creating basic structure');
+        formData = {
+          formFields: [],
+          formAnswers: {},
+          welcomeMessage: "Welcome to your marketing journey!",
+          footerMessage: "Thank you for completing the questionnaire."
+        };
+      } else {
+        formData = typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+      }
 
       // Now make the chat request with the form data
       const response = await fetch(
@@ -1731,7 +1928,7 @@ export default function Dashboard() {
           },
           body: JSON.stringify({
             formData,
-            currentMessage: isEditPopupOpen ? editedCoreMessage : coreMessage,
+            currentMessage: data.core_message || (isEditPopupOpen ? editedCoreMessage : coreMessage), // Use project-specific core message if available
             userPrompt: inputMessage,
           }),
         }
@@ -1765,6 +1962,7 @@ export default function Dashboard() {
         setShowTypewriter(true);
 
         // Save the updated message to the database
+        const currentProjectId = localStorage.getItem('currentProjectId');
         await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
           {
@@ -1773,7 +1971,10 @@ export default function Dashboard() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ coreMessage: newMessage }),
+            body: JSON.stringify({ 
+              coreMessage: newMessage,
+              projectId: currentProjectId 
+            }),
           }
         );
       }
@@ -1808,24 +2009,54 @@ export default function Dashboard() {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const onboardingResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      // Get current project ID
+      const currentProjectId = localStorage.getItem('currentProjectId');
+      console.log('handleOptionClick - Current project ID:', currentProjectId);
+
+      // Only include projectId if it's a valid value (not null, undefined, or empty string)
+      const url = currentProjectId && currentProjectId !== 'null' && currentProjectId !== 'undefined' && currentProjectId.trim() !== ''
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${currentProjectId}`
+        : `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`;
+
+      const onboardingResponse = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!onboardingResponse.ok) {
         throw new Error("Failed to fetch onboarding data");
       }
 
       const { data } = await onboardingResponse.json();
+      console.log('handleOptionClick - Fetched data:', data);
+      console.log('handleOptionClick - Current step:', currentStep);
 
-      if (data) {
-        const formData =
-          typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+      // Check if we have valid onboarding data OR if user is on step 2 or higher (which means Discovery Questionnaire is completed)
+      if ((!data || !data.data || data.data === null) && currentStep < 2) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            content: "Please complete the Discovery Questionnaire first.",
+            type: "ai",
+          },
+        ]);
+        return;
+      }
+      
+      // If we're on step 2 or higher but don't have form data, create a basic structure
+      let formData;
+      if (!data || !data.data || data.data === null) {
+        console.log('No form data found, but user is on step', currentStep, '- creating basic structure');
+        formData = {
+          formFields: [],
+          formAnswers: {},
+          welcomeMessage: "Welcome to your marketing journey!",
+          footerMessage: "Thank you for completing the questionnaire."
+        };
+      } else {
+        formData = typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+      }
 
         let modificationPrompt = "";
         switch (optionType) {
@@ -1878,6 +2109,7 @@ export default function Dashboard() {
           setCoreMessage(marketingData.data.coreMessage);
           setShowTypewriter(true);
 
+          const currentProjectId = localStorage.getItem('currentProjectId');
           await fetch(
             `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
             {
@@ -1888,11 +2120,11 @@ export default function Dashboard() {
               },
               body: JSON.stringify({
                 coreMessage: marketingData.data.coreMessage,
+                projectId: currentProjectId,
               }),
             }
           );
         }
-      }
     } catch (error) {
       console.error("Error modifying message:", error);
     } finally {
@@ -1926,23 +2158,55 @@ export default function Dashboard() {
         return;
       }
 
+      // Get current project ID
+      const currentProjectId = localStorage.getItem('currentProjectId');
+      console.log('handleEditSubmit - Current project ID:', currentProjectId);
+
+      // Only include projectId if it's a valid value (not null, undefined, or empty string)
+      const url = currentProjectId && currentProjectId !== 'null' && currentProjectId !== 'undefined' && currentProjectId.trim() !== ''
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${currentProjectId}`
+        : `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`;
+
       // Get the onboarding data
-      const onboardingResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const onboardingResponse = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!onboardingResponse.ok) {
         throw new Error("Failed to fetch onboarding data");
       }
 
       const { data } = await onboardingResponse.json();
-      const formData =
-        typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+      console.log('handleEditSubmit - Fetched data:', data);
+      console.log('handleEditSubmit - Current step:', currentStep);
+      
+      // Check if we have valid onboarding data OR if user is on step 2 or higher (which means Discovery Questionnaire is completed)
+      if ((!data || !data.data || data.data === null) && currentStep < 2) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            content: "Please complete the Discovery Questionnaire first.",
+            type: "ai",
+          },
+        ]);
+        return;
+      }
+      
+      // If we're on step 2 or higher but don't have form data, create a basic structure
+      let formData;
+      if (!data || !data.data || data.data === null) {
+        console.log('No form data found, but user is on step', currentStep, '- creating basic structure');
+        formData = {
+          formFields: [],
+          formAnswers: {},
+          welcomeMessage: "Welcome to your marketing journey!",
+          footerMessage: "Thank you for completing the questionnaire."
+        };
+      } else {
+        formData = typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+      }
 
       // Make the generate request with the edited message
       const response = await fetch(
@@ -1955,7 +2219,7 @@ export default function Dashboard() {
           },
           body: JSON.stringify({
             formData,
-            currentMessage: coreMessage,
+            currentMessage: data.core_message || coreMessage, // Use project-specific core message if available
             userPrompt: editInputValue,
           }),
         }
@@ -1968,6 +2232,7 @@ export default function Dashboard() {
         setCoreMessage(marketingData.data.coreMessage);
 
         // Save the new core message to the database
+        const currentProjectId = localStorage.getItem('currentProjectId');
         await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/core-message`,
           {
@@ -1978,6 +2243,7 @@ export default function Dashboard() {
             },
             body: JSON.stringify({
               coreMessage: marketingData.data.coreMessage,
+              projectId: currentProjectId,
             }),
           }
         );
@@ -2238,7 +2504,12 @@ export default function Dashboard() {
                           console.log('Fetching saved onboarding data for project...');
                           
                           // Fetch the saved onboarding data for this specific project
-                          const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${project.id}`, {
+                          // Only include projectId if it's a valid value (not null, undefined, or empty string)
+                          const url = project.id && project.id !== 'null' && project.id !== 'undefined' && project.id.toString().trim() !== ''
+                            ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${project.id}`
+                            : `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`;
+
+                          const response = await fetch(url, {
                             headers: {
                               'Authorization': `Bearer ${token}`
                             }
@@ -2339,6 +2610,9 @@ export default function Dashboard() {
                       // Load the current step for this project
                       const savedStep = await loadCurrentStep(project.id);
                       console.log('Loaded saved step for project:', savedStep);
+                      
+                      // Clear chat messages to ensure project-specific chat
+                      setMessages([]);
                       
                       // Hide projects and show step form
                       setShowProjects(false);
@@ -2584,7 +2858,9 @@ export default function Dashboard() {
     localStorage.removeItem('currentProjectId');
     setCoreMessage('');
     setShowTypewriter(false);
-     fetchProjects()
+    // Clear chat messages to ensure project-specific chat
+    setMessages([]);
+    fetchProjects()
   };
 
   const handleNextStep = () => {
@@ -2608,13 +2884,11 @@ export default function Dashboard() {
           setShowTypewriter(true); // Show typewriter effect for the core message
         } catch (error) {
           console.error('Error parsing project core message:', error);
-          // If parsing fails, try to fetch core message from backend
-          fetchCoreMessage();
+          // Core message will be loaded when needed (e.g., when opening edit popup)
         }
       } else {
-        console.log('No project-specific core message found, fetching from backend');
-        // If no project-specific message, fetch from backend
-        fetchCoreMessage();
+        console.log('No project-specific core message found');
+        // Core message will be loaded when needed (e.g., when opening edit popup)
       }
     }
     
@@ -2962,9 +3236,6 @@ export default function Dashboard() {
         setCurrentStep(2); // Move to step 2 (Core Message)
         setShowStepForm(true); // Ensure step form stays visible
         
-        // Save the current step to database
-        await saveCurrentStep(2);
-        
         return; // Exit early - no project creation/update needed
       }
 
@@ -3139,8 +3410,8 @@ export default function Dashboard() {
         localStorage.setItem('marketingCoreMessage', JSON.stringify(storedData));
       }
 
-      // Clear the stored project ID since we're done with it
-      localStorage.removeItem('currentProjectId');
+      // Keep the project ID for future use (like editing the core message)
+      localStorage.setItem('currentProjectId', projectId);
 
       // Update local state and advance to next step
       setCoreMessage(data.data?.coreMessage || '');
@@ -3200,7 +3471,12 @@ export default function Dashboard() {
         console.log('Save result:', saveResult);
         
         // Test fetching the data back
-        const fetchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${currentProjectId}`, {
+        // Only include projectId if it's a valid value (not null, undefined, or empty string)
+        const url = currentProjectId && currentProjectId !== 'null' && currentProjectId !== 'undefined' && currentProjectId.trim() !== ''
+          ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${currentProjectId}`
+          : `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`;
+
+        const fetchResponse = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -3248,6 +3524,7 @@ export default function Dashboard() {
         showTypewriter={showTypewriter}
         setShowTypewriter={setShowTypewriter}
         onClose={handleCloseEditPopup}
+        currentStep={currentStep}
       />
       {isSavePopupOpen && (
         <div className={styles.modalOverlay}>
@@ -3498,11 +3775,12 @@ export default function Dashboard() {
                       
                       <h3>
                         {localStorage.getItem('currentProjectId') ? 
-                          `Project: ${projects?.find(p => p.id == localStorage.getItem('currentProjectId'))?.name || 'Unknown Project'}` : 
+                          `Project: ${projects?.find(p => p.id == localStorage.getItem('currentProjectId'))?.name || ''}` : 
                           "Let's Get Started"
                         }
                       </h3>
                       </div>
+                      <div className={styles.stepFormHeaderBottom}>
                     <Stepper activeStep={currentStep - 1} alternativeLabel sx={{ width: '100%', maxWidth: 600, margin: '0 auto' }}>
                       <Step >
                         <StepLabel>Discovery Questionnaire</StepLabel>
@@ -3514,9 +3792,10 @@ export default function Dashboard() {
                         <StepLabel>Complete</StepLabel>
                       </Step>
                     </Stepper>
+                    </div>
                   </div>
                   
-                  {/* Step 1: Discovery Questionnaire */} 
+                  {/* Step 1: Discovery Questionnaire */}
                   {currentStep === 1 && (
                     <div className={styles.discoveryStep}>
                       <div className={styles.discoveryContent}>
@@ -3610,7 +3889,7 @@ export default function Dashboard() {
                           <div className={styles.formContainer}>
                             <div className={styles.formLoaderContainer}>
                               <div className={styles.formLoader}></div>
-                              <p className={styles.formLoadingMessage}>{loadingMessage}</p>
+                              {/* <p className={styles.formLoadingMessage}>{loadingMessage}</p> */}
                             </div>
                           </div>
                         )}

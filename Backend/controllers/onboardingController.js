@@ -32,9 +32,20 @@ class OnboardingController {
       
       console.log('getOnboardingData - metadata:', metadata);
       
+      // If no metadata exists, return empty data instead of 404
       if (!metadata || !metadata.data) {
-        return res.status(404).json({
-          message: 'Onboarding data not found'
+        console.log('No onboarding data found, returning empty data structure');
+        return res.status(200).json({
+          data: {
+            id: null,
+            user_id: req.user.id,
+            project_id: projectId,
+            data: null,
+            core_message: null,
+            core_message_seen: false,
+            created_at: null,
+            updated_at: null
+          }
         });
       }
 
