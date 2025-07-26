@@ -52,6 +52,60 @@ class BriefController {
         }
     }
 
+    async updateProject(req, res) {
+        try {
+            const { id } = req.params;
+            const { projectName } = req.body;
+            
+            if (!projectName || !projectName.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Project name is required'
+                });
+            }
+
+            // Check if project exists and belongs to user
+            const existingProject = await Project.findById(id);
+            if (!existingProject) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Project not found'
+                });
+            }
+
+            if (existingProject.user_id !== req.user.id) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Access denied'
+                });
+            }
+
+            // Check if new name already exists for this user
+            const projectWithSameName = await Project.findByName(projectName.trim(), req.user.id);
+            if (projectWithSameName && projectWithSameName.id !== parseInt(id)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Project with this name already exists'
+                });
+            }
+
+            // Update the project
+            await Project.update(id, {
+                projectName: projectName.trim()
+            });
+
+            const updatedProject = await Project.findById(id);
+            res.status(200).json({
+                success: true,
+                message: 'Project updated successfully',
+                data: updatedProject
+            });
+        }
+        catch (error) {
+            handleError(res, error, 'Failed to update project');
+        }
+    }
+
     // Get Projects
     async getProjectsWithBriefs(req, res) {
         try {

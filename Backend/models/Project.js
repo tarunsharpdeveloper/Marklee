@@ -35,6 +35,19 @@ class Project {
         }
     }
 
+    static async update(id, updateData) {
+        try {
+            const [result] = await db.execute(
+                'UPDATE projects SET project_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                [updateData.projectName, id]
+            );
+            return result.affectedRows > 0;
+        } catch (error) {
+            console.error('Error updating project:', error);
+            throw error;
+        }
+    }
+
     static async findByUserWithBriefs(userId) {
         try {
             const [rows] = await db.execute(`

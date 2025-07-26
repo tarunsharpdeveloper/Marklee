@@ -90,17 +90,53 @@ export default function MarketingPage() {
         const data = await response.json();
         setFormFields(data.data);
 
-        const storageKey = getStorageKey();
-        const savedAnswers = localStorage.getItem(storageKey);
-        const parsedAnswers = savedAnswers ? JSON.parse(savedAnswers) : {};
+        // Check if we have stored form data from database
+        const onboardingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
 
+        if (onboardingResponse.ok) {
+          const onboardingData = await onboardingResponse.json();
+          if (onboardingData.data && onboardingData.data.data) {
+            try {
+              const parsedData = typeof onboardingData.data.data === "string" ? JSON.parse(onboardingData.data.data) : onboardingData.data.data;
+              
+              console.log('Marketing form - parsedData:', parsedData);
+              console.log('Marketing form - parsedData type:', typeof parsedData);
+              console.log('Marketing form - isArray:', Array.isArray(parsedData));
+              
+              // Handle both array and object formats
+              let formAnswersToUse;
+              
+              if (Array.isArray(parsedData)) {
+                // If it's an array, it might be the form fields directly
+                console.log('Marketing form - Data is array, using empty answers');
+                formAnswersToUse = {};
+              } else if (parsedData && typeof parsedData === 'object' && parsedData.formAnswers) {
+                // If it's an object with formAnswers
+                formAnswersToUse = parsedData.formAnswers;
+                console.log('Marketing form - Found formAnswers in object:', formAnswersToUse);
+              }
+              
+              if (formAnswersToUse) {
+                // Use stored answers from database
+                setFormAnswers(formAnswersToUse);
+                console.log('Loaded stored form data from database for editing');
+                return;
+              }
+            } catch (error) {
+              console.error('Error parsing stored form data:', error);
+            }
+          }
+        }
+
+        // If no stored data, use empty values
         const initialAnswers = {};
         data.data.fields.forEach(field => {
-          initialAnswers[field.nameKey] = parsedAnswers[field.nameKey] || '';
+          initialAnswers[field.nameKey] = '';
         });
 
         setFormAnswers(initialAnswers);
-        localStorage.setItem(storageKey, JSON.stringify(initialAnswers));
       } catch (error) {
         console.error('Error fetching form fields:', error);
         setError(error.message);
@@ -121,12 +157,8 @@ export default function MarketingPage() {
     const updated = { ...formAnswers, [name]: value };
     setFormAnswers(updated);
     
-    try {
-      const storageKey = getStorageKey();
-      localStorage.setItem(storageKey, JSON.stringify(updated));
-    } catch (error) {
-      console.error('Error saving answers:', error);
-    }
+    // Note: We'll save to database when user submits the form
+    // This prevents too many database calls while typing
   };
 
   const startLoadingSequence = () => {
@@ -205,22 +237,35 @@ export default function MarketingPage() {
       clearInterval(loadingInterval);
       setGeneratedContent(data.data);
 
+      // Prepare form data with questions and answers
+      const formDataWithQuestions = {
+        formFields: formFields.fields,
+        formAnswers: formAnswers,
+        welcomeMessage: formFields.welcomeMessage,
+        footerMessage: formFields.footerMessage
+      };
+
       // Save both form data and core message to onboarding
       await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/user`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({ 
-          data: formAnswers,
+          data: JSON.stringify(formDataWithQuestions),
           coreMessage: data.data?.coreMessage,
           projectId
-        })
+        }),
       });
 
       if (data.data?.coreMessage) {
-        localStorage.setItem('marketingCoreMessage', data.data.coreMessage);
+        const storedData = {
+          message: data.data.coreMessage,
+          timestamp: Date.now(),
+          context: 'core-message'
+        };
+        localStorage.setItem('marketingCoreMessage', JSON.stringify(storedData));
       }
 
       // Clear the stored project ID since we're done with it
@@ -328,7 +373,7 @@ export default function MarketingPage() {
                   className={styles.continueButton}
                   disabled={loading}
                 >
-                  Generate Marketing Content
+                  Generate Core Message
                 </button>
               </div>
 

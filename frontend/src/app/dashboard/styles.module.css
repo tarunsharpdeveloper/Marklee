@@ -114,6 +114,15 @@
   }
 }
 
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
 .formGroup {
   /* margin-bottom: 2.5rem;? */
   position: relative;
@@ -886,6 +895,10 @@
   display: none;
 }
 
+.stepLabel {
+  color: var(--foreground);
+}
+
 .greetingSection {
   width: 100%;
   position: relative;
@@ -896,6 +909,7 @@
   justify-content: center;
   flex-direction: column;
   padding: 2rem 1rem;
+  border: none;
 }
 
 .greetingContainer {
@@ -906,7 +920,7 @@
   /* padding: 2rem; */
   padding-top: 3rem;
   background: white;
-  border-radius: 12px;
+  /* border-radius: 12px; */
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
@@ -944,10 +958,6 @@
   width: fit-content;
 }
 
-.createProjectButton:hover {
-  background: #6c63e6;
-  transform: translateY(-2px);
-}
 
 .backgroundPattern {
   position: absolute;
@@ -1001,7 +1011,7 @@
     min-height: 250px;
     padding: 1rem;
   }
-
+ 
   .greetingContainer {
     padding-top: 3rem;
     display: flex;
@@ -1868,7 +1878,7 @@
     width: 60px;
     padding: 1rem 0.5rem;
   }
-
+  
   .sidebar.collapsed {
     transform: translateX(-60px);
   }
@@ -1998,6 +2008,7 @@
     grid-template-columns: 1fr;
     /* height: auto; */
   }
+ 
 }
 /* Desktops, large screens */
 @media screen and (min-width: 1025px) and (max-width: 1200px) {
@@ -2156,11 +2167,13 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  width: 100%;
+  height: 100%;
 }
 
 .loadingContainer {
@@ -3495,6 +3508,105 @@
   height: calc(100% - 140px); /* Account for header and input container */
 }
 
+/* Current Question Styles */
+.currentQuestionSection {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(40, 42, 179, 0.08) 0%, rgba(0, 74, 173, 0.08) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(40, 42, 179, 0.15);
+  border-left: 4px solid #282ab3;
+}
+
+.currentQuestionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.questionIcon {
+  font-size: 1.2rem;
+}
+
+.questionText {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #282ab3;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.skipQuestionsButton {
+  margin-left: auto;
+  padding: 0.25rem 0.75rem;
+  background: transparent;
+  border: 1px solid rgba(40, 42, 179, 0.3);
+  border-radius: 6px;
+  color: #282ab3;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.skipQuestionsButton:hover {
+  background: rgba(40, 42, 179, 0.1);
+  border-color: #282ab3;
+}
+
+.currentQuestionText {
+  font-size: 1rem;
+  color: var(--foreground);
+  margin: 0;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.questionProgress {
+  margin: 0.75rem 0;
+}
+
+.progressBar {
+  width: 100%;
+  height: 6px;
+  background: rgba(40, 42, 179, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #282ab3, #004aad);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.updatingMessage {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, rgba(40, 42, 179, 0.1) 0%, rgba(0, 74, 173, 0.1) 100%);
+  border: 1px solid rgba(40, 42, 179, 0.2);
+  border-radius: 8px;
+  padding: 0.5rem;
+  text-align: center;
+  z-index: 10;
+}
+
+.updatingText {
+  font-size: 0.9rem;
+  color: #282ab3;
+  font-weight: 500;
+}
+
 .inputContainer {
   position: sticky;
   bottom: 0;
@@ -4302,5 +4414,1536 @@
 
   .saveAndContinueFeatures li {
     font-size: 0.85rem;
+  }
+}
+
+/* Projects Section Styles */
+
+
+
+.projectsContainer {
+  max-width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.projectsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.projectsHeader h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #282ab3 0%, #1e40af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+.createProjectButton {
+  background: #004AAD;
+  color: white;
+  border: none;
+  padding: 0.875rem 1.75rem;
+  border-radius: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(40, 42, 179, 0.2);
+}
+
+.createProjectButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: #004AAD;
+  transition: left 0.5s;
+}
+
+
+.projectsList {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.projectCard {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.projectCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(40, 42, 179, 0.05) 0%, rgba(30, 64, 175, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.projectCard:hover::before {
+  opacity: 1;
+}
+
+.projectCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border-color: rgba(40, 42, 179, 0.3);
+}
+
+.projectInfo {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.projectHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.projectIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, rgba(40, 42, 179, 0.1) 0%, rgba(30, 64, 175, 0.1) 100%);
+  border-radius: 12px;
+  color: #282ab3;
+  flex-shrink: 0;
+}
+
+.projectInfo h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+.projectMeta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.projectDate {
+  font-size: 0.75rem;
+  color: var(--foreground);
+  opacity: 0.6;
+  font-weight: 500;
+}
+
+.projectStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.projectStatus::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.viewProjectButton {
+  background: linear-gradient(135deg, #282ab3 0%, #1e40af 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.875rem;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 4px 15px rgba(40, 42, 179, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.viewProjectButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(40, 42, 179, 0.4);
+}
+
+.viewProjectButton svg {
+  transition: transform 0.3s ease;
+}
+
+.viewProjectButton:hover svg {
+  transform: translateX(2px);
+}
+
+.noProjects {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 2px dashed rgba(40, 42, 179, 0.3);
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.noProjects::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(40, 42, 179, 0.05) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.noProjectsIcon {
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.noProjectsIcon svg {
+  color: rgba(40, 42, 179, 0.3);
+  animation: float 3s ease-in-out infinite;
+}
+
+.noProjects h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0 0 1rem 0;
+  position: relative;
+  z-index: 1;
+  letter-spacing: -0.025em;
+}
+
+.noProjects p {
+  color: var(--foreground);
+  font-size: 1.125rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+  line-height: 1.6;
+}
+
+.createFirstProjectButton {
+  background: #004AAD;
+  color: white;
+  border: none;
+  padding: 1.25rem 2.5rem;
+  border-radius: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 1rem;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 8px 25px rgba(40, 42, 179, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.createFirstProjectButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(40, 42, 179, 0.4);
+}
+
+.createFirstProjectButton svg {
+  transition: transform 0.3s ease;
+}
+
+.createFirstProjectButton:hover svg {
+  transform: rotate(90deg);
+}
+
+@media (max-width: 768px) {
+ 
+
+  .projectsHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .projectsHeader h3 {
+    font-size: 1.5rem;
+  }
+
+  .projectCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding: 1.5rem;
+  }
+
+  .viewProjectButton {
+    width: 100%;
+    justify-content: center;
+    padding: 0.875rem 1.5rem;
+  }
+
+  .noProjects {
+    padding: 3rem 1.5rem;
+  }
+
+  .noProjects::before {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .projectsSection {
+    padding: 2rem !important;
+    border-radius: 20px;
+  }
+  .stepFormSection {
+    padding: 0rem !important;
+    padding-top: 2rem !important;
+  }
+  .projectsHeader h3 {
+    font-size: 1.375rem;
+  }
+  .stepFormContainer {
+    padding: 0rem !important;
+  }
+  .projectCard {
+    padding: 1.25rem;
+    border-radius: 16px;
+  }
+
+  .projectInfo h4 {
+    font-size: 1.125rem;
+  }
+
+  .noProjects {
+    padding: 2.5rem 1rem;
+    border-radius: 20px;
+  }
+
+  .noProjects p {
+    font-size: 1rem;
+  }
+
+  .createFirstProjectButton {
+    padding: 1rem 2rem;
+    font-size: 0.875rem;
+  }
+
+  .createProjectButton {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Welcome Section Styles */
+.welcomeSection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  padding: 2rem;
+}
+
+.welcomeContainer {
+  max-width: 600px;
+  text-align: center;
+  background: var(--card);
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  /* box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); */
+  border: 1px solid var(--border);
+}
+
+.welcomeTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #282ab3 0%, #1e40af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1rem;
+}
+
+.welcomeSubtitle {
+  font-size: 1.125rem;
+  color: var(--foreground);
+  opacity: 0.8;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.getStartedButton {
+  background: #004AAD;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 1rem;
+  box-shadow: 0 4px 15px rgba(40, 42, 179, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.getStartedButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(40, 42, 179, 0.4);
+}
+
+/* Step Form Styles */
+.stepFormSection {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0rem 4rem;
+  /* background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); */
+  min-height: 100vh;
+}
+.welcomeButtonContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2rem;
+}
+.stepFormContainer {
+  background: white;
+  border-radius: 32px;
+  padding: 3rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+ 
+}
+
+.stepFormHeader {
+  text-align: center;
+  margin-bottom: 4rem;
+  position: relative;
+}
+.stepFormHeader span {
+  color: var(--foreground);
+}
+
+
+.stepFormHeader h3 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #004AAD 0%, #282ab3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+.stepProgress {
+  margin-bottom: 3rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 20px;
+  padding: 2rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.stepProgressBar {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stepProgressFill {
+  height: 100%;
+  background: linear-gradient(135deg, #004AAD 0%, #282ab3 100%);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 74, 173, 0.4);
+}
+
+.stepProgressText {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: 600;
+  gap: 2rem;
+}
+
+.stepCompleted {
+  color: #10b981;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.stepCompleted::before {
+  content: "✓";
+  font-weight: bold;
+  font-size: 1.2rem;
+  background: #10b981;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.stepCurrent {
+  color: #004AAD;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.stepCurrent::before {
+  content: "●";
+  font-weight: bold;
+  font-size: 1.2rem;
+  background: #004AAD;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 74, 173, 0.3);
+}
+
+.stepPending {
+  color: #64748b;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.stepPending::before {
+  content: "○";
+  font-weight: bold;
+  font-size: 1.2rem;
+  background: #f1f5f9;
+  color: #64748b;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e2e8f0;
+}
+
+/* Discovery Step Styles */
+.discoveryStep {
+  margin-bottom: 3rem;
+  /* background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); */
+  border-radius: 24px;
+  padding: 3rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  /* box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04); */
+}
+
+.discoveryContent h4 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 1rem;
+  text-align: start;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.discoveryContent h4::before {
+  content: "🔍";
+  font-size: 1.5rem;
+}
+
+.discoveryContent p {
+  color: #64748b;
+  line-height: 1.7;
+  margin-bottom: 2.5rem;
+  text-align: start;
+  font-size: 1.1rem;
+  background: rgba(0, 74, 173, 0.05);
+  padding: 1.5rem;
+  border-radius: 16px;
+  /* border-left: 4px solid #004AAD; */
+}
+
+.discoverySummary {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.summaryItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+.summaryItem:hover {
+  background: rgba(0, 74, 173, 0.02);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 0 -1rem;
+}
+
+.summaryItem:last-child {
+  border-bottom: none;
+}
+
+.summaryLabel {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.summaryLabel::before {
+  content: "📋";
+  font-size: 1.1rem;
+}
+
+.summaryValue {
+  color: #64748b;
+  font-weight: 500;
+  font-size: 1rem;
+  background: rgba(0, 74, 173, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 74, 173, 0.2);
+}
+
+.discoveryNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #92400e;
+}
+
+.discoveryNote svg {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+/* Step Navigation Styles */
+.stepNavigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.stepButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  font-size: 0.875rem;
+}
+
+.previousButton {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+
+
+.previousButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nextButton {
+  background: linear-gradient(135deg, #282ab3 0%, #1e40af 100%);
+  color: white;
+}
+
+.nextButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(40, 42, 179, 0.3);
+}
+
+.editDiscoveryButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+.discoveryActions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.editDiscoveryButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #004AAD;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 1rem;
+}
+
+.editDiscoveryButton:hover {
+  background: #004AAD;
+  transform: translateY(-1px);
+}
+
+.editDiscoveryButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+.editDiscoveryButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+.fullFormSection {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--background-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.fullFormSection h5 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.fullFormContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 20px;
+  padding: 2.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.formField:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 74, 173, 0.2);
+}
+
+.formField label {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.formField label::before {
+  content: "✏️";
+  font-size: 1.2rem;
+}
+
+.requiredIndicator {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.formTextarea {
+  min-height: 120px;
+  padding: 1rem 1.25rem;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: #f8fafc;
+  color: #1a1a1a;
+  resize: vertical;
+  transition: all 0.3s ease;
+  line-height: 1.6;
+}
+
+.formTextarea:focus {
+  outline: none;
+  border-color: #004AAD;
+  box-shadow: 0 0 0 3px rgba(0, 74, 173, 0.1);
+  background: white;
+  transform: translateY(-1px);
+}
+
+.formTextarea::placeholder {
+  color: var(--text-secondary);
+}
+
+.fieldGuidance {
+  font-size: 0.95rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin-top: 0.5rem;
+  background: rgba(0, 74, 173, 0.05);
+  padding: 1rem;
+  border-radius: 12px;
+  border-left: 4px solid #004AAD;
+}
+
+.formActions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.saveFormButton {
+  background: linear-gradient(135deg, #004AAD 0%, #282ab3 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 74, 173, 0.3);
+}
+
+.saveFormButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #003d8f 0%, #1e40af 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 74, 173, 0.4);
+}
+
+.saveFormButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+.css-12eb3rq-MuiStepLabel-label.Mui-active {
+  color: var(--foreground);
+}
+.css-12eb3rq-MuiStepLabel-label {
+  color: var(--foreground);
+}
+.css-12eb3rq-MuiStepLabel-label.Mui-completed {
+  color: var(--foreground);
+}
+
+
+.successMessage {
+  background: #d4edda;
+  color: #155724;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border: 1px solid #c3e6cb;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.successMessage p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Marketing Form Styles */
+.formContainer {
+  background: var(--background);
+  color: var(--foreground);
+  border-radius: 30px;
+  padding: 0rem;
+  /* margin-top: 2rem; */
+
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  justify-content: flex-start;
+}
+
+.formLoaderContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  padding: 2rem;
+}
+
+.formLoader {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(128, 117, 255, 0.2);
+  border-top: 4px solid #8075ff;
+  border-radius: 50%;
+  animation: spin 1.2s linear infinite;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.formLoader::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border: 2px solid rgba(128, 117, 255, 0.1);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.formLoadingMessage {
+  color: var(--foreground);
+  font-size: 1.1rem;
+  font-weight: 500;
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.inputGroup label {
+  font-weight: 600;
+  color: var(--foreground);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.textarea {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border: 2px solid transparent;
+  border-radius: 15px;
+  font-size: 1rem;
+  color: var(--foreground);
+  background: var(--background);
+  box-shadow: 
+      inset 2px 2px 5px rgba(0, 0, 0, 0.05),
+      inset -2px -2px 5px rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #8075ff;
+  box-shadow: 
+      0 0 0 3px rgba(128, 117, 255, 0.1),
+      inset 2px 2px 5px rgba(0, 0, 0, 0.05),
+      inset -2px -2px 5px rgba(255, 255, 255, 0.1);
+}
+
+.guidance {
+  font-size: 0.875rem;
+  color: var(--foreground);
+  opacity: 0.7;
+  margin-top: 0.5rem;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.guidance::before {
+  content: "💡";
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.continueButton {
+  background: linear-gradient(135deg, #8075ff 0%, #6b63ff 100%);
+  color: white;
+  border: none;
+  padding: 1rem 3rem;
+  border-radius: 15px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+      0 4px 15px rgba(128, 117, 255, 0.3),
+      0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.continueButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.continueButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+      0 6px 20px rgba(128, 117, 255, 0.4),
+      0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.continueButton:hover::before {
+  left: 100%;
+}
+
+.continueButton:active {
+  transform: translateY(0);
+  box-shadow: 
+      0 2px 10px rgba(128, 117, 255, 0.3),
+      0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.continueButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.requiredIndicator {
+  color: #8075ff;
+  margin-left: 2px;
+  font-size: 1.2em;
+  line-height: 1;
+}
+.backToProjectsButton {
+  background: #004AAD;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 1rem;
+}
+
+.loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 3rem;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  width: 100%;
+  height: 100%;
+}
+
+.loadingContainer {
+  background: var(--background);
+  padding: 2rem;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.loader {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #8075ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loadingMessage {
+  color: var(--foreground);
+  font-size: 1rem;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .formContainer {
+    padding: 2rem 1.5rem;
+    margin-top: 1rem;
+  }
+  
+  .formContainer h2 {
+    font-size: 1.75rem;
+  }
+
+  .formLoaderContainer {
+    min-height: 250px;
+    padding: 1.5rem;
+  }
+
+  .formLoader {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 1rem;
+  }
+
+  .formLoadingMessage {
+    font-size: 1rem;
+  }
+  
+  .continueButton {
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+  }
+}
+
+/* Complete Step Styles */
+.completeStep {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.completeContent {
+  text-align: center;
+  max-width: 500px;
+  padding: 2rem;
+}
+
+.completeIcon {
+  margin-bottom: 2rem;
+  color: #4caf50;
+}
+
+.completeContent h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 1rem;
+}
+
+.completeContent p {
+  font-size: 1.1rem;
+  color: var(--foreground);
+  opacity: 0.8;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.completeActions {
+  display: flex;
+  justify-content: center;
+}
+
+.completeButton {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.completeButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+/* Auto-save indicator */
+.autoSaveIndicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 8px;
+  color: #4caf50;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.autoSaveIndicator span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.autoSaveIndicator span::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: #4caf50;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Projects Section */
+.projectsSection {
+  padding: 4rem;
+  max-width: 1200px;
+  /* margin: 0 auto; */
+}
+
+.projectsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.projectsHeader h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.createProjectButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #004AAD;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+
+
+.projectsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.projectCard {
+  background: var(--background);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f0f0f0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  pointer-events: none;
+}
+
+.projectCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  border-color: #667eea;
+}
+
+.projectCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.projectIcon {
+  width: 48px;
+  height: 48px;
+  background: #004AAD;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.projectInfo {
+  color: var(--foreground);
+  flex: 1;
+}
+.projectInfo h3 {
+  color: var(--foreground);
+}
+.projectName {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 0.25rem 0;
+}
+
+.projectStatus {
+  font-size: 0.875rem;
+  color: #667eea;
+  font-weight: 500;
+}
+
+.projectActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.projectActionButton {
+  background: #004AAD;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  pointer-events: auto;
+}
+
+.projectActionButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.noProjects {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px dashed #e0e0e0;
+}
+
+.noProjectsIcon {
+  color: #667eea;
+  margin-bottom: 1rem;
+}
+
+.noProjects h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+}
+
+.noProjects p {
+  color: #666;
+  margin: 0 0 2rem 0;
+  font-size: 1rem;
+}
+
+.createFirstProjectButton {
+  background: #004AAD;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.createFirstProjectButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.readOnlyIndicator {
+  color: #666;
+  font-style: italic;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  display: block;
+}
+@media (max-width: 768px) {
+  .stepFormSection {
+    padding: 1rem;
+  }
+  
+  .stepFormContainer {
+    padding: 2rem 1.5rem;
+    border-radius: 20px;
+  }
+  
+  .stepFormHeader h3 {
+    font-size: 2rem;
+  }
+  
+  .stepProgress {
+    padding: 1.5rem;
+  }
+  
+  .stepProgressText {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .discoveryStep {
+    padding: 2rem;
+  }
+  
+  .fullFormContainer {
+    padding: 2rem;
+  }
+  
+  .formField {
+    padding: 1.5rem;
+  }
+  
+  .formTextarea {
+    min-height: 100px;
+  }
+}
+
+@media (max-width: 400px) {
+  .projectsSection {
+    padding: 0rem !important;
+    padding-top: 2rem !important;
+  }
+  .stepFormContainer {
+    padding: 0rem !important;
   }
 }

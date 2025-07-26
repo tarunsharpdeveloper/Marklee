@@ -50,14 +50,10 @@ router.post('/google', async (req, res) => {
     const UserOnboarding = (await import('../models/UserOnboarding.js')).default;
     
     let user = await User.findByEmail(email);
-    let isUserMetaData = true;
+    let isUserMetaData = true; // Always set to true so users go directly to dashboard
 
     if (user) {
-      // User exists, check onboarding status
-      if (user.role !== 'admin') {
-        const metadata = await UserOnboarding.findByUserId(user.id);
-        isUserMetaData = metadata ? true : false;
-      }
+      // User exists - no need to check onboarding status
     } else {
       // Create new user
       const randomPassword = 'google-oauth-' + Math.random().toString(36).substring(2, 15);
@@ -71,7 +67,6 @@ router.post('/google', async (req, res) => {
       await User.verifyOTP(email, '000000'); // This will mark them as verified
       
       user = await User.findById(userId);
-      isUserMetaData = false; // New users need to complete onboarding
     }
 
     // Generate JWT token
@@ -132,14 +127,10 @@ router.post('/facebook', async (req, res) => {
     const UserOnboarding = (await import('../models/UserOnboarding.js')).default;
     
     let user = await User.findByEmail(email);
-    let isUserMetaData = true;
+    let isUserMetaData = true; // Always set to true so users go directly to dashboard
 
     if (user) {
-      // User exists, check onboarding status
-      if (user.role !== 'admin') {
-        const metadata = await UserOnboarding.findByUserId(user.id);
-        isUserMetaData = metadata ? true : false;
-      }
+      // User exists - no need to check onboarding status
     } else {
       // Create new user
       const randomPassword = 'facebook-oauth-' + Math.random().toString(36).substring(2, 15);
@@ -153,7 +144,6 @@ router.post('/facebook', async (req, res) => {
       await User.verifyOTP(email, '000000'); // This will mark them as verified
       
       user = await User.findById(userId);
-      isUserMetaData = false; // New users need to complete onboarding
     }
 
     // Generate JWT token

@@ -159,8 +159,8 @@ export const Login = ({ isOpen, onClose }) => {
         if (data.user.role === 'admin') {
           window.location.href = '/usermanagement';
         } else {
-          // For normal users, navigate based on metadata
-          window.location.href = data.isUserMetaData ? '/dashboard' : '/marketing';
+          // For normal users, always go to dashboard
+          window.location.href = '/dashboard';
         }
       }, 2000);
 
@@ -218,8 +218,8 @@ export const Login = ({ isOpen, onClose }) => {
                 if (data.user.role === 'admin') {
                   window.location.href = '/usermanagement';
                 } else {
-                  // For normal users, navigate based on metadata
-                  window.location.href = data.isUserMetaData ? '/dashboard' : '/marketing';
+                  // For normal users, always go to dashboard
+                  window.location.href = '/dashboard';
                 }
               }, 2000);
 
@@ -313,8 +313,8 @@ export const Login = ({ isOpen, onClose }) => {
         if (data.user.role === 'admin') {
           window.location.href = '/usermanagement';
         } else {
-          // For normal users, navigate based on metadata
-          window.location.href = data.isUserMetaData ? '/dashboard' : '/marketing';
+          // For normal users, always go to dashboard
+          window.location.href = '/dashboard';
         }
       }, 2000);
 

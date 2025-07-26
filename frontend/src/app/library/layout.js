@@ -55,10 +55,11 @@ export default function LibraryLayout({ children }) {
 
         const data = await response.json();
         
-        if (!response.ok || !data.data) {
-          router.push('/pre-homepage');
-          return;
-        }
+        // Remove the metadata check - library should be accessible regardless of onboarding status
+        // if (!response.ok || !data.data) {
+        //   router.push('/pre-homepage');
+        //   return;
+        // }
 
         // Set user data if everything is ok
         const userData = JSON.parse(localStorage.getItem('user'));
@@ -69,11 +70,14 @@ export default function LibraryLayout({ children }) {
           });
         }
 
-        // Fetch project name
-        fetchProjectName();
+        // Fetch project name only if onboarding data exists
+        if (data.data) {
+          fetchProjectName();
+        }
       } catch (error) {
         console.error('Error checking auth:', error);
-        router.push('/');
+        // Instead of redirecting to root, just log the error and continue
+        // The user should still be able to access library
       }
     };
 
@@ -115,13 +119,13 @@ export default function LibraryLayout({ children }) {
                 </svg>
                 <span>Home</span>
               </li>
-              <li className={styles.active}>
+              {/* <li className={styles.active}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
                 </svg>
-                <span>{sidebarProjectName}</span>
-              </li>
+                <span>Library</span>
+              </li> */}
               <li onClick={() => router.push('/settings')}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="3"></circle>

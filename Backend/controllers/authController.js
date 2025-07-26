@@ -107,12 +107,8 @@ class AuthController {
         });
       }
 
+      // Always set isUserMetaData to true so users go directly to dashboard
       let isUserMetaData = true;
-
-      if(user.role !== 'admin'){
-        const metadata = await UserOnboarding.findByUserId(user.id);
-        isUserMetaData = metadata ? true : false;
-      }
 
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {

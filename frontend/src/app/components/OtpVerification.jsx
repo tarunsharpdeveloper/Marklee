@@ -49,8 +49,8 @@ export const OtpVerification = ({ isOpen, email, onVerificationSuccess, onClose 
       // Close the verification modal
       onClose();
       
-      // Force navigation to marketing route
-      window.location.href = '/marketing';
+      // Navigate to dashboard
+      window.location.href = '/dashboard';
 
     } catch (error) {
       console.error('OTP verification failed:', error);
