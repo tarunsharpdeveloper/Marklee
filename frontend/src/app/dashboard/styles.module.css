@@ -5966,6 +5966,281 @@
   }
 }
 
+/* Target Audience Step Styles */
+.audienceStep {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.audienceContent {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.audienceContent h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 0.5rem;
+}
+
+.audienceContent p {
+  color: var(--muted-foreground);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.audienceTypeSelection {
+  margin-bottom: 2rem;
+}
+
+.audienceTypeSelection h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 1rem;
+}
+
+.manualAudienceForm {
+  margin-top: 1.5rem;
+}
+
+.manualAudienceForm .formGroup {
+  margin-bottom: 1.5rem;
+}
+
+.manualAudienceForm h4 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--foreground);
+  margin-bottom: 0.5rem;
+}
+
+.generatedAudiences {
+  margin-top: 2rem;
+}
+
+.audiencesList {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.audienceCard {
+  background: var(--background);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.audienceCard:hover {
+  border-color: #282ab3;
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.1);
+}
+
+.audienceHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.editAudienceButton {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.editAudienceButton:hover {
+  color: #282ab3;
+  background: rgba(96, 165, 250, 0.1);
+}
+
+.audienceCard p {
+  color: var(--muted-foreground);
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}
+
+.viewDetailsButton {
+  background: none;
+  border: none;
+  color: #282ab3;
+  cursor: pointer;
+  font-size: 0.875rem;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.viewDetailsButton:hover {
+  color: #1e40af;
+}
+
+.saveAudiencesButton {
+  background: #282ab3;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+}
+
+.saveAudiencesButton:hover:not(:disabled) {
+  background: #1e40af;
+  transform: translateY(-1px);
+}
+
+.saveAudiencesButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.refreshButton {
+  background: none;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  margin-left: 0.5rem;
+}
+
+.refreshButton:hover {
+  border-color: #282ab3;
+  color: #282ab3;
+}
+
+.generateButton {
+  background: #282ab3;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+}
+
+.generateButton:hover {
+  background: #1e40af;
+  transform: translateY(-1px);
+}
+
+.segmentsList {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.segmentCard {
+  background: var(--background);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.segmentCard:hover {
+  border-color: #282ab3;
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.1);
+}
+
+.segmentHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.submitButton {
+  background: #282ab3;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+}
+
+.submitButton:hover {
+  background: #1e40af;
+  transform: translateY(-1px);
+}
+
+/* Enhanced Error Styles */
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  color: #dc2626;
+}
+
+.errorIcon {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.errorContent {
+  flex: 1;
+}
+
+.errorContent p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.errorSuggestion {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #059669;
+}
+
+@media (max-width: 768px) {
+  .audienceStep {
+    padding: 1rem;
+  }
+  
+  .audienceContent {
+    padding: 1.5rem;
+  }
+  
+  .audienceTypeSelection h1 {
+    font-size: 1.125rem;
+  }
+  
+  .audienceCard {
+    padding: 1rem;
+  }
+  
+  .audienceHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
 @media (max-width: 400px) {
   .projectsSection {
     padding: 0rem !important;

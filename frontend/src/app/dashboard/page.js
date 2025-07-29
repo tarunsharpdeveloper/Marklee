@@ -1133,6 +1133,30 @@ export default function Dashboard() {
 
   const [audiences, setAudiences] = useState([]);
 
+  // Target Audience State (exactly like library page)
+  const [audienceData, setAudienceData] = useState({
+    audienceType: null,
+    labelName: '',
+    whoTheyAre: '',
+    whatTheyWant: '',
+    whatTheyStruggle: '',
+    additionalInfo: ''
+  });
+  const [isGeneratingAudiences, setIsGeneratingAudiences] = useState(false);
+  const [isSavingAudiences, setIsSavingAudiences] = useState(false);
+  const [audienceError, setAudienceError] = useState('');
+  const [audienceLoadingMessage, setAudienceLoadingMessage] = useState('');
+  const [checkedAudiences, setCheckedAudiences] = useState({});
+  const [savedAudiences, setSavedAudiences] = useState({});
+  const [currentBriefId, setCurrentBriefId] = useState(null);
+  const [audienceLoadingQuestions] = useState([
+    "Analyzing your brief requirements...",
+    "Identifying key audience segments...",
+    "Generating detailed audience insights...",
+    "Creating personalized messaging strategies...",
+    "Finalizing audience profiles..."
+  ]);
+
   const qaPairs = [
     {
       question: "What type of content are you looking to create?",
@@ -1200,7 +1224,7 @@ export default function Dashboard() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const [currentStep, setCurrentStep] = useState(1);
-  const [totalSteps] = useState(3);
+  const [totalSteps] = useState(4);
   const autoSaveTimeout = useRef(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
@@ -2863,7 +2887,7 @@ export default function Dashboard() {
     fetchProjects()
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     const nextStep = currentStep + 1;
     
     if (nextStep <= totalSteps) {
@@ -2892,12 +2916,108 @@ export default function Dashboard() {
       }
     }
     
-    // If we're moving FROM step 2 TO step 3 (Core Message to Complete)
+    // If we're moving FROM step 2 TO step 3 (Core Message to Target Audience)
     if (currentStep === 2 && nextStep === 3) {
+      // Initialize audience data for step 3
+      setAudienceData({
+        audienceType: null,
+        labelName: '',
+        whoTheyAre: '',
+        whatTheyWant: '',
+        whatTheyStruggle: '',
+        additionalInfo: ''
+      });
+      setAudienceError('');
+      
+      // First, check if we have temporarily stored audiences from navigation
+      const tempAudiences = localStorage.getItem('tempAudiences');
+      const tempCurrentBriefId = localStorage.getItem('tempCurrentBriefId');
+      
+      if (tempAudiences && tempCurrentBriefId) {
+        try {
+          const parsedAudiences = JSON.parse(tempAudiences);
+          setAudiences(parsedAudiences);
+          setCurrentBriefId(tempCurrentBriefId);
+          console.log('Restored audiences from navigation:', parsedAudiences);
+          
+          // Clear the temporary storage
+          localStorage.removeItem('tempAudiences');
+          localStorage.removeItem('tempCurrentBriefId');
+          return; // Don't proceed with API calls since we have restored audiences
+        } catch (error) {
+          console.error('Error parsing temp audiences:', error);
+          localStorage.removeItem('tempAudiences');
+          localStorage.removeItem('tempCurrentBriefId');
+        }
+      }
+      
+      // Check if there are existing audiences for this project
+      const currentProjectId = localStorage.getItem('currentProjectId');
+      let foundExistingAudiences = false;
+      
+      if (currentProjectId) {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/projects`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (response.ok) {
+            const { data } = await response.json();
+            const currentProject = data.find(project => project.id === currentProjectId);
+            
+            if (currentProject && currentProject.briefs && currentProject.briefs.length > 0) {
+              // Get the most recent brief
+              const latestBrief = currentProject.briefs[currentProject.briefs.length - 1];
+              
+              // Fetch audiences for this brief
+              const audienceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/brief/${latestBrief.id}/audience`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              });
+
+              if (audienceResponse.ok) {
+                const audienceData = await audienceResponse.json();
+                if (audienceData.data && audienceData.data.length > 0) {
+                  // Format the existing audiences
+                  const formattedAudiences = audienceData.data.map(audience => ({
+                    ...audience,
+                    name: getFirstTwoWords(audience.segment),
+                    description: getDescription(audience.segment)
+                  }));
+                  
+                  setAudiences(formattedAudiences);
+                  setCurrentBriefId(latestBrief.id);
+                  foundExistingAudiences = true;
+                  console.log('Loaded existing audiences for project:', formattedAudiences);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error checking for existing audiences:', error);
+        }
+      }
+      
+      // Only clear audiences if we didn't find existing ones
+      if (!foundExistingAudiences) {
+        setAudiences([]);
+        console.log('No existing audiences found, proceeding with generation');
+      }
+    }
+    
+    // If we're moving FROM step 3 TO step 4 (Target Audience to Complete)
+    if (currentStep === 3 && nextStep === 4) {
       setShowStepForm(false);
       setShowProjects(true);
       // Clear project-specific data when returning to projects
       clearProjectSpecificData();
+      // Clear any temporary audience storage
+      localStorage.removeItem('tempAudiences');
+      localStorage.removeItem('tempCurrentBriefId');
       // Fetch latest projects to ensure we have the most recent data
       fetchProjects();
     }
@@ -2980,6 +3100,14 @@ export default function Dashboard() {
   const handlePreviousStep = () => {
     if (currentStep > 1) {
       const previousStep = currentStep - 1;
+      
+      // If we're going back from step 3, save the current audiences to localStorage
+      if (currentStep === 3 && audiences && audiences.length > 0) {
+        localStorage.setItem('tempAudiences', JSON.stringify(audiences));
+        localStorage.setItem('tempCurrentBriefId', currentBriefId);
+        console.log('Saved audiences to localStorage for navigation:', audiences);
+      }
+      
       setCurrentStep(previousStep);
       // Save the current step to database
       saveCurrentStep(previousStep);
@@ -3506,6 +3634,370 @@ export default function Dashboard() {
     }
   };
 
+  // Helper functions for target audience (exactly like library page)
+  const getFirstTwoWords = (text) => {
+    if (!text || typeof text !== 'string') {
+      return 'Untitled Segment';
+    }
+    
+    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+    
+    if (words.length >= 2) {
+      const firstTwoWords = words.slice(0, 2).join(' ');
+      return firstTwoWords;
+    }
+    
+    if (words.length === 1) {
+      return words[0];
+    }
+    
+    return 'Untitled Segment';
+  };
+
+  const getDescription = (text) => {
+    if (!text || typeof text !== 'string') {
+      return '';
+    }
+    
+    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+    
+    if (words.length >= 3) {
+      const description = words.slice(2).join(' ');
+      return description;
+    }
+    
+    if (words.length === 2) {
+      return 'No description available';
+    }
+    
+    return text;
+  };
+
+  // Handle audience generation (exactly like library page but project-specific)
+  const handleGenerateAudiences = async (e) => {
+    if (e) e.preventDefault();
+    console.log('handleGenerateAudiences called with audienceType:', audienceData.audienceType);
+    setIsGeneratingAudiences(true);
+    setAudienceError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found');
+        router.push('/');
+        return;
+      }
+
+      const currentProjectId = localStorage.getItem('currentProjectId');
+      console.log('Current project ID:', currentProjectId);
+      if (!currentProjectId) {
+        throw new Error('No project selected. Please select a project first.');
+      }
+
+      // If audienceType is null, default to 'suggest' for auto-generation
+      const audienceType = audienceData.audienceType || 'suggest';
+      console.log('Using audience type:', audienceType);
+
+      if (audienceType === 'know') {
+        // Validate required fields
+        if (!audienceData.labelName || !audienceData.whoTheyAre || !audienceData.whatTheyWant || !audienceData.whatTheyStruggle) {
+          throw new Error('Please fill in all required fields');
+        }
+
+        // Start loading sequence
+        const loadingInterval = startLoadingSequence(audienceLoadingQuestions, setAudienceLoadingMessage);
+
+        // Handle "I Know My Audience" path - project-specific
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-from-audience`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            labelName: audienceData.labelName,
+            whoTheyAre: audienceData.whoTheyAre,
+            whatTheyWant: audienceData.whatTheyWant,
+            whatTheyStruggle: audienceData.whatTheyStruggle,
+            additionalInfo: audienceData.additionalInfo,
+            projectId: currentProjectId,
+            projectName: localStorage.getItem('currentProjectName') || 'My Project'
+          })
+        });
+
+        if (!response.ok) {
+          clearInterval(loadingInterval);
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to generate core message');
+        }
+
+        const data = await response.json();
+        clearInterval(loadingInterval);
+        
+        if (data.success) {
+          setAudiences(data.data.audiences || []);
+          setCurrentBriefId(data.data.brief?.id);
+        }
+      } else if (audienceType === 'suggest') {
+        // Handle "Suggest audiences for me" path - project-specific
+        console.log('Starting "Suggest audiences for me" path');
+        // Start loading sequence
+        const loadingInterval = startLoadingSequence(audienceLoadingQuestions, setAudienceLoadingMessage);
+
+        // Get the onboarding data first (project-specific)
+        console.log('Fetching onboarding data for project:', currentProjectId);
+        const onboardingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${currentProjectId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!onboardingResponse.ok) {
+          throw new Error('Failed to fetch project data');
+        }
+
+        const onboardingData = await onboardingResponse.json();
+        if (!onboardingData.data || !onboardingData.data.data) {
+          throw new Error('No Discovery Questionnaire data found. Please complete the questionnaire first.');
+        }
+
+        const formData = typeof onboardingData.data.data === 'string' 
+          ? JSON.parse(onboardingData.data.data) 
+          : onboardingData.data.data;
+
+        console.log('Parsed form data:', formData);
+
+        // Extract form answers from the parsed data
+        const formAnswers = formData.formAnswers || {};
+        console.log('Form answers:', formAnswers);
+
+        // Extract all available text data from formAnswers (not formData)
+        const allTextData = [];
+        Object.keys(formAnswers).forEach(key => {
+          if (formAnswers[key] && typeof formAnswers[key] === 'string' && formAnswers[key].trim().length > 0) {
+            allTextData.push(formAnswers[key].trim());
+          }
+        });
+        console.log('All available text data from form answers:', allTextData);
+
+        // Map Discovery Questionnaire data to required fields with more fallbacks
+        const mappedData = {
+          description: formAnswers.productSummary || formAnswers.description || formAnswers.productDescription || formAnswers.summary || formAnswers.product || formAnswers.name || formAnswers.title || '',
+          whoItHelps: formAnswers.coreAudience || formAnswers.targetMarket || formAnswers.audience || formAnswers.whoItHelps || formAnswers.targetAudience || formAnswers.who || formAnswers.customer || formAnswers.target || '',
+          problemItSolves: formAnswers.outcome || formAnswers.problemSolved || formAnswers.problem || formAnswers.solution || formAnswers.value || formAnswers.why || formAnswers.benefit || formAnswers.challenge || '',
+          projectId: currentProjectId,
+          projectName: localStorage.getItem('currentProjectName') || 'My Project'
+        };
+
+        // If we still don't have enough data, try to construct from all available text
+        if (!mappedData.description && allTextData.length > 0) {
+          mappedData.description = allTextData.slice(0, 2).join(' ');
+        }
+        if (!mappedData.whoItHelps && allTextData.length > 1) {
+          mappedData.whoItHelps = allTextData.slice(1, 3).join(' ');
+        }
+        if (!mappedData.problemItSolves && allTextData.length > 2) {
+          mappedData.problemItSolves = allTextData.slice(2, 4).join(' ');
+        }
+
+        console.log('Mapped data for audience generation:', mappedData);
+
+        // Try to get core message as fallback if available
+        const projectCoreMessage = localStorage.getItem('projectCoreMessage');
+        let coreMessageData = null;
+        if (projectCoreMessage) {
+          try {
+            coreMessageData = JSON.parse(projectCoreMessage);
+            console.log('Found core message data:', coreMessageData);
+          } catch (error) {
+            console.log('Could not parse core message data');
+          }
+        }
+
+        // Check if we have at least some meaningful data
+        const hasDescription = mappedData.description && mappedData.description.trim().length > 5;
+        const hasAudience = mappedData.whoItHelps && mappedData.whoItHelps.trim().length > 3;
+        const hasProblem = mappedData.problemItSolves && mappedData.problemItSolves.trim().length > 3;
+
+        // If we don't have enough data, try to use core message as fallback
+        if ((!hasDescription || !hasAudience || !hasProblem) && coreMessageData && coreMessageData.message) {
+          console.log('Using core message as fallback for audience generation');
+          const coreMessage = coreMessageData.message;
+          
+          // Create a basic audience suggestion based on core message
+          const fallbackAudience = {
+            segment: "General Audience",
+            insights: "Based on your core message",
+            messagingAngle: "Focus on the value proposition from your core message",
+            tone: "Professional and engaging",
+            personaProfile: coreMessage.substring(0, 200) + "..."
+          };
+          
+          setAudiences([fallbackAudience]);
+          return;
+        }
+
+        // Final fallback: Create a basic audience with whatever data we have
+        if (!hasDescription || !hasAudience || !hasProblem) {
+          console.log('Missing required fields:', {
+            hasDescription,
+            hasAudience,
+            hasProblem,
+            description: mappedData.description,
+            whoItHelps: mappedData.whoItHelps,
+            problemItSolves: mappedData.problemItSolves
+          });
+          
+          if (allTextData.length > 0) {
+            console.log('Creating basic audience with available data');
+            const basicAudience = {
+              segment: "General Target Audience",
+              insights: "Based on your project information",
+              messagingAngle: "Focus on the value and benefits of your offering",
+              tone: "Professional and approachable",
+              personaProfile: allTextData.join(' ').substring(0, 300) + "..."
+            };
+            
+            setAudiences([basicAudience]);
+            return;
+          }
+          
+          throw new Error('Insufficient project data. Please complete the Discovery Questionnaire with more detailed information about your product, target audience, and the problem you solve.');
+        }
+
+        // Use the mapped data to generate audiences
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-suggested-audiences`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(mappedData)
+        });
+
+        if (!response.ok) {
+          clearInterval(loadingInterval);
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to generate audience suggestions');
+        }
+
+        const data = await response.json();
+        clearInterval(loadingInterval);
+        
+        if (data.success) {
+          setAudiences(data.data.audiences || []);
+          setCurrentBriefId(data.data.brief?.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error generating audiences:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        audienceType: audienceData.audienceType,
+        currentProjectId: localStorage.getItem('currentProjectId')
+      });
+      setAudienceError(error.message);
+    } finally {
+      setIsGeneratingAudiences(false);
+      setAudienceLoadingMessage('');
+    }
+  };
+
+  // Handle audience saving (exactly like library page)
+  const handleSaveAudiences = async () => {
+    try {
+      setIsSavingAudiences(true);
+      setAudienceError('');
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/');
+        return;
+      }
+
+      if (!currentBriefId) {
+        throw new Error('No brief found. Please generate audiences first.');
+      }
+
+      // Get the selected and unselected audience objects
+      const selectedAudienceObjects = audiences.filter(audience => 
+        checkedAudiences[audience.id]
+      );
+      
+      const unselectedAudienceIds = audiences
+        .filter(audience => !checkedAudiences[audience.id])
+        .map(audience => audience.id);
+
+      // Delete unselected audiences from the database
+      if (unselectedAudienceIds.length > 0) {
+        const deleteResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/brief/${currentBriefId}/audience/delete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            audienceIds: unselectedAudienceIds
+          })
+        });
+
+        if (!deleteResponse.ok) {
+          throw new Error('Failed to delete unselected audiences');
+        }
+      }
+
+      // Update saved audiences in local state
+      setSavedAudiences(prev => ({
+        ...prev,
+        [currentBriefId]: selectedAudienceObjects
+      }));
+
+      // Update audiences state to only show selected ones
+      setAudiences(selectedAudienceObjects);
+
+      // Clear checkboxes after successful save
+      setCheckedAudiences({});
+
+      // Move to next step
+      await handleNextStep();
+      
+    } catch (error) {
+      console.error('Error saving/deleting audiences:', error);
+      setAudienceError('Failed to save changes to audiences');
+    } finally {
+      setIsSavingAudiences(false);
+    }
+  };
+
+  // Handle audience refresh (exactly like library page)
+  const handleRefreshAudiences = () => {
+    setAudiences([]);
+    setCheckedAudiences({});
+    setAudienceError('');
+    handleGenerateAudiences();
+  };
+
+  // Handle audience editing (placeholder for now)
+  const handleEditAudience = (audience) => {
+    console.log('Edit audience:', audience);
+    // TODO: Implement edit functionality
+  };
+
+  // Handle audience viewing (placeholder for now)
+  const handleViewAudienceDetails = (audience) => {
+    console.log('View audience details:', audience);
+    // TODO: Implement view functionality
+  };
+
+  // Handle audience checkbox (exactly like library page)
+  const handleCheckAudience = (audienceId) => {
+    setCheckedAudiences(prev => ({
+      ...prev,
+      [audienceId]: !prev[audienceId]
+    }));
+  };
+
   return (
     <div className={styles.container}>
       {renderProjectPopup()}
@@ -3816,6 +4308,9 @@ export default function Dashboard() {
                         <StepLabel >Core Message</StepLabel>
                       </Step>
                       <Step>
+                        <StepLabel>Target Audience</StepLabel>
+                      </Step>
+                      <Step>
                         <StepLabel>Complete</StepLabel>
                       </Step>
                     </Stepper>
@@ -4032,8 +4527,188 @@ export default function Dashboard() {
                     </div>
                   )}
                   
-                  {/* Step 3: Complete */}
+                  {/* Step 3: Target Audience Creation */}
                   {currentStep === 3 && (
+                    <div className={styles.audienceStep}>
+                      <div className={styles.audienceContent}>
+                        <h3>Target Audience Creation</h3>
+                        <p>Now let&apos;s define who you&apos;re talking to. You can create your own audience profiles or get AI suggestions based on your core message.</p>
+                        
+                        {/* Audience Type Selection - Exactly like library page */}
+                        <div className={styles.formGroup}>
+                          <h1>How would you like to define your audience?</h1>
+                          <div className={styles.radioGroup}>
+                            <div className={`${styles.radioOption} ${audienceData.audienceType === 'know' ? styles.selected : ''}`}>
+                              <input
+                                type="radio"
+                                name="audienceType"
+                                value="know"
+                                checked={audienceData.audienceType === 'know'}
+                                onChange={(e) => setAudienceData({ 
+                                  audienceType: e.target.value,
+                                  labelName: '',
+                                  whoTheyAre: '',
+                                  whatTheyWant: '',
+                                  whatTheyStruggle: '',
+                                  additionalInfo: ''
+                                })}
+                                id="know"
+                              />
+                              <label htmlFor="know" className={styles.radioLabel}>I know my audience</label>
+                            </div>
+                            <div className={`${styles.radioOption} ${audienceData.audienceType === 'suggest' ? styles.selected : ''}`}>
+                              <input
+                                type="radio"
+                                name="audienceType"
+                                value="suggest"
+                                checked={audienceData.audienceType === 'suggest'}
+                                onChange={(e) => {
+                                  setAudienceData({ 
+                                    audienceType: e.target.value
+                                  });
+                                  // Automatically submit for audience suggestions
+                                  setTimeout(() => handleGenerateAudiences(new Event('submit')), 0);
+                                }}
+                                id="suggest"
+                              />
+                              <label htmlFor="suggest" className={styles.radioLabel}>Suggest audiences for me</label>
+                            </div>
+                          </div>
+                          {audienceData.audienceType === 'know' && (
+                            <div className={styles.questionsContainer}>
+                              <div className={styles.formGroup}>
+                                <h4>Label / Persona name</h4>
+                                <textarea
+                                  value={audienceData.labelName || ''}
+                                  onChange={(e) => setAudienceData(prev => ({ ...prev, labelName: e.target.value }))}
+                                  className={styles.textarea}
+                                />
+                              </div>
+                              <div className={styles.formGroup}>
+                                <h4>Who they are (role, life stage, market segment)?</h4>
+                                <textarea
+                                  value={audienceData.whoTheyAre || ''}
+                                  onChange={(e) => setAudienceData(prev => ({ ...prev, whoTheyAre: e.target.value }))}
+                                  className={styles.textarea}
+                                />
+                              </div>
+                              <div className={styles.formGroup}>
+                                <h4>What they want (main goal or desired outcome)?</h4>
+                                <textarea
+                                  value={audienceData.whatTheyWant || ''}
+                                  onChange={(e) => setAudienceData(prev => ({ ...prev, whatTheyWant: e.target.value }))}
+                                  className={styles.textarea}
+                                />
+                              </div>
+                              <div className={styles.formGroup}>
+                                <h4>What they struggle with (main pain point or problem)?</h4>
+                                <textarea
+                                  value={audienceData.whatTheyStruggle || ''}
+                                  onChange={(e) => setAudienceData(prev => ({ ...prev, whatTheyStruggle: e.target.value }))}
+                                  className={styles.textarea}
+                                />
+                              </div>
+                              <div className={styles.formGroup}>
+                                <h4>(Optional) Age, channels, purchasing power, etc.</h4>
+                                <textarea
+                                  value={audienceData.additionalInfo || ''}
+                                  onChange={(e) => setAudienceData(prev => ({ ...prev, additionalInfo: e.target.value }))}
+                                  className={styles.textarea}
+                                />
+                              </div>
+                              <button className={styles.submitButton} onClick={handleGenerateAudiences}>Generate</button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Loading State */}
+                        {isGeneratingAudiences && (
+                          <div className={styles.loadingOverlay}>
+                            <div className={styles.loadingContainer}>
+                              <div className={styles.loader}></div>
+                              <p className={styles.loadingMessage}>Generating audiences...</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Generated Audiences Display - Exactly like library page */}
+                        {audiences.length > 0 && (
+                          <div className={styles.generatedAudiences}>
+                            <div className={styles.audienceActions}>
+                              {!savedAudiences[currentBriefId] && (
+                                <button 
+                                  className={styles.saveAudiencesButton}
+                                  onClick={handleSaveAudiences}
+                                  disabled={isSavingAudiences}
+                                >
+                                  {isSavingAudiences ? 'Saving...' : 'Save'}
+                                </button>
+                              )}
+                            </div>
+                            <div className={styles.segmentsList}>
+                              {audiences.map((audience, index) => (
+                                <div key={index} className={styles.segmentCard}>
+                                  <div className={styles.segmentHeader}>
+                                    {!savedAudiences[currentBriefId] && (
+                                      <input 
+                                        type="checkbox"
+                                        checked={checkedAudiences[audience.id] || false}
+                                        onChange={() => handleCheckAudience(audience.id)}
+                                      />
+                                    )}
+                                    
+                                    <button
+                                      className={styles.editAudienceButton}
+                                      onClick={() => handleEditAudience(audience)}
+                                    >
+                                      <svg width="18" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                      </svg>
+                                    </button>
+                                  </div>
+                                  <h4>{getFirstTwoWords(audience.segment)}</h4>
+                                  <p>{getDescription(audience.segment) || 'No description available'}</p>
+                                  <div className={styles.audienceActions}>
+                                    <button
+                                      className={styles.viewDetailsButton}
+                                      onClick={() => handleViewAudienceDetails(audience)}
+                                    >
+                                      view
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Error Display */}
+                        {audienceError && (
+                          <div className={styles.error}>
+                            <div className={styles.errorIcon}>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                              </svg>
+                            </div>
+                            <div className={styles.errorContent}>
+                              <p>{audienceError}</p>
+                              {audienceError.includes('Insufficient project data') && (
+                                <p className={styles.errorSuggestion}>
+                                  💡 Tip: You can still create audiences manually by filling out the form above.
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 4: Setup Complete */}
+                  {currentStep === 4 && (
                     <div className={styles.completeStep}>
                       <div className={styles.completeContent}>
                         <div className={styles.completeIcon}>
@@ -4043,7 +4718,7 @@ export default function Dashboard() {
                           </svg>
                         </div>
                         <h3>Setup Complete!</h3>
-                        <p>Your core marketing message has been created successfully. You&apos;re now ready to start creating content and reaching your audience.</p>
+                        <p>Your core marketing message and target audiences have been created successfully. You&apos;re now ready to start creating content and reaching your audience.</p>
                         <div className={styles.completeActions}>
                           <button 
                             className={styles.completeButton}
@@ -4071,8 +4746,11 @@ export default function Dashboard() {
                     
                     <button
                       className={`${styles.stepButton} ${styles.nextButton}`}
-                      onClick={handleNextStep}
-                      disabled={currentStep === 1 && !coreMessage}
+                      onClick={async () => await handleNextStep()}
+                      disabled={
+                        (currentStep === 1 && !coreMessage) ||
+                        (currentStep === 3 && audiences.length === 0)
+                      }
                     >
                       <span>Next</span>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
