@@ -4860,7 +4860,7 @@
   margin-top: 2rem;
 }
 .stepFormContainer {
-  background: white;
+  background: var(--background);
   border-radius: 32px;
   padding: 3rem;
   width: 100%;
@@ -5002,8 +5002,9 @@
 /* Discovery Step Styles */
 .discoveryStep {
   margin-bottom: 3rem;
-  /* background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); */
+  background: var(--background);
   border-radius: 24px;
+  color: var(--foreground);
   padding: 3rem;
   border: 1px solid rgba(0, 0, 0, 0.05);
   /* box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04); */
@@ -5012,7 +5013,7 @@
 .discoveryContent h4 {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--foreground);
   margin-bottom: 1rem;
   text-align: start;
   display: flex;
@@ -5024,9 +5025,11 @@
   content: "🔍";
   font-size: 1.5rem;
 }
-
+.css-12eb3rq-MuiStepLabel-label.MuiStepLabel-alternativeLabel {
+  color: var(--foreground);
+}
 .discoveryContent p {
-  color: #64748b;
+  color: var(--foreground);
   line-height: 1.7;
   margin-bottom: 2.5rem;
   text-align: start;
@@ -5325,14 +5328,39 @@
   cursor: not-allowed;
   transform: none;
 }
-.css-12eb3rq-MuiStepLabel-label.Mui-active {
+/* Material-UI Stepper Styles - Using wrapper class */
+.stepperWrapper :global(.MuiStepLabel-label.Mui-active) {
+  color: #282ab3 !important;
+}
+
+.stepperWrapper :global(.MuiStepLabel-label) {
   color: var(--foreground);
 }
-.css-12eb3rq-MuiStepLabel-label {
-  color: var(--foreground);
+
+.stepperWrapper :global(.MuiStepLabel-label.Mui-completed) {
+  color: #282ab3 !important;
 }
-.css-12eb3rq-MuiStepLabel-label.Mui-completed {
-  color: var(--foreground);
+
+/* Material-UI Stepper Icon Styles */
+.stepperWrapper :global(.MuiStepIcon-root.Mui-active) {
+  color: #282ab3 !important;
+}
+
+.stepperWrapper :global(.MuiStepIcon-root.Mui-completed) {
+  color: #282ab3 !important;
+}
+
+.stepperWrapper :global(.MuiStepIcon-root.Mui-error) {
+  color: #d32f2f !important;
+}
+
+/* Material-UI Stepper Connector Styles */
+.stepperWrapper :global(.MuiStepConnector-root.Mui-active .MuiStepConnector-line) {
+  border-color: #282ab3 !important;
+}
+
+.stepperWrapper :global(.MuiStepConnector-root.Mui-completed .MuiStepConnector-line) {
+  border-color: #282ab3 !important;
 }
 
 

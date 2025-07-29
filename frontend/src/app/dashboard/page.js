@@ -3781,9 +3781,36 @@ export default function Dashboard() {
                       </h3>
                       </div>
                       <div className={styles.stepFormHeaderBottom}>
-                    <Stepper activeStep={currentStep - 1} alternativeLabel sx={{ width: '100%', maxWidth: 600, margin: '0 auto' }}>
+                    <div className={styles.stepperWrapper}>
+                      <Stepper 
+                        activeStep={currentStep - 1} 
+                        alternativeLabel 
+                        sx={{ 
+                          width: '100%', 
+                          maxWidth: 600, 
+                          margin: '0 auto',
+                          '& .MuiStepLabel-label.Mui-active': {
+                            color: '#282ab3 !important'
+                          },
+                          '& .MuiStepLabel-label.Mui-completed': {
+                            color: '#282ab3 !important'
+                          },
+                          '& .MuiStepIcon-root.Mui-active': {
+                            color: '#282ab3 !important'
+                          },
+                          '& .MuiStepIcon-root.Mui-completed': {
+                            color: '#282ab3 !important'
+                          },
+                          '& .MuiStepConnector-root.Mui-active .MuiStepConnector-line': {
+                            borderColor: '#282ab3 !important'
+                          },
+                          '& .MuiStepConnector-root.Mui-completed .MuiStepConnector-line': {
+                            borderColor: '#282ab3 !important'
+                          }
+                        }}
+                      >
                       <Step >
-                        <StepLabel>Discovery Questionnaire</StepLabel>
+                        <StepLabel >Discovery Questionnaire</StepLabel>
                       </Step>
                       <Step>
                         <StepLabel >Core Message</StepLabel>
@@ -3792,6 +3819,7 @@ export default function Dashboard() {
                         <StepLabel>Complete</StepLabel>
                       </Step>
                     </Stepper>
+                    </div>
                     </div>
                   </div>
                   
