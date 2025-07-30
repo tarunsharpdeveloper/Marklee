@@ -2504,7 +2504,7 @@ export default function Dashboard() {
         </div>
         
         <div className={styles.projectsGrid}>
-          {projects && projects.length > 0 ? (
+          {projects && projects.length > 0 && (
             projects.map((project) => (
               <div key={project.id} className={styles.projectCard}>
                 <div className={styles.projectCardHeader}>
@@ -2692,22 +2692,6 @@ export default function Dashboard() {
                 </div>
               </div>
             ))
-          ) : (
-            <div className={styles.noProjects}>
-              <div className={styles.noProjectsIcon}>
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                </svg>
-              </div>
-              <h3>No Projects Yet</h3>
-              <p>Create your first project to get started with content creation</p>
-              <button 
-                className={styles.createFirstProjectButton}
-                onClick={() => setIsProjectPopupOpen(true)}
-              >
-                Create Your First Project
-              </button>
-            </div>
           )}
         </div>
       </div>
@@ -3498,6 +3482,7 @@ export default function Dashboard() {
           console.log('Using existing project:', projectId);
         } else {
           // Create new project
+          const userData = JSON.parse(localStorage.getItem('user'));
           const projectResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/project`, {
             method: 'POST',
             headers: {
@@ -3505,6 +3490,7 @@ export default function Dashboard() {
               'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
+              userId: userData.id,
               projectName: marketingFormAnswers.description.trim()
             })
           });
@@ -3519,6 +3505,7 @@ export default function Dashboard() {
         }
       } else {
         // Create new project if fetch fails
+        const userData = JSON.parse(localStorage.getItem('user'));
         const projectResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/project`, {
           method: 'POST',
           headers: {
@@ -3526,6 +3513,7 @@ export default function Dashboard() {
             'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
+            userId: userData.id,
             projectName: marketingFormAnswers.description.trim()
           })
         });

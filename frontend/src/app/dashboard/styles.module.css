@@ -208,7 +208,7 @@
   display: flex;
   /* gap: 0.5rem; */
   margin-top: 1rem;
-  justify-content: center;
+  justify-content: end;
 }
 .audienceActions button {
   background-color: #004aad;
@@ -220,7 +220,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   font-weight: 700;
-  width: 100%;
+  justify-content: center;
+  align-items: center;
 }
 .generateDocumentButton {
   display: flex;
