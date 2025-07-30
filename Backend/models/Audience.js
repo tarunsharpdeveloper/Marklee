@@ -89,6 +89,86 @@ class Audience {
         await db.execute(query, [briefId, ...audienceIds]);
         return true;
     }
+
+    // Find audiences by project ID (via briefs)
+    static async findByProjectId(projectId) {
+        try {
+            const [rows] = await db.execute(
+                `SELECT a.* FROM audiences a
+                 INNER JOIN briefs b ON a.brief_id = b.id
+                 WHERE b.project_id = ?`,
+                [projectId]
+            );
+            return rows.map(row => new Audience(row));
+        } catch (error) {
+            console.error('Error fetching audiences by project ID:', error);
+            throw error;
+        }
+    }
+
+    // Find audiences by project ID with additional details
+    static async findByProjectIdWithDetails(projectId) {
+        try {
+            const [rows] = await db.execute(
+                `SELECT a.*, b.project_id, b.project_name 
+                 FROM audiences a
+                 INNER JOIN briefs b ON a.brief_id = b.id
+                 WHERE b.project_id = ?
+                 ORDER BY a.created_at DESC`,
+                [projectId]
+            );
+            return rows.map(row => new Audience(row));
+        } catch (error) {
+            console.error('Error fetching audiences by project ID with details:', error);
+            throw error;
+        }
+    }
+
+    // Delete all audiences for a project
+    static async deleteByProjectId(projectId) {
+        try {
+            const [result] = await db.execute(
+                `DELETE a FROM audiences a
+                 INNER JOIN briefs b ON a.brief_id = b.id
+                 WHERE b.project_id = ?`,
+                [projectId]
+            );
+            return result;
+        } catch (error) {
+            console.error('Error deleting audiences by project ID:', error);
+            throw error;
+        }
+    }
+
+    // Update audience details
+    static async update(id, updateData) {
+        try {
+            const [result] = await db.execute(
+                `UPDATE audiences 
+                 SET segment = ?, 
+                     insights = ?, 
+                     messaging_angle = ?, 
+                     support_points = ?, 
+                     tone = ?, 
+                     persona_profile = ?,
+                     updated_at = NOW()
+                 WHERE id = ?`,
+                [
+                    updateData.segment,
+                    updateData.insights,
+                    updateData.messagingAngle,
+                    updateData.supportPoints,
+                    updateData.tone,
+                    updateData.personaProfile,
+                    id
+                ]
+            );
+            return result;
+        } catch (error) {
+            console.error('Error updating audience:', error);
+            throw error;
+        }
+    }
 }
 
 export default Audience; 

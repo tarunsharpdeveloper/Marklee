@@ -21,4 +21,8 @@ router.post('/generate-suggested-audiences', marketingController.generateSuggest
 // Add audience update route
 router.put('/audience/:id', marketingController.updateAudience);
 
+// Project-specific audience routes
+router.get('/project/:projectId/audiences', marketingController.getAudiencesByProject);
+router.delete('/project/:projectId/audiences', marketingController.deleteAudiencesByProject);
+
 export default router; 

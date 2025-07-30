@@ -1757,6 +1757,11 @@ export default function Dashboard() {
       );
 
       if (response.ok) {
+        const responseData = await response.json();
+        
+        // Clear any existing project-specific data to ensure clean slate
+        clearProjectSpecificData();
+        
         setProjectName("");
         setIsProjectPopupOpen(false);
         // Navigate to library after successful project creation
@@ -2635,6 +2640,39 @@ export default function Dashboard() {
                       const savedStep = await loadCurrentStep(project.id);
                       console.log('Loaded saved step for project:', savedStep);
                       
+                      // Load project-specific audiences if we're on step 3 or higher
+                      if (savedStep >= 3) {
+                        try {
+                          const token = localStorage.getItem('token');
+                          const audienceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/project/${project.id}/audiences`, {
+                            headers: {
+                              'Authorization': `Bearer ${token}`
+                            }
+                          });
+
+                          if (audienceResponse.ok) {
+                            const audienceData = await audienceResponse.json();
+                            if (audienceData.data && audienceData.data.length > 0) {
+                              // Format the existing audiences
+                              const formattedAudiences = audienceData.data.map(audience => ({
+                                ...audience,
+                                name: getFirstTwoWords(audience.segment),
+                                description: getDescription(audience.segment)
+                              }));
+                              
+                              setAudiences(formattedAudiences);
+                              // Set the brief ID from the first audience (they all have the same brief_id)
+                              if (formattedAudiences.length > 0 && formattedAudiences[0].briefId) {
+                                setCurrentBriefId(formattedAudiences[0].briefId);
+                              }
+                              console.log('Loaded project-specific audiences:', formattedAudiences);
+                            }
+                          }
+                        } catch (error) {
+                          console.error('Error loading project audiences:', error);
+                        }
+                      }
+                      
                       // Clear chat messages to ensure project-specific chat
                       setMessages([]);
                       
@@ -2884,6 +2922,22 @@ export default function Dashboard() {
     setShowTypewriter(false);
     // Clear chat messages to ensure project-specific chat
     setMessages([]);
+    
+    // Clear audience-related state to ensure project-specific audiences
+    setAudiences([]);
+    setCurrentBriefId(null);
+    setAudienceData({
+      audienceType: null,
+      labelName: '',
+      whoTheyAre: '',
+      whatTheyWant: '',
+      whatTheyStruggle: '',
+      additionalInfo: ''
+    });
+    setAudienceError('');
+    setCheckedAudiences({});
+    setSavedAudiences({});
+    
     fetchProjects()
   };
 
@@ -3735,8 +3789,12 @@ export default function Dashboard() {
         clearInterval(loadingInterval);
         
         if (data.success) {
-          setAudiences(data.data.audiences || []);
+          const generatedAudiences = data.data.audiences || [];
+          setAudiences(generatedAudiences);
           setCurrentBriefId(data.data.brief?.id);
+          
+          // Audiences are automatically saved to database during generation
+          console.log('Generated and saved audiences for project:', currentProjectId);
         }
       } else if (audienceType === 'suggest') {
         // Handle "Suggest audiences for me" path - project-specific
@@ -3885,8 +3943,12 @@ export default function Dashboard() {
         clearInterval(loadingInterval);
         
         if (data.success) {
-          setAudiences(data.data.audiences || []);
+          const generatedAudiences = data.data.audiences || [];
+          setAudiences(generatedAudiences);
           setCurrentBriefId(data.data.brief?.id);
+          
+          // Audiences are automatically saved to database during generation
+          console.log('Generated and saved audiences for project:', currentProjectId);
         }
       }
     } catch (error) {

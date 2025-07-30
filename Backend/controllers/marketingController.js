@@ -837,6 +837,61 @@ Problem it solves: ${problemItSolves}`
             });
         }
     }
+
+    // Get audiences by project ID
+    async getAudiencesByProject(req, res) {
+        try {
+            const { projectId } = req.params;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Project ID is required'
+                });
+            }
+
+            const audiences = await Audience.findByProjectIdWithDetails(projectId);
+            
+            res.json({
+                success: true,
+                data: audiences
+            });
+        } catch (error) {
+            console.error('Error getting audiences by project:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error'
+            });
+        }
+    }
+
+    // Delete audiences by project ID
+    async deleteAudiencesByProject(req, res) {
+        try {
+            const { projectId } = req.params;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Project ID is required'
+                });
+            }
+
+            const result = await Audience.deleteByProjectId(projectId);
+            
+            res.json({
+                success: true,
+                message: `Deleted ${result.affectedRows} audiences for project ${projectId}`,
+                data: { deletedCount: result.affectedRows }
+            });
+        } catch (error) {
+            console.error('Error deleting audiences by project:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error'
+            });
+        }
+    }
 }
 
 export default new MarketingController();
