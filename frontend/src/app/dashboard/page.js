@@ -4308,7 +4308,7 @@ export default function Dashboard() {
                           clearProjectSpecificData();
                         }}
                       >
-                        Back to folder
+                        Back to Library
                       
                       </button>
                   <div className={styles.stepFormHeader}>
@@ -4317,7 +4317,7 @@ export default function Dashboard() {
                       
                       <h3>
                         {localStorage.getItem('currentProjectId') ? 
-                          `Project: ${projects?.find(p => p.id == localStorage.getItem('currentProjectId'))?.name || ''}` : 
+                          `Library: ${projects?.find(p => p.id == localStorage.getItem('currentProjectId'))?.name || ''}` : 
                           "Let's Get Started"
                         }
                       </h3>
