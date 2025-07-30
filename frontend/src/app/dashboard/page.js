@@ -19,6 +19,53 @@ const MessageSkeleton = () => (
   </div>
 );
 
+// Helper function to get first 2 words from a string (title)
+const getFirstTwoWords = (text) => {
+  if (!text || typeof text !== 'string') {
+    return 'Untitled Segment';
+  }
+  
+  // Split by whitespace and filter out empty strings
+  const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+  
+  // If we have 2 or more words, take the first 2
+  if (words.length >= 2) {
+    const firstTwoWords = words.slice(0, 2).join(' ');
+    return firstTwoWords;
+  }
+  
+  // If we have only 1 word, return it
+  if (words.length === 1) {
+    return words[0];
+  }
+  
+  return 'Untitled Segment';
+};
+
+// Function to get description (everything after the first 2 words)
+const getDescription = (text) => {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+  
+  // Split by whitespace and filter out empty strings
+  const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+  
+  // If we have 3 or more words, return everything after the first 2 words
+  if (words.length >= 3) {
+    const description = words.slice(2).join(' ');
+    return description;
+  }
+  
+  // If we have exactly 2 words, there's no description
+  if (words.length === 2) {
+    return 'No description available';
+  }
+  
+  // If we have only 1 word, treat it as description
+  return text;
+};
+
 const MemoizedEditPopup = memo(({ 
   isOpen, 
   messages, 
@@ -1088,6 +1135,320 @@ const MemoizedEditPopup = memo(({
 
   MemoizedEditPopup.displayName = 'MemoizedEditPopup';
 
+const MemoizedEditAudiencePopup = memo(({ 
+    isOpen, 
+    audience, 
+    onClose, 
+    onSave 
+}) => {
+    const [localInputMessage, setLocalInputMessage] = useState("");
+    const [messages, setMessages] = useState([]);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [localSegment, setLocalSegment] = useState(audience?.segment || "");
+    const [showMobileEdit, setShowMobileEdit] = useState(false);
+    const textareaRef = useRef(null);
+    const chatContainerRef = useRef(null);
+    const router = useRouter();
+    const timeoutRef = useRef(null);
+
+    // Add effect to show edit view when AI responds
+    useEffect(() => {
+        if (messages.length > 0 && messages[messages.length - 1].type === 'ai' && window.innerWidth <= 838) {
+            setShowMobileEdit(true);
+        }
+    }, [messages]);
+
+    // Modified useEffect to scroll only on user messages
+    useEffect(() => {
+        if (chatContainerRef.current && messages.length > 0 && messages[messages.length - 1].type === 'ai') {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [messages]);
+
+    // Initialize textarea value once
+    useEffect(() => {
+        if (audience?.segment) {
+            const title = getFirstTwoWords(audience.segment);
+            const description = getDescription(audience.segment);
+            // Format with "Title - " prefix
+            const formattedText = `Title - ${title}\n${description}`;
+            setLocalSegment(formattedText);
+        }
+    }, [audience?.segment]);
+
+    const handleTextAreaChange = (e) => {
+        const newValue = e.target.value;
+        setLocalSegment(newValue);
+    };
+
+    const handleInputChange = (e) => {
+        setLocalInputMessage(e.target.value);
+        // Auto-resize the textarea
+        const textarea = e.target;
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+    };
+
+    const handleLocalSendMessage = async () => {
+        if (!localInputMessage.trim()) return;
+
+        setMessages(prev => [...prev, { content: localInputMessage, type: 'user' }]);
+        setLocalInputMessage('');
+        
+        // Reset textarea height to normal
+        const textarea = document.querySelector(`.${styles.messageInput}`);
+        if (textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = '44px'; // Reset to min-height
+        }
+        
+        setIsRefreshing(true);
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                router.push('/');
+                return;
+            }
+
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        formData: {
+                            labelName: "Audience Editing",
+                            whoTheyAre: "User editing audience segment",
+                            whatTheyWant: "Improve audience description",
+                            whatTheyNeed: "Better audience targeting",
+                            whatTheyValue: "Clear audience definition",
+                            whatTheyFear: "Poor audience targeting",
+                            whatTheyDesire: "Effective audience segmentation"
+                        },
+                        currentMessage: localSegment,
+                        userPrompt: localInputMessage,
+                        isAudienceEdit: true
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to get AI response');
+            }
+
+            const result = await response.json();
+            
+            if (result.success) {
+                setMessages(prev => [...prev, {
+                    content: result.data?.chatResponse || "Sorry, I couldn't process that. Please try again.",
+                    type: 'ai'
+                }]);
+                
+                // Clear any pending timeout
+                if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current);
+                }
+                
+                // Set new value with a small delay
+                timeoutRef.current = setTimeout(() => {
+                    const newSegment = result.data.coreMessage;
+                    const title = getFirstTwoWords(newSegment);
+                    const description = getDescription(newSegment);
+                    // Format with "Title - " prefix
+                    const formattedText = `Title - ${title}\n${description}`;
+                    setLocalSegment(formattedText);
+                }, 100);
+            } else {
+                setMessages(prev => [...prev, {
+                    content: "Sorry, I couldn't process that. Please try again.",
+                    type: 'ai'
+                }]);
+            }
+        } catch (error) {
+            console.error('Error getting AI response:', error);
+            setMessages(prev => [...prev, {
+                content: "Sorry, I encountered an error. Please try again.",
+                type: 'ai'
+            }]);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    const handleSave = async () => {
+        if (!audience?.id) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                router.push('/');
+                return;
+            }
+
+            // Split the textarea content by lines
+            const lines = localSegment.split('\n');
+            const titleLine = lines[0] || '';
+            const description = lines.slice(1).join('\n') || '';
+            
+            // Extract title from "Title - " prefix
+            const title = titleLine.replace('Title - ', '');
+            
+            // Combine title and description with a space
+            const combinedSegment = `${title} ${description}`.trim();
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/audience/${audience.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    segment: combinedSegment
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update audience');
+            }
+
+            // Call the parent's onSave with the updated audience
+            onSave({
+                ...audience,
+                segment: combinedSegment
+            });
+        } catch (error) {
+            console.error('Error updating audience:', error);
+        }
+    };
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
+
+    if (!isOpen || !audience) return null;
+
+    return (
+        <div className={styles.editPopupOverlay}>
+            <div className={styles.editPopupContent}>
+                <div className={`${styles.editPopupLeft} ${showMobileEdit ? styles.hideMobile : ''}`}>
+                    <div className={styles.editPopupHeader}>
+                        <h2>Message Assistant</h2>
+                        <button
+                            className={styles.editPopupCloseButton}
+                            onClick={onClose}
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div className={styles.chatMessages} ref={chatContainerRef}>
+                        {messages.map((message, index) => (
+                            <div
+                                key={index}
+                                className={`${styles.messageContent} ${
+                                    message.type === "user"
+                                        ? styles.userMessage
+                                        : styles.aiMessage
+                                }`}
+                            >
+                                <p>{message.content}</p>
+                            </div>
+                        ))}
+                        {isRefreshing && (
+                            <div className={styles.aiMessage}>
+                                <div className={styles.loadingDots}>
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <div className={styles.inputContainer}>
+                        <textarea
+                            className={styles.messageInput}
+                            value={localInputMessage}
+                            onChange={handleInputChange}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleLocalSendMessage();
+                                }
+                            }}
+                            placeholder="Type your message..."
+                            style={{height: '44px', minHeight: '44px', maxHeight: '200px', resize: 'none', overflow: 'hidden'}}
+                        />
+                        <button
+                            className={styles.sendButton}
+                            onClick={handleLocalSendMessage}
+                            disabled={isRefreshing || !localInputMessage.trim()}
+                        >Send
+                        </button>
+                    </div>
+                </div>
+                <div className={`${styles.editPopupRight} ${!showMobileEdit ? styles.hideMobile : ''}`}>
+                    {window.innerWidth <= 838 && (
+                        <button 
+                            className={styles.backButton}
+                            onClick={() => setShowMobileEdit(false)}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                            Back to Chat
+                        </button>
+                    )}
+                    <div className={styles.editPopupHeader}>
+                        <h2>Edit Audience</h2>
+                    </div>
+                    <div className={styles.formGroup}>
+                        <textarea
+                            ref={textareaRef}
+                            className={styles.editCoreMessageInput}
+                            value={localSegment}
+                            onChange={handleTextAreaChange}
+                            placeholder="Title - Your Title Here&#10;Description goes here..."
+                            style={{minHeight: '120px'}}
+                        />
+                    </div>
+                    <div className={styles.editCoreMessageActions}>
+                        <button
+                            className={styles.saveButton}
+                            onClick={handleSave}
+                        >
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+});
+
+MemoizedEditAudiencePopup.displayName = 'MemoizedEditAudiencePopup';
+
 export default function Dashboard() {
   const router = useRouter();
   const [isSavePopupOpen, setSavePopupOpen] = useState(false);
@@ -1149,6 +1510,11 @@ export default function Dashboard() {
   const [checkedAudiences, setCheckedAudiences] = useState({});
   const [savedAudiences, setSavedAudiences] = useState({});
   const [currentBriefId, setCurrentBriefId] = useState(null);
+  
+  // Edit Audience Popup State
+  const [isEditAudiencePopupOpen, setIsEditAudiencePopupOpen] = useState(false);
+  const [editingAudience, setEditingAudience] = useState(null);
+  
   const [audienceLoadingQuestions] = useState([
     "Analyzing your brief requirements...",
     "Identifying key audience segments...",
@@ -3676,44 +4042,7 @@ export default function Dashboard() {
     }
   };
 
-  // Helper functions for target audience (exactly like library page)
-  const getFirstTwoWords = (text) => {
-    if (!text || typeof text !== 'string') {
-      return 'Untitled Segment';
-    }
-    
-    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-    
-    if (words.length >= 2) {
-      const firstTwoWords = words.slice(0, 2).join(' ');
-      return firstTwoWords;
-    }
-    
-    if (words.length === 1) {
-      return words[0];
-    }
-    
-    return 'Untitled Segment';
-  };
 
-  const getDescription = (text) => {
-    if (!text || typeof text !== 'string') {
-      return '';
-    }
-    
-    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-    
-    if (words.length >= 3) {
-      const description = words.slice(2).join(' ');
-      return description;
-    }
-    
-    if (words.length === 2) {
-      return 'No description available';
-    }
-    
-    return text;
-  };
 
   // Handle audience generation (exactly like library page but project-specific)
   const handleGenerateAudiences = async (e) => {
@@ -4028,16 +4357,32 @@ export default function Dashboard() {
     handleGenerateAudiences();
   };
 
-  // Handle audience editing (placeholder for now)
+  // Handle audience editing
   const handleEditAudience = (audience) => {
-    console.log('Edit audience:', audience);
-    // TODO: Implement edit functionality
+    setEditingAudience(audience);
+    setIsEditAudiencePopupOpen(true);
   };
 
   // Handle audience viewing (placeholder for now)
   const handleViewAudienceDetails = (audience) => {
     console.log('View audience details:', audience);
     // TODO: Implement view functionality
+  };
+
+  // Handle closing edit audience popup
+  const handleCloseEditAudiencePopup = () => {
+    setIsEditAudiencePopupOpen(false);
+    setEditingAudience(null);
+  };
+
+  // Handle saving edited audience
+  const handleSaveEditedAudience = (updatedAudience) => {
+    // Update the audiences list
+    setAudiences(audiences.map(a => 
+      a.id === updatedAudience.id ? updatedAudience : a
+    ));
+    setIsEditAudiencePopupOpen(false);
+    setEditingAudience(null);
   };
 
   // Handle audience checkbox (exactly like library page)
@@ -4068,6 +4413,14 @@ export default function Dashboard() {
         onClose={handleCloseEditPopup}
         currentStep={currentStep}
       />
+      {isEditAudiencePopupOpen && (
+        <MemoizedEditAudiencePopup
+          isOpen={isEditAudiencePopupOpen}
+          audience={editingAudience}
+          onClose={handleCloseEditAudiencePopup}
+          onSave={handleSaveEditedAudience}
+        />
+      )}
       {isSavePopupOpen && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
@@ -4447,13 +4800,7 @@ export default function Dashboard() {
                               )}
                               
                               {/* Auto-save indicator */}
-                              {isAutoSaving && (
-                                <div className={styles.autoSaveIndicator}>
-                                  <span>
-                                    {localStorage.getItem('currentProjectId') ? 'Saving changes to project...' : 'Saving...'}
-                                  </span>
-                                </div>
-                              )}
+                             
                             </form>
                           </div>
                         )}
