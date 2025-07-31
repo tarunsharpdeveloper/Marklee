@@ -19,6 +19,53 @@ const MessageSkeleton = () => (
   </div>
 );
 
+// Helper function to get first 2 words from a string (title)
+const getFirstTwoWords = (text) => {
+  if (!text || typeof text !== 'string') {
+    return 'Untitled Segment';
+  }
+  
+  // Split by whitespace and filter out empty strings
+  const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+  
+  // If we have 2 or more words, take the first 2
+  if (words.length >= 2) {
+    const firstTwoWords = words.slice(0, 2).join(' ');
+    return firstTwoWords;
+  }
+  
+  // If we have only 1 word, return it
+  if (words.length === 1) {
+    return words[0];
+  }
+  
+  return 'Untitled Segment';
+};
+
+// Function to get description (everything after the first 2 words)
+const getDescription = (text) => {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+  
+  // Split by whitespace and filter out empty strings
+  const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+  
+  // If we have 3 or more words, return everything after the first 2 words
+  if (words.length >= 3) {
+    const description = words.slice(2).join(' ');
+    return description;
+  }
+  
+  // If we have exactly 2 words, there's no description
+  if (words.length === 2) {
+    return 'No description available';
+  }
+  
+  // If we have only 1 word, treat it as description
+  return text;
+};
+
 const MemoizedEditPopup = memo(({ 
   isOpen, 
   messages, 
@@ -1088,6 +1135,320 @@ const MemoizedEditPopup = memo(({
 
   MemoizedEditPopup.displayName = 'MemoizedEditPopup';
 
+const MemoizedEditAudiencePopup = memo(({ 
+    isOpen, 
+    audience, 
+    onClose, 
+    onSave 
+}) => {
+    const [localInputMessage, setLocalInputMessage] = useState("");
+    const [messages, setMessages] = useState([]);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [localSegment, setLocalSegment] = useState(audience?.segment || "");
+    const [showMobileEdit, setShowMobileEdit] = useState(false);
+    const textareaRef = useRef(null);
+    const chatContainerRef = useRef(null);
+    const router = useRouter();
+    const timeoutRef = useRef(null);
+
+    // Add effect to show edit view when AI responds
+    useEffect(() => {
+        if (messages.length > 0 && messages[messages.length - 1].type === 'ai' && window.innerWidth <= 838) {
+            setShowMobileEdit(true);
+        }
+    }, [messages]);
+
+    // Modified useEffect to scroll only on user messages
+    useEffect(() => {
+        if (chatContainerRef.current && messages.length > 0 && messages[messages.length - 1].type === 'ai') {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [messages]);
+
+    // Initialize textarea value once
+    useEffect(() => {
+        if (audience?.segment) {
+            const title = getFirstTwoWords(audience.segment);
+            const description = getDescription(audience.segment);
+            // Format with "Title - " prefix
+            const formattedText = `Title - ${title}\n${description}`;
+            setLocalSegment(formattedText);
+        }
+    }, [audience?.segment]);
+
+    const handleTextAreaChange = (e) => {
+        const newValue = e.target.value;
+        setLocalSegment(newValue);
+    };
+
+    const handleInputChange = (e) => {
+        setLocalInputMessage(e.target.value);
+        // Auto-resize the textarea
+        const textarea = e.target;
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+    };
+
+    const handleLocalSendMessage = async () => {
+        if (!localInputMessage.trim()) return;
+
+        setMessages(prev => [...prev, { content: localInputMessage, type: 'user' }]);
+        setLocalInputMessage('');
+        
+        // Reset textarea height to normal
+        const textarea = document.querySelector(`.${styles.messageInput}`);
+        if (textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = '44px'; // Reset to min-height
+        }
+        
+        setIsRefreshing(true);
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                router.push('/');
+                return;
+            }
+
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-with-prompt`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        formData: {
+                            labelName: "Audience Editing",
+                            whoTheyAre: "User editing audience segment",
+                            whatTheyWant: "Improve audience description",
+                            whatTheyNeed: "Better audience targeting",
+                            whatTheyValue: "Clear audience definition",
+                            whatTheyFear: "Poor audience targeting",
+                            whatTheyDesire: "Effective audience segmentation"
+                        },
+                        currentMessage: localSegment,
+                        userPrompt: localInputMessage,
+                        isAudienceEdit: true
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to get AI response');
+            }
+
+            const result = await response.json();
+            
+            if (result.success) {
+                setMessages(prev => [...prev, {
+                    content: result.data?.chatResponse || "Sorry, I couldn't process that. Please try again.",
+                    type: 'ai'
+                }]);
+                
+                // Clear any pending timeout
+                if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current);
+                }
+                
+                // Set new value with a small delay
+                timeoutRef.current = setTimeout(() => {
+                    const newSegment = result.data.coreMessage;
+                    const title = getFirstTwoWords(newSegment);
+                    const description = getDescription(newSegment);
+                    // Format with "Title - " prefix
+                    const formattedText = `Title - ${title}\n${description}`;
+                    setLocalSegment(formattedText);
+                }, 100);
+            } else {
+                setMessages(prev => [...prev, {
+                    content: "Sorry, I couldn't process that. Please try again.",
+                    type: 'ai'
+                }]);
+            }
+        } catch (error) {
+            console.error('Error getting AI response:', error);
+            setMessages(prev => [...prev, {
+                content: "Sorry, I encountered an error. Please try again.",
+                type: 'ai'
+            }]);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    const handleSave = async () => {
+        if (!audience?.id) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                router.push('/');
+                return;
+            }
+
+            // Split the textarea content by lines
+            const lines = localSegment.split('\n');
+            const titleLine = lines[0] || '';
+            const description = lines.slice(1).join('\n') || '';
+            
+            // Extract title from "Title - " prefix
+            const title = titleLine.replace('Title - ', '');
+            
+            // Combine title and description with a space
+            const combinedSegment = `${title} ${description}`.trim();
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/audience/${audience.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    segment: combinedSegment
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update audience');
+            }
+
+            // Call the parent's onSave with the updated audience
+            onSave({
+                ...audience,
+                segment: combinedSegment
+            });
+        } catch (error) {
+            console.error('Error updating audience:', error);
+        }
+    };
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
+
+    if (!isOpen || !audience) return null;
+
+    return (
+        <div className={styles.editPopupOverlay}>
+            <div className={styles.editPopupContent}>
+                <div className={`${styles.editPopupLeft} ${showMobileEdit ? styles.hideMobile : ''}`}>
+                    <div className={styles.editPopupHeader}>
+                        <h2>Message Assistant</h2>
+                        <button
+                            className={styles.editPopupCloseButton}
+                            onClick={onClose}
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div className={styles.chatMessages} ref={chatContainerRef}>
+                        {messages.map((message, index) => (
+                            <div
+                                key={index}
+                                className={`${styles.messageContent} ${
+                                    message.type === "user"
+                                        ? styles.userMessage
+                                        : styles.aiMessage
+                                }`}
+                            >
+                                <p>{message.content}</p>
+                            </div>
+                        ))}
+                        {isRefreshing && (
+                            <div className={styles.aiMessage}>
+                                <div className={styles.loadingDots}>
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <div className={styles.inputContainer}>
+                        <textarea
+                            className={styles.messageInput}
+                            value={localInputMessage}
+                            onChange={handleInputChange}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleLocalSendMessage();
+                                }
+                            }}
+                            placeholder="Type your message..."
+                            style={{height: '44px', minHeight: '44px', maxHeight: '200px', resize: 'none', overflow: 'hidden'}}
+                        />
+                        <button
+                            className={styles.sendButton}
+                            onClick={handleLocalSendMessage}
+                            disabled={isRefreshing || !localInputMessage.trim()}
+                        >Send
+                        </button>
+                    </div>
+                </div>
+                <div className={`${styles.editPopupRight} ${!showMobileEdit ? styles.hideMobile : ''}`}>
+                    {window.innerWidth <= 838 && (
+                        <button 
+                            className={styles.backButton}
+                            onClick={() => setShowMobileEdit(false)}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                            Back to Chat
+                        </button>
+                    )}
+                    <div className={styles.editPopupHeader}>
+                        <h2>Edit Audience</h2>
+                    </div>
+                    <div className={styles.formGroup}>
+                        <textarea
+                            ref={textareaRef}
+                            className={styles.editCoreMessageInput}
+                            value={localSegment}
+                            onChange={handleTextAreaChange}
+                            placeholder="Title - Your Title Here&#10;Description goes here..."
+                            style={{minHeight: '120px'}}
+                        />
+                    </div>
+                    <div className={styles.editCoreMessageActions}>
+                        <button
+                            className={styles.saveButton}
+                            onClick={handleSave}
+                        >
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+});
+
+MemoizedEditAudiencePopup.displayName = 'MemoizedEditAudiencePopup';
+
 export default function Dashboard() {
   const router = useRouter();
   const [isSavePopupOpen, setSavePopupOpen] = useState(false);
@@ -1132,6 +1493,35 @@ export default function Dashboard() {
   });
 
   const [audiences, setAudiences] = useState([]);
+
+  // Target Audience State (exactly like library page)
+  const [audienceData, setAudienceData] = useState({
+    audienceType: null,
+    labelName: '',
+    whoTheyAre: '',
+    whatTheyWant: '',
+    whatTheyStruggle: '',
+    additionalInfo: ''
+  });
+  const [isGeneratingAudiences, setIsGeneratingAudiences] = useState(false);
+  const [isSavingAudiences, setIsSavingAudiences] = useState(false);
+  const [audienceError, setAudienceError] = useState('');
+  const [audienceLoadingMessage, setAudienceLoadingMessage] = useState('');
+  const [checkedAudiences, setCheckedAudiences] = useState({});
+  const [savedAudiences, setSavedAudiences] = useState({});
+  const [currentBriefId, setCurrentBriefId] = useState(null);
+  
+  // Edit Audience Popup State
+  const [isEditAudiencePopupOpen, setIsEditAudiencePopupOpen] = useState(false);
+  const [editingAudience, setEditingAudience] = useState(null);
+  
+  const [audienceLoadingQuestions] = useState([
+    "Analyzing your brief requirements...",
+    "Identifying key audience segments...",
+    "Generating detailed audience insights...",
+    "Creating personalized messaging strategies...",
+    "Finalizing audience profiles..."
+  ]);
 
   const qaPairs = [
     {
@@ -1200,7 +1590,7 @@ export default function Dashboard() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const [currentStep, setCurrentStep] = useState(1);
-  const [totalSteps] = useState(3);
+  const [totalSteps] = useState(4);
   const autoSaveTimeout = useRef(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
@@ -1733,6 +2123,11 @@ export default function Dashboard() {
       );
 
       if (response.ok) {
+        const responseData = await response.json();
+        
+        // Clear any existing project-specific data to ensure clean slate
+        clearProjectSpecificData();
+        
         setProjectName("");
         setIsProjectPopupOpen(false);
         // Navigate to library after successful project creation
@@ -2475,7 +2870,7 @@ export default function Dashboard() {
         </div>
         
         <div className={styles.projectsGrid}>
-          {projects && projects.length > 0 ? (
+          {projects && projects.length > 0 && (
             projects.map((project) => (
               <div key={project.id} className={styles.projectCard}>
                 <div className={styles.projectCardHeader}>
@@ -2611,6 +3006,39 @@ export default function Dashboard() {
                       const savedStep = await loadCurrentStep(project.id);
                       console.log('Loaded saved step for project:', savedStep);
                       
+                      // Load project-specific audiences if we're on step 3 or higher
+                      if (savedStep >= 3) {
+                        try {
+                          const token = localStorage.getItem('token');
+                          const audienceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/project/${project.id}/audiences`, {
+                            headers: {
+                              'Authorization': `Bearer ${token}`
+                            }
+                          });
+
+                          if (audienceResponse.ok) {
+                            const audienceData = await audienceResponse.json();
+                            if (audienceData.data && audienceData.data.length > 0) {
+                              // Format the existing audiences
+                              const formattedAudiences = audienceData.data.map(audience => ({
+                                ...audience,
+                                name: getFirstTwoWords(audience.segment),
+                                description: getDescription(audience.segment)
+                              }));
+                              
+                              setAudiences(formattedAudiences);
+                              // Set the brief ID from the first audience (they all have the same brief_id)
+                              if (formattedAudiences.length > 0 && formattedAudiences[0].briefId) {
+                                setCurrentBriefId(formattedAudiences[0].briefId);
+                              }
+                              console.log('Loaded project-specific audiences:', formattedAudiences);
+                            }
+                          }
+                        } catch (error) {
+                          console.error('Error loading project audiences:', error);
+                        }
+                      }
+                      
                       // Clear chat messages to ensure project-specific chat
                       setMessages([]);
                       
@@ -2630,22 +3058,6 @@ export default function Dashboard() {
                 </div>
               </div>
             ))
-          ) : (
-            <div className={styles.noProjects}>
-              <div className={styles.noProjectsIcon}>
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                </svg>
-              </div>
-              <h3>No Projects Yet</h3>
-              <p>Create your first project to get started with content creation</p>
-              <button 
-                className={styles.createFirstProjectButton}
-                onClick={() => setIsProjectPopupOpen(true)}
-              >
-                Create Your First Project
-              </button>
-            </div>
           )}
         </div>
       </div>
@@ -2860,10 +3272,26 @@ export default function Dashboard() {
     setShowTypewriter(false);
     // Clear chat messages to ensure project-specific chat
     setMessages([]);
+    
+    // Clear audience-related state to ensure project-specific audiences
+    setAudiences([]);
+    setCurrentBriefId(null);
+    setAudienceData({
+      audienceType: null,
+      labelName: '',
+      whoTheyAre: '',
+      whatTheyWant: '',
+      whatTheyStruggle: '',
+      additionalInfo: ''
+    });
+    setAudienceError('');
+    setCheckedAudiences({});
+    setSavedAudiences({});
+    
     fetchProjects()
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     const nextStep = currentStep + 1;
     
     if (nextStep <= totalSteps) {
@@ -2892,12 +3320,108 @@ export default function Dashboard() {
       }
     }
     
-    // If we're moving FROM step 2 TO step 3 (Core Message to Complete)
+    // If we're moving FROM step 2 TO step 3 (Core Message to Target Audience)
     if (currentStep === 2 && nextStep === 3) {
+      // Initialize audience data for step 3
+      setAudienceData({
+        audienceType: null,
+        labelName: '',
+        whoTheyAre: '',
+        whatTheyWant: '',
+        whatTheyStruggle: '',
+        additionalInfo: ''
+      });
+      setAudienceError('');
+      
+      // First, check if we have temporarily stored audiences from navigation
+      const tempAudiences = localStorage.getItem('tempAudiences');
+      const tempCurrentBriefId = localStorage.getItem('tempCurrentBriefId');
+      
+      if (tempAudiences && tempCurrentBriefId) {
+        try {
+          const parsedAudiences = JSON.parse(tempAudiences);
+          setAudiences(parsedAudiences);
+          setCurrentBriefId(tempCurrentBriefId);
+          console.log('Restored audiences from navigation:', parsedAudiences);
+          
+          // Clear the temporary storage
+          localStorage.removeItem('tempAudiences');
+          localStorage.removeItem('tempCurrentBriefId');
+          return; // Don't proceed with API calls since we have restored audiences
+        } catch (error) {
+          console.error('Error parsing temp audiences:', error);
+          localStorage.removeItem('tempAudiences');
+          localStorage.removeItem('tempCurrentBriefId');
+        }
+      }
+      
+      // Check if there are existing audiences for this project
+      const currentProjectId = localStorage.getItem('currentProjectId');
+      let foundExistingAudiences = false;
+      
+      if (currentProjectId) {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/projects`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (response.ok) {
+            const { data } = await response.json();
+            const currentProject = data.find(project => project.id === currentProjectId);
+            
+            if (currentProject && currentProject.briefs && currentProject.briefs.length > 0) {
+              // Get the most recent brief
+              const latestBrief = currentProject.briefs[currentProject.briefs.length - 1];
+              
+              // Fetch audiences for this brief
+              const audienceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/brief/${latestBrief.id}/audience`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              });
+
+              if (audienceResponse.ok) {
+                const audienceData = await audienceResponse.json();
+                if (audienceData.data && audienceData.data.length > 0) {
+                  // Format the existing audiences
+                  const formattedAudiences = audienceData.data.map(audience => ({
+                    ...audience,
+                    name: getFirstTwoWords(audience.segment),
+                    description: getDescription(audience.segment)
+                  }));
+                  
+                  setAudiences(formattedAudiences);
+                  setCurrentBriefId(latestBrief.id);
+                  foundExistingAudiences = true;
+                  console.log('Loaded existing audiences for project:', formattedAudiences);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error checking for existing audiences:', error);
+        }
+      }
+      
+      // Only clear audiences if we didn't find existing ones
+      if (!foundExistingAudiences) {
+        setAudiences([]);
+        console.log('No existing audiences found, proceeding with generation');
+      }
+    }
+    
+    // If we're moving FROM step 3 TO step 4 (Target Audience to Complete)
+    if (currentStep === 3 && nextStep === 4) {
       setShowStepForm(false);
       setShowProjects(true);
       // Clear project-specific data when returning to projects
       clearProjectSpecificData();
+      // Clear any temporary audience storage
+      localStorage.removeItem('tempAudiences');
+      localStorage.removeItem('tempCurrentBriefId');
       // Fetch latest projects to ensure we have the most recent data
       fetchProjects();
     }
@@ -2980,6 +3504,14 @@ export default function Dashboard() {
   const handlePreviousStep = () => {
     if (currentStep > 1) {
       const previousStep = currentStep - 1;
+      
+      // If we're going back from step 3, save the current audiences to localStorage
+      if (currentStep === 3 && audiences && audiences.length > 0) {
+        localStorage.setItem('tempAudiences', JSON.stringify(audiences));
+        localStorage.setItem('tempCurrentBriefId', currentBriefId);
+        console.log('Saved audiences to localStorage for navigation:', audiences);
+      }
+      
       setCurrentStep(previousStep);
       // Save the current step to database
       saveCurrentStep(previousStep);
@@ -3316,6 +3848,7 @@ export default function Dashboard() {
           console.log('Using existing project:', projectId);
         } else {
           // Create new project
+          const userData = JSON.parse(localStorage.getItem('user'));
           const projectResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/project`, {
             method: 'POST',
             headers: {
@@ -3323,6 +3856,7 @@ export default function Dashboard() {
               'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
+              userId: userData.id,
               projectName: marketingFormAnswers.description.trim()
             })
           });
@@ -3337,6 +3871,7 @@ export default function Dashboard() {
         }
       } else {
         // Create new project if fetch fails
+        const userData = JSON.parse(localStorage.getItem('user'));
         const projectResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/project`, {
           method: 'POST',
           headers: {
@@ -3344,6 +3879,7 @@ export default function Dashboard() {
             'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
+            userId: userData.id,
             projectName: marketingFormAnswers.description.trim()
           })
         });
@@ -3506,6 +4042,357 @@ export default function Dashboard() {
     }
   };
 
+
+
+  // Handle audience generation (exactly like library page but project-specific)
+  const handleGenerateAudiences = async (e) => {
+    if (e) e.preventDefault();
+    console.log('handleGenerateAudiences called with audienceType:', audienceData.audienceType);
+    setIsGeneratingAudiences(true);
+    setAudienceError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found');
+        router.push('/');
+        return;
+      }
+
+      const currentProjectId = localStorage.getItem('currentProjectId');
+      console.log('Current project ID:', currentProjectId);
+      if (!currentProjectId) {
+        throw new Error('No project selected. Please select a project first.');
+      }
+
+      // If audienceType is null, default to 'suggest' for auto-generation
+      const audienceType = audienceData.audienceType || 'suggest';
+      console.log('Using audience type:', audienceType);
+
+      if (audienceType === 'know') {
+        // Validate required fields
+        if (!audienceData.labelName || !audienceData.whoTheyAre || !audienceData.whatTheyWant || !audienceData.whatTheyStruggle) {
+          throw new Error('Please fill in all required fields');
+        }
+
+        // Start loading sequence
+        const loadingInterval = startLoadingSequence(audienceLoadingQuestions, setAudienceLoadingMessage);
+
+        // Handle "I Know My Audience" path - project-specific
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-from-audience`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            labelName: audienceData.labelName,
+            whoTheyAre: audienceData.whoTheyAre,
+            whatTheyWant: audienceData.whatTheyWant,
+            whatTheyStruggle: audienceData.whatTheyStruggle,
+            additionalInfo: audienceData.additionalInfo,
+            projectId: currentProjectId,
+            projectName: localStorage.getItem('currentProjectName') || 'My Project'
+          })
+        });
+
+        if (!response.ok) {
+          clearInterval(loadingInterval);
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to generate core message');
+        }
+
+        const data = await response.json();
+        clearInterval(loadingInterval);
+        
+        if (data.success) {
+          const generatedAudiences = data.data.audiences || [];
+          setAudiences(generatedAudiences);
+          setCurrentBriefId(data.data.brief?.id);
+          
+          // Audiences are automatically saved to database during generation
+          console.log('Generated and saved audiences for project:', currentProjectId);
+        }
+      } else if (audienceType === 'suggest') {
+        // Handle "Suggest audiences for me" path - project-specific
+        console.log('Starting "Suggest audiences for me" path');
+        // Start loading sequence
+        const loadingInterval = startLoadingSequence(audienceLoadingQuestions, setAudienceLoadingMessage);
+
+        // Get the onboarding data first (project-specific)
+        console.log('Fetching onboarding data for project:', currentProjectId);
+        const onboardingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get?projectId=${currentProjectId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!onboardingResponse.ok) {
+          throw new Error('Failed to fetch project data');
+        }
+
+        const onboardingData = await onboardingResponse.json();
+        if (!onboardingData.data || !onboardingData.data.data) {
+          throw new Error('No Discovery Questionnaire data found. Please complete the questionnaire first.');
+        }
+
+        const formData = typeof onboardingData.data.data === 'string' 
+          ? JSON.parse(onboardingData.data.data) 
+          : onboardingData.data.data;
+
+        console.log('Parsed form data:', formData);
+
+        // Extract form answers from the parsed data
+        const formAnswers = formData.formAnswers || {};
+        console.log('Form answers:', formAnswers);
+
+        // Extract all available text data from formAnswers (not formData)
+        const allTextData = [];
+        Object.keys(formAnswers).forEach(key => {
+          if (formAnswers[key] && typeof formAnswers[key] === 'string' && formAnswers[key].trim().length > 0) {
+            allTextData.push(formAnswers[key].trim());
+          }
+        });
+        console.log('All available text data from form answers:', allTextData);
+
+        // Map Discovery Questionnaire data to required fields with more fallbacks
+        const mappedData = {
+          description: formAnswers.productSummary || formAnswers.description || formAnswers.productDescription || formAnswers.summary || formAnswers.product || formAnswers.name || formAnswers.title || '',
+          whoItHelps: formAnswers.coreAudience || formAnswers.targetMarket || formAnswers.audience || formAnswers.whoItHelps || formAnswers.targetAudience || formAnswers.who || formAnswers.customer || formAnswers.target || '',
+          problemItSolves: formAnswers.outcome || formAnswers.problemSolved || formAnswers.problem || formAnswers.solution || formAnswers.value || formAnswers.why || formAnswers.benefit || formAnswers.challenge || '',
+          projectId: currentProjectId,
+          projectName: localStorage.getItem('currentProjectName') || 'My Project'
+        };
+
+        // If we still don't have enough data, try to construct from all available text
+        if (!mappedData.description && allTextData.length > 0) {
+          mappedData.description = allTextData.slice(0, 2).join(' ');
+        }
+        if (!mappedData.whoItHelps && allTextData.length > 1) {
+          mappedData.whoItHelps = allTextData.slice(1, 3).join(' ');
+        }
+        if (!mappedData.problemItSolves && allTextData.length > 2) {
+          mappedData.problemItSolves = allTextData.slice(2, 4).join(' ');
+        }
+
+        console.log('Mapped data for audience generation:', mappedData);
+
+        // Try to get core message as fallback if available
+        const projectCoreMessage = localStorage.getItem('projectCoreMessage');
+        let coreMessageData = null;
+        if (projectCoreMessage) {
+          try {
+            coreMessageData = JSON.parse(projectCoreMessage);
+            console.log('Found core message data:', coreMessageData);
+          } catch (error) {
+            console.log('Could not parse core message data');
+          }
+        }
+
+        // Check if we have at least some meaningful data
+        const hasDescription = mappedData.description && mappedData.description.trim().length > 5;
+        const hasAudience = mappedData.whoItHelps && mappedData.whoItHelps.trim().length > 3;
+        const hasProblem = mappedData.problemItSolves && mappedData.problemItSolves.trim().length > 3;
+
+        // If we don't have enough data, try to use core message as fallback
+        if ((!hasDescription || !hasAudience || !hasProblem) && coreMessageData && coreMessageData.message) {
+          console.log('Using core message as fallback for audience generation');
+          const coreMessage = coreMessageData.message;
+          
+          // Create a basic audience suggestion based on core message
+          const fallbackAudience = {
+            segment: "General Audience",
+            insights: "Based on your core message",
+            messagingAngle: "Focus on the value proposition from your core message",
+            tone: "Professional and engaging",
+            personaProfile: coreMessage.substring(0, 200) + "..."
+          };
+          
+          setAudiences([fallbackAudience]);
+          return;
+        }
+
+        // Final fallback: Create a basic audience with whatever data we have
+        if (!hasDescription || !hasAudience || !hasProblem) {
+          console.log('Missing required fields:', {
+            hasDescription,
+            hasAudience,
+            hasProblem,
+            description: mappedData.description,
+            whoItHelps: mappedData.whoItHelps,
+            problemItSolves: mappedData.problemItSolves
+          });
+          
+          if (allTextData.length > 0) {
+            console.log('Creating basic audience with available data');
+            const basicAudience = {
+              segment: "General Target Audience",
+              insights: "Based on your project information",
+              messagingAngle: "Focus on the value and benefits of your offering",
+              tone: "Professional and approachable",
+              personaProfile: allTextData.join(' ').substring(0, 300) + "..."
+            };
+            
+            setAudiences([basicAudience]);
+            return;
+          }
+          
+          throw new Error('Insufficient project data. Please complete the Discovery Questionnaire with more detailed information about your product, target audience, and the problem you solve.');
+        }
+
+        // Use the mapped data to generate audiences
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/generate-suggested-audiences`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(mappedData)
+        });
+
+        if (!response.ok) {
+          clearInterval(loadingInterval);
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to generate audience suggestions');
+        }
+
+        const data = await response.json();
+        clearInterval(loadingInterval);
+        
+        if (data.success) {
+          const generatedAudiences = data.data.audiences || [];
+          setAudiences(generatedAudiences);
+          setCurrentBriefId(data.data.brief?.id);
+          
+          // Audiences are automatically saved to database during generation
+          console.log('Generated and saved audiences for project:', currentProjectId);
+        }
+      }
+    } catch (error) {
+      console.error('Error generating audiences:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        audienceType: audienceData.audienceType,
+        currentProjectId: localStorage.getItem('currentProjectId')
+      });
+      setAudienceError(error.message);
+    } finally {
+      setIsGeneratingAudiences(false);
+      setAudienceLoadingMessage('');
+    }
+  };
+
+  // Handle audience saving (exactly like library page)
+  const handleSaveAudiences = async () => {
+    try {
+      setIsSavingAudiences(true);
+      setAudienceError('');
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/');
+        return;
+      }
+
+      if (!currentBriefId) {
+        throw new Error('No brief found. Please generate audiences first.');
+      }
+
+      // Get the selected and unselected audience objects
+      const selectedAudienceObjects = audiences.filter(audience => 
+        checkedAudiences[audience.id]
+      );
+      
+      const unselectedAudienceIds = audiences
+        .filter(audience => !checkedAudiences[audience.id])
+        .map(audience => audience.id);
+
+      // Delete unselected audiences from the database
+      if (unselectedAudienceIds.length > 0) {
+        const deleteResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/brief/${currentBriefId}/audience/delete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            audienceIds: unselectedAudienceIds
+          })
+        });
+
+        if (!deleteResponse.ok) {
+          throw new Error('Failed to delete unselected audiences');
+        }
+      }
+
+      // Update saved audiences in local state
+      setSavedAudiences(prev => ({
+        ...prev,
+        [currentBriefId]: selectedAudienceObjects
+      }));
+
+      // Update audiences state to only show selected ones
+      setAudiences(selectedAudienceObjects);
+
+      // Clear checkboxes after successful save
+      setCheckedAudiences({});
+
+      // Move to next step
+      await handleNextStep();
+      
+    } catch (error) {
+      console.error('Error saving/deleting audiences:', error);
+      setAudienceError('Failed to save changes to audiences');
+    } finally {
+      setIsSavingAudiences(false);
+    }
+  };
+
+  // Handle audience refresh (exactly like library page)
+  const handleRefreshAudiences = () => {
+    setAudiences([]);
+    setCheckedAudiences({});
+    setAudienceError('');
+    handleGenerateAudiences();
+  };
+
+  // Handle audience editing
+  const handleEditAudience = (audience) => {
+    setEditingAudience(audience);
+    setIsEditAudiencePopupOpen(true);
+  };
+
+  // Handle audience viewing (placeholder for now)
+  const handleViewAudienceDetails = (audience) => {
+    console.log('View audience details:', audience);
+    // TODO: Implement view functionality
+  };
+
+  // Handle closing edit audience popup
+  const handleCloseEditAudiencePopup = () => {
+    setIsEditAudiencePopupOpen(false);
+    setEditingAudience(null);
+  };
+
+  // Handle saving edited audience
+  const handleSaveEditedAudience = (updatedAudience) => {
+    // Update the audiences list
+    setAudiences(audiences.map(a => 
+      a.id === updatedAudience.id ? updatedAudience : a
+    ));
+    setIsEditAudiencePopupOpen(false);
+    setEditingAudience(null);
+  };
+
+  // Handle audience checkbox (exactly like library page)
+  const handleCheckAudience = (audienceId) => {
+    setCheckedAudiences(prev => ({
+      ...prev,
+      [audienceId]: !prev[audienceId]
+    }));
+  };
+
   return (
     <div className={styles.container}>
       {renderProjectPopup()}
@@ -3526,6 +4413,14 @@ export default function Dashboard() {
         onClose={handleCloseEditPopup}
         currentStep={currentStep}
       />
+      {isEditAudiencePopupOpen && (
+        <MemoizedEditAudiencePopup
+          isOpen={isEditAudiencePopupOpen}
+          audience={editingAudience}
+          onClose={handleCloseEditAudiencePopup}
+          onSave={handleSaveEditedAudience}
+        />
+      )}
       {isSavePopupOpen && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
@@ -3766,7 +4661,7 @@ export default function Dashboard() {
                           clearProjectSpecificData();
                         }}
                       >
-                        Back to folder
+                        Back to Library
                       
                       </button>
                   <div className={styles.stepFormHeader}>
@@ -3775,7 +4670,7 @@ export default function Dashboard() {
                       
                       <h3>
                         {localStorage.getItem('currentProjectId') ? 
-                          `Project: ${projects?.find(p => p.id == localStorage.getItem('currentProjectId'))?.name || ''}` : 
+                          `Library: ${projects?.find(p => p.id == localStorage.getItem('currentProjectId'))?.name || ''}` : 
                           "Let's Get Started"
                         }
                       </h3>
@@ -3814,6 +4709,9 @@ export default function Dashboard() {
                       </Step>
                       <Step>
                         <StepLabel >Core Message</StepLabel>
+                      </Step>
+                      <Step>
+                        <StepLabel>Target Audience</StepLabel>
                       </Step>
                       <Step>
                         <StepLabel>Complete</StepLabel>
@@ -3902,13 +4800,7 @@ export default function Dashboard() {
                               )}
                               
                               {/* Auto-save indicator */}
-                              {isAutoSaving && (
-                                <div className={styles.autoSaveIndicator}>
-                                  <span>
-                                    {localStorage.getItem('currentProjectId') ? 'Saving changes to project...' : 'Saving...'}
-                                  </span>
-                                </div>
-                              )}
+                             
                             </form>
                           </div>
                         )}
@@ -4032,8 +4924,188 @@ export default function Dashboard() {
                     </div>
                   )}
                   
-                  {/* Step 3: Complete */}
+                  {/* Step 3: Target Audience Creation */}
                   {currentStep === 3 && (
+                    <div className={styles.audienceStep}>
+                      <div className={styles.audienceContent}>
+                        <h3>Target Audience Creation</h3>
+                        <p>Now let&apos;s define who you&apos;re talking to. You can create your own audience profiles or get AI suggestions based on your core message.</p>
+                        
+                        {/* Audience Type Selection - Exactly like library page */}
+                        <div className={styles.formGroup}>
+                          <h1>How would you like to define your audience?</h1>
+                          <div className={styles.radioGroup}>
+                            <div className={`${styles.radioOption} ${audienceData.audienceType === 'know' ? styles.selected : ''}`}>
+                              <input
+                                type="radio"
+                                name="audienceType"
+                                value="know"
+                                checked={audienceData.audienceType === 'know'}
+                                onChange={(e) => setAudienceData({ 
+                                  audienceType: e.target.value,
+                                  labelName: '',
+                                  whoTheyAre: '',
+                                  whatTheyWant: '',
+                                  whatTheyStruggle: '',
+                                  additionalInfo: ''
+                                })}
+                                id="know"
+                              />
+                              <label htmlFor="know" className={styles.radioLabel}>I know my audience</label>
+                            </div>
+                            <div className={`${styles.radioOption} ${audienceData.audienceType === 'suggest' ? styles.selected : ''}`}>
+                              <input
+                                type="radio"
+                                name="audienceType"
+                                value="suggest"
+                                checked={audienceData.audienceType === 'suggest'}
+                                onChange={(e) => {
+                                  setAudienceData({ 
+                                    audienceType: e.target.value
+                                  });
+                                  // Automatically submit for audience suggestions
+                                  setTimeout(() => handleGenerateAudiences(new Event('submit')), 0);
+                                }}
+                                id="suggest"
+                              />
+                              <label htmlFor="suggest" className={styles.radioLabel}>Suggest audiences for me</label>
+                            </div>
+                          </div>
+                          {audienceData.audienceType === 'know' && (
+                            <div className={styles.questionsContainer}>
+                              <div className={styles.formGroup}>
+                                <h4>Label / Persona name</h4>
+                                <textarea
+                                  value={audienceData.labelName || ''}
+                                  onChange={(e) => setAudienceData(prev => ({ ...prev, labelName: e.target.value }))}
+                                  className={styles.textarea}
+                                />
+                              </div>
+                              <div className={styles.formGroup}>
+                                <h4>Who they are (role, life stage, market segment)?</h4>
+                                <textarea
+                                  value={audienceData.whoTheyAre || ''}
+                                  onChange={(e) => setAudienceData(prev => ({ ...prev, whoTheyAre: e.target.value }))}
+                                  className={styles.textarea}
+                                />
+                              </div>
+                              <div className={styles.formGroup}>
+                                <h4>What they want (main goal or desired outcome)?</h4>
+                                <textarea
+                                  value={audienceData.whatTheyWant || ''}
+                                  onChange={(e) => setAudienceData(prev => ({ ...prev, whatTheyWant: e.target.value }))}
+                                  className={styles.textarea}
+                                />
+                              </div>
+                              <div className={styles.formGroup}>
+                                <h4>What they struggle with (main pain point or problem)?</h4>
+                                <textarea
+                                  value={audienceData.whatTheyStruggle || ''}
+                                  onChange={(e) => setAudienceData(prev => ({ ...prev, whatTheyStruggle: e.target.value }))}
+                                  className={styles.textarea}
+                                />
+                              </div>
+                              <div className={styles.formGroup}>
+                                <h4>(Optional) Age, channels, purchasing power, etc.</h4>
+                                <textarea
+                                  value={audienceData.additionalInfo || ''}
+                                  onChange={(e) => setAudienceData(prev => ({ ...prev, additionalInfo: e.target.value }))}
+                                  className={styles.textarea}
+                                />
+                              </div>
+                              <button className={styles.submitButton} onClick={handleGenerateAudiences}>Generate</button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Loading State */}
+                        {isGeneratingAudiences && (
+                          <div className={styles.loadingOverlay}>
+                            <div className={styles.loadingContainer}>
+                              <div className={styles.loader}></div>
+                              <p className={styles.loadingMessage}>Generating audiences...</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Generated Audiences Display - Exactly like library page */}
+                        {audiences.length > 0 && (
+                          <div className={styles.generatedAudiences}>
+                            <div className={styles.audienceActions}>
+                              {!savedAudiences[currentBriefId] && (
+                                <button 
+                                  className={styles.saveAudiencesButton}
+                                  onClick={handleSaveAudiences}
+                                  disabled={isSavingAudiences}
+                                >
+                                  {isSavingAudiences ? 'Saving...' : 'Save'}
+                                </button>
+                              )}
+                            </div>
+                            <div className={styles.segmentsList}>
+                              {audiences.map((audience, index) => (
+                                <div key={index} className={styles.segmentCard}>
+                                  <div className={styles.segmentHeader}>
+                                    {!savedAudiences[currentBriefId] && (
+                                      <input 
+                                        type="checkbox"
+                                        checked={checkedAudiences[audience.id] || false}
+                                        onChange={() => handleCheckAudience(audience.id)}
+                                      />
+                                    )}
+                                    
+                                    <button
+                                      className={styles.editAudienceButton}
+                                      onClick={() => handleEditAudience(audience)}
+                                    >
+                                      <svg width="18" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                      </svg>
+                                    </button>
+                                  </div>
+                                  <h4>{getFirstTwoWords(audience.segment)}</h4>
+                                  <p>{getDescription(audience.segment) || 'No description available'}</p>
+                                  <div className={styles.audienceActions}>
+                                    <button
+                                      className={styles.viewDetailsButton}
+                                      onClick={() => handleViewAudienceDetails(audience)}
+                                    >
+                                      view
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Error Display */}
+                        {audienceError && (
+                          <div className={styles.error}>
+                            <div className={styles.errorIcon}>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                              </svg>
+                            </div>
+                            <div className={styles.errorContent}>
+                              <p>{audienceError}</p>
+                              {audienceError.includes('Insufficient project data') && (
+                                <p className={styles.errorSuggestion}>
+                                  💡 Tip: You can still create audiences manually by filling out the form above.
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 4: Setup Complete */}
+                  {currentStep === 4 && (
                     <div className={styles.completeStep}>
                       <div className={styles.completeContent}>
                         <div className={styles.completeIcon}>
@@ -4043,7 +5115,7 @@ export default function Dashboard() {
                           </svg>
                         </div>
                         <h3>Setup Complete!</h3>
-                        <p>Your core marketing message has been created successfully. You&apos;re now ready to start creating content and reaching your audience.</p>
+                        <p>Your core marketing message and target audiences have been created successfully. You&apos;re now ready to start creating content and reaching your audience.</p>
                         <div className={styles.completeActions}>
                           <button 
                             className={styles.completeButton}
@@ -4071,8 +5143,11 @@ export default function Dashboard() {
                     
                     <button
                       className={`${styles.stepButton} ${styles.nextButton}`}
-                      onClick={handleNextStep}
-                      disabled={currentStep === 1 && !coreMessage}
+                      onClick={async () => await handleNextStep()}
+                      disabled={
+                        (currentStep === 1 && !coreMessage) ||
+                        (currentStep === 3 && audiences.length === 0)
+                      }
                     >
                       <span>Next</span>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
