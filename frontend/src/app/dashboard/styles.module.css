@@ -1010,9 +1010,17 @@
 @media (max-width: 480px) {
   .greetingSection {
     min-height: 250px;
-    padding: 1rem;
+    padding: 1rem 0rem;
   }
- 
+  .backToProjectsButton{
+    margin-top: 0.6rem !important;
+    margin-left: 1rem !important;
+
+  }
+  .stepNavigation{
+    padding-right: 1.2rem;
+
+  }
   .greetingContainer {
     padding-top: 3rem;
     display: flex;
@@ -4757,7 +4765,7 @@
 
 @media (max-width: 480px) {
   .projectsSection {
-    padding: 2rem !important;
+    padding: 2rem 0rem !important;
     border-radius: 20px;
   }
   .stepFormSection {
@@ -6265,4 +6273,36 @@
   .stepFormContainer {
     padding: 0rem !important;
   }
+}
+
+
+
+@media (max-width: 404px) {
+  
+  .stepFormContainer {
+    padding-left: 0rem !important;
+    /* margin-left: 2rem !important; */
+  }
+  .greetingSection{
+padding: 1rem 0rem !important;
+  }
+  .backToProjectsButton{
+    margin-top: 0.6rem !important;
+    margin-left: 1rem !important;
+
+  }
+  .stepButton{
+    padding: 0.75rem 1.5rem !important;
+  }
+  .stepNavigation{
+    padding-right: 1.2rem;
+
+  }
+  .stepFormHeader h3{
+    padding-right: 0.8rem !important;
+
+  }
+  /* .stepperWrapper :global(.MuiStepper-root) {
+    padding-right: 1rem !important;
+  } */
 }
