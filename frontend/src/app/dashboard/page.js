@@ -25,6 +25,21 @@ const getFirstTwoWords = (text) => {
     return 'Untitled Segment';
   }
   
+  // Handle audience editing case - if text contains newlines, split by first newline
+  if (text.includes('\n')) {
+    const lines = text.split('\n');
+    const firstLine = lines[0].trim();
+    if (firstLine) {
+      // Split first line by whitespace and take first 2 words
+      const words = firstLine.split(/\s+/).filter(word => word.length > 0);
+      if (words.length >= 2) {
+        return words.slice(0, 2).join(' ');
+      } else if (words.length === 1) {
+        return words[0];
+      }
+    }
+  }
+  
   // Split by whitespace and filter out empty strings
   const words = text.trim().split(/\s+/).filter(word => word.length > 0);
   
@@ -46,6 +61,15 @@ const getFirstTwoWords = (text) => {
 const getDescription = (text) => {
   if (!text || typeof text !== 'string') {
     return '';
+  }
+  
+  // Handle audience editing case - if text contains newlines, get everything after first line
+  if (text.includes('\n')) {
+    const lines = text.split('\n');
+    if (lines.length > 1) {
+      const description = lines.slice(1).join('\n').trim();
+      return description || 'No description available';
+    }
   }
   
   // Split by whitespace and filter out empty strings
@@ -1166,15 +1190,15 @@ const MemoizedEditAudiencePopup = memo(({
     }, [messages]);
 
     // Initialize textarea value once
-    useEffect(() => {
-        if (audience?.segment) {
-            const title = getFirstTwoWords(audience.segment);
-            const description = getDescription(audience.segment);
-            // Format with "Title - " prefix
-            const formattedText = `Title - ${title}\n${description}`;
-            setLocalSegment(formattedText);
-        }
-    }, [audience?.segment]);
+                            useEffect(() => {
+                            if (audience?.segment) {
+                                // Format audience segment as "Title Description" (like initial generation)
+                                const title = getFirstTwoWords(audience.segment);
+                                const description = getDescription(audience.segment);
+                                const formattedText = `${title}\n${description}`;
+                                setLocalSegment(formattedText);
+                            }
+                        }, [audience?.segment]);
 
     const handleTextAreaChange = (e) => {
         const newValue = e.target.value;
@@ -1253,15 +1277,13 @@ const MemoizedEditAudiencePopup = memo(({
                     clearTimeout(timeoutRef.current);
                 }
                 
-                // Set new value with a small delay
-                timeoutRef.current = setTimeout(() => {
-                    const newSegment = result.data.coreMessage;
-                    const title = getFirstTwoWords(newSegment);
-                    const description = getDescription(newSegment);
-                    // Format with "Title - " prefix
-                    const formattedText = `Title - ${title}\n${description}`;
-                    setLocalSegment(formattedText);
-                }, 100);
+                                                        // Set new value with a small delay
+                                        timeoutRef.current = setTimeout(() => {
+                                            const newSegment = result.data.coreMessage;
+                                            console.log('AI Response for audience editing:', newSegment);
+                                            // Use the AI response directly as it should already be formatted correctly
+                                            setLocalSegment(newSegment);
+                                        }, 100);
             } else {
                 setMessages(prev => [...prev, {
                     content: "Sorry, I couldn't process that. Please try again.",
@@ -1289,16 +1311,17 @@ const MemoizedEditAudiencePopup = memo(({
                 return;
             }
 
-            // Split the textarea content by lines
-            const lines = localSegment.split('\n');
-            const titleLine = lines[0] || '';
-            const description = lines.slice(1).join('\n') || '';
-            
-            // Extract title from "Title - " prefix
-            const title = titleLine.replace('Title - ', '');
-            
-            // Combine title and description with a space
-            const combinedSegment = `${title} ${description}`.trim();
+                                        // Split the textarea content by lines
+                            const lines = localSegment.split('\n');
+                            const titleLine = lines[0] || '';
+                            const description = lines.slice(1).join('\n') || '';
+                            
+                            // Extract title (first line)
+                            const title = titleLine.trim();
+                            
+                            // Combine title and description with a space (like initial generation)
+                            const combinedSegment = `${title} ${description}`.trim();
+                            console.log('Saving audience segment:', combinedSegment);
 
             const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/audience/${audience.id}`, {
                 method: 'PUT',
@@ -1426,10 +1449,10 @@ const MemoizedEditAudiencePopup = memo(({
                     <div className={styles.formGroup}>
                         <textarea
                             ref={textareaRef}
-                            className={styles.editCoreMessageInput}
+                            className={`${styles.editCoreMessageInput} ${styles.audienceEditTextarea}`}
                             value={localSegment}
                             onChange={handleTextAreaChange}
-                            placeholder="Title - Your Title Here&#10;Description goes here..."
+                            placeholder="Your Title Here&#10;Description goes here..."
                             style={{minHeight: '120px'}}
                         />
                     </div>
@@ -1510,6 +1533,13 @@ export default function Dashboard() {
   const [checkedAudiences, setCheckedAudiences] = useState({});
   const [savedAudiences, setSavedAudiences] = useState({});
   const [currentBriefId, setCurrentBriefId] = useState(null);
+  
+  // Track if user came from Open Library button
+    const [cameFromOpenLibrary, setCameFromOpenLibrary] = useState(false);
+  const [newlyCreatedLibraryName, setNewlyCreatedLibraryName] = useState('');
+  
+    
+
   
   // Edit Audience Popup State
   const [isEditAudiencePopupOpen, setIsEditAudiencePopupOpen] = useState(false);
@@ -1916,6 +1946,60 @@ export default function Dashboard() {
       }
     }
   }, [onboardingData]);
+
+  // Auto-load audiences when reaching step 3 and came from Open Library
+  useEffect(() => {
+    const loadAudiencesForOpenLibrary = async () => {
+      // Only load if we're on step 3, came from Open Library, and don't have audiences yet
+      if (currentStep === 3 && cameFromOpenLibrary && audiences.length === 0) {
+        try {
+          const currentProjectId = localStorage.getItem('currentProjectId');
+          const token = localStorage.getItem('token');
+          
+          if (!currentProjectId || !token) {
+            console.log('No project ID or token available for audience loading');
+            return;
+          }
+
+          console.log('Auto-loading audiences for Open Library user on step 3');
+          
+          // Fetch audiences for this project
+          const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/marketing/project/${currentProjectId}/audiences`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (response.ok) {
+            const audienceData = await response.json();
+            if (audienceData.data && audienceData.data.length > 0) {
+              // Format the existing audiences
+              const formattedAudiences = audienceData.data.map(audience => ({
+                ...audience,
+                name: getFirstTwoWords(audience.segment),
+                description: getDescription(audience.segment)
+              }));
+              
+              setAudiences(formattedAudiences);
+              // Set the brief ID from the first audience (they all have the same brief_id)
+              if (formattedAudiences.length > 0 && formattedAudiences[0].briefId) {
+                setCurrentBriefId(formattedAudiences[0].briefId);
+              }
+              console.log('Auto-loaded audiences for Open Library user:', formattedAudiences);
+            } else {
+              console.log('No audiences found for this project');
+            }
+          } else {
+            console.error('Failed to fetch audiences for Open Library user');
+          }
+        } catch (error) {
+          console.error('Error auto-loading audiences for Open Library user:', error);
+        }
+      }
+    };
+
+    loadAudiencesForOpenLibrary();
+  }, [currentStep, cameFromOpenLibrary, audiences.length]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -2850,7 +2934,12 @@ export default function Dashboard() {
               // Clear form fields to trigger loading state (same as Get Started)
               setFormFields(null);
               setMarketingFormAnswers({});
-              setCoreMessage('');
+                            setCoreMessage('');
+              
+              // Clear the newly created library name
+              setNewlyCreatedLibraryName('');
+              
+              
               
               // Show the step form directly (same as Get Started)
               setShowStepForm(true);
@@ -3041,6 +3130,9 @@ export default function Dashboard() {
                       
                       // Clear chat messages to ensure project-specific chat
                       setMessages([]);
+                      
+                      // Set flag to indicate user came from Open Library
+                      setCameFromOpenLibrary(true);
                       
                       // Hide projects and show step form
                       setShowProjects(false);
@@ -3288,6 +3380,12 @@ export default function Dashboard() {
     setCheckedAudiences({});
     setSavedAudiences({});
     
+    // Reset the Open Library flag when clearing project data
+    setCameFromOpenLibrary(false);
+    
+    // Clear the newly created library name
+    setNewlyCreatedLibraryName('');
+    
     fetchProjects()
   };
 
@@ -3422,6 +3520,8 @@ export default function Dashboard() {
       // Clear any temporary audience storage
       localStorage.removeItem('tempAudiences');
       localStorage.removeItem('tempCurrentBriefId');
+      // Reset the Open Library flag since we're moving away from step 3
+      setCameFromOpenLibrary(false);
       // Fetch latest projects to ensure we have the most recent data
       fetchProjects();
     }
@@ -3510,6 +3610,11 @@ export default function Dashboard() {
         localStorage.setItem('tempAudiences', JSON.stringify(audiences));
         localStorage.setItem('tempCurrentBriefId', currentBriefId);
         console.log('Saved audiences to localStorage for navigation:', audiences);
+      }
+      
+      // Reset the Open Library flag if moving away from step 3
+      if (currentStep === 3) {
+        setCameFromOpenLibrary(false);
       }
       
       setCurrentStep(previousStep);
@@ -3848,7 +3953,23 @@ export default function Dashboard() {
           console.log('Using existing project:', projectId);
         } else {
           // Create new project
-          const userData = JSON.parse(localStorage.getItem('user'));
+          const userDataString = localStorage.getItem('user');
+          if (!userDataString) {
+            throw new Error('User data not found. Please log in again.');
+          }
+          
+          let userData;
+          try {
+            userData = JSON.parse(userDataString);
+          } catch (parseError) {
+            console.error('Error parsing user data:', parseError);
+            throw new Error('Invalid user data. Please log in again.');
+          }
+          
+          if (!userData || !userData.id) {
+            throw new Error('User ID not found. Please log in again.');
+          }
+          
           const projectResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/project`, {
             method: 'POST',
             headers: {
@@ -3862,7 +3983,9 @@ export default function Dashboard() {
           });
 
           if (!projectResponse.ok) {
-            throw new Error('Failed to create project');
+            const errorText = await projectResponse.text();
+            console.error('Project creation failed:', errorText);
+            throw new Error('Failed to create project. Please try again.');
           }
 
           const projectData = await projectResponse.json();
@@ -3871,7 +3994,23 @@ export default function Dashboard() {
         }
       } else {
         // Create new project if fetch fails
-        const userData = JSON.parse(localStorage.getItem('user'));
+        const userDataString = localStorage.getItem('user');
+        if (!userDataString) {
+          throw new Error('User data not found. Please log in again.');
+        }
+        
+        let userData;
+        try {
+          userData = JSON.parse(userDataString);
+        } catch (parseError) {
+          console.error('Error parsing user data:', parseError);
+          throw new Error('Invalid user data. Please log in again.');
+        }
+        
+        if (!userData || !userData.id) {
+          throw new Error('User ID not found. Please log in again.');
+        }
+        
         const projectResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/project`, {
           method: 'POST',
           headers: {
@@ -3885,7 +4024,9 @@ export default function Dashboard() {
         });
 
         if (!projectResponse.ok) {
-          throw new Error('Failed to create project');
+          const errorText = await projectResponse.text();
+          console.error('Project creation failed:', errorText);
+          throw new Error('Failed to create project. Please try again.');
         }
 
         const projectData = await projectResponse.json();
@@ -3949,14 +4090,29 @@ export default function Dashboard() {
       // Keep the project ID for future use (like editing the core message)
       localStorage.setItem('currentProjectId', projectId);
 
-      // Update local state and advance to next step
+      // Store the newly created library name for immediate display
+      setNewlyCreatedLibraryName(marketingFormAnswers.description?.trim() || 'New Library');
+
+      // Update local state and advance to next step (continue normal flow)
       setCoreMessage(data.data?.coreMessage || '');
       setShowTypewriter(true);
       setCurrentStep(2); // Move to step 2 (Core Message)
+      setShowStepForm(true); // Ensure step form stays visible
 
     } catch (error) {
       console.error('Error generating content:', error);
-      setMarketingError(error.message);
+      
+      // Provide more specific error messages
+      let errorMessage = error.message;
+      if (error.message.includes('User data not found') || error.message.includes('Invalid user data') || error.message.includes('User ID not found')) {
+        errorMessage = 'Session expired. Please log in again.';
+      } else if (error.message.includes('Failed to create project')) {
+        errorMessage = 'Failed to create project. Please try again.';
+      } else if (error.message.includes('No authentication token found')) {
+        errorMessage = 'Authentication failed. Please log in again.';
+      }
+      
+      setMarketingError(errorMessage);
     } finally {
       setIsMarketingFormLoading(false);
       setLoadingMessage('');
@@ -4670,7 +4826,7 @@ export default function Dashboard() {
                       
                       <h3>
                         {localStorage.getItem('currentProjectId') ? 
-                          `Library: ${projects?.find(p => p.id == localStorage.getItem('currentProjectId'))?.name || ''}` : 
+                          `Library: ${newlyCreatedLibraryName || projects?.find(p => p.id == localStorage.getItem('currentProjectId'))?.name || ''}` : 
                           "Let's Get Started"
                         }
                       </h3>

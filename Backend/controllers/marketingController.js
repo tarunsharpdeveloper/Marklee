@@ -283,20 +283,28 @@ Keep it conversational and helpful.`
                 {
                     role: "system",
                     content: isAudienceEdit ?
-                    `Update this audience description based on the user's request:
+                    `Update this audience segment based on the user's request:
                     
-Current description: "${currentMessage}"
+Current audience: "${currentMessage}"
 User's request: "${userPrompt}"
 Audience context: ${JSON.stringify(formData, null, 2)}
 
-Return only the updated audience description, focusing on:
-1. Clear identification of who the audience is
-2. Their key characteristics and behaviors
-3. Pain points and desires
-4. Relevant demographic or firmographic details
-5. Any unique insights that make this audience distinct
+IMPORTANT: Return the complete audience segment in this format:
+- First line: EXACTLY 2 words for the title (e.g., "Young Professionals", "Small Business Owners", "Tech Entrepreneurs")
+- Second line and beyond: Full descriptive paragraph about the audience
 
-Keep the description concise but comprehensive. No explanations or additional text.` :
+CRITICAL RULES:
+1. The title MUST be exactly 2 words - no more, no less
+2. The description must NOT start with the same words as the title
+3. The description should be unique and related to the title, but use different phrasing
+4. Avoid repetition between title and description
+5. The title must be a complete, logical phrase that makes sense on its own
+
+Example format:
+Young Tech Professionals
+These individuals are typically aged 25-35, working in technology companies or startups, and are early adopters of new digital solutions. They value efficiency, innovation, and seamless user experiences.
+
+Return only the updated audience segment, no explanations or additional text.` :
                     `Update this marketing message based on the user's request:
                     
 Current message: "${currentMessage}"
@@ -690,13 +698,29 @@ IMPORTANT: For each audience segment, format the "segment" field as follows:
 
 CRITICAL RULES:
 1. The first 2 words must be a complete, logical title that makes sense on its own. 
-   - AVOID: Incomplete phrases like "Active Parents of" or "Dedicated Coaches and"
-   - USE: Complete phrases like "Active Sports Parents", "Dedicated Sports Coaches", "Busy Working Parents"
-   - The title must NOT end with words like "and", "of", "the", "in", "to", "for", "with"
+   - AVOID: Incomplete phrases like "Active Parents of", "Dedicated Coaches and", "Parents of", "Managers of", "Users of"
+   - USE: Complete phrases like "Active Sports Parents", "Dedicated Sports Coaches", "Busy Working Parents", "Tech Entrepreneurs", "Small Business Owners"
+   - The title must NOT end with words like "and", "of", "the", "in", "to", "for", "with", "by", "from"
    - The title must be a complete noun phrase that can stand alone
+   - TEST: Ask yourself "Does this title make complete sense on its own?" If not, rewrite it
 2. The description paragraph must NOT start with the same words as the title. For example:
    - WRONG: "Active Sports Families Active sports families consist of..."
    - CORRECT: "Active Sports Families These families typically consist of..." or "Active Sports Families Parents with children who participate in..."
+3. The description must be a complete, meaningful sentence that stands on its own
+   - WRONG: "Landscape Architects and Designers" (incomplete, continues from title)
+   - CORRECT: "Landscape Architects These professionals create outdoor spaces and landscapes for various projects. They care about aesthetic appeal, environmental sustainability, and functional design."
+4. EXAMPLES OF GOOD TITLES:
+   - "Young Professionals" (complete)
+   - "Small Business Owners" (complete)
+   - "Tech Entrepreneurs" (complete)
+   - "Health-Conscious Parents" (complete)
+   - "Creative Designers" (complete)
+5. EXAMPLES OF BAD TITLES (NEVER USE):
+   - "Parents of" (incomplete - ends with preposition)
+   - "Managers of" (incomplete - ends with preposition)
+   - "Users of" (incomplete - ends with preposition)
+   - "Designers and" (incomplete - ends with conjunction)
+   - "Professionals in" (incomplete - ends with preposition)
 
 Return a JSON object with this structure:
 {
@@ -744,20 +768,51 @@ Problem it solves: ${problemItSolves}`
                 additionalInfo: ''
             });
 
-            // Create audiences with plain text segments
-            const audienceData = parsedResponse.audiences.map(audience => ({
-                briefId: briefResult,
-                segment: audience.segment, // Store segment directly as text
-                insights: JSON.stringify(audience.insights || []),
-                messagingAngle: audience.messagingAngle || '',
-                supportPoints: JSON.stringify([]),
-                tone: audience.tone || '',
-                personaProfile: JSON.stringify({
-                    description,
-                    whoItHelps,
-                    problemItSolves
-                })
-            }));
+            // Create audiences with plain text segments and validate titles
+            const audienceData = parsedResponse.audiences.map(audience => {
+                // Validate and fix incomplete titles
+                let segment = audience.segment;
+                const lines = segment.split('\n');
+                if (lines.length > 0) {
+                    const title = lines[0].trim();
+                    const words = title.split(' ');
+                    
+                    // Check if title ends with incomplete words
+                    const incompleteEndings = ['of', 'and', 'the', 'in', 'to', 'for', 'with', 'by', 'from', 'at', 'on', 'up', 'out', 'over', 'under'];
+                    const lastWord = words[words.length - 1].toLowerCase();
+                    
+                    if (incompleteEndings.includes(lastWord)) {
+                        console.log(`Warning: Incomplete title detected: "${title}". Attempting to fix...`);
+                        
+                        // Try to create a better title by removing the incomplete ending
+                        if (words.length > 2) {
+                            const betterTitle = words.slice(0, -1).join(' ');
+                            const description = lines.slice(1).join('\n');
+                            segment = `${betterTitle}\n${description}`;
+                            console.log(`Fixed title from "${title}" to "${betterTitle}"`);
+                        } else {
+                            // If only 2 words and the last is incomplete, replace with a generic complete title
+                            const description = lines.slice(1).join('\n');
+                            segment = `Target Audience\n${description}`;
+                            console.log(`Replaced incomplete title "${title}" with "Target Audience"`);
+                        }
+                    }
+                }
+                
+                return {
+                    briefId: briefResult,
+                    segment: segment, // Store validated segment
+                    insights: JSON.stringify(audience.insights || []),
+                    messagingAngle: audience.messagingAngle || '',
+                    supportPoints: JSON.stringify([]),
+                    tone: audience.tone || '',
+                    personaProfile: JSON.stringify({
+                        description,
+                        whoItHelps,
+                        problemItSolves
+                    })
+                };
+            });
 
             await Audience.create(audienceData);
             

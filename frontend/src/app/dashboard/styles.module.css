@@ -3285,6 +3285,18 @@
   box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
 }
 
+.audienceEditTextarea {
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+.audienceEditTextarea::first-line {
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+
+
 .editCoreMessageActions {
   display: flex;
   justify-content: flex-end;
@@ -5763,6 +5775,9 @@
   align-items: center;
   margin-bottom: 2rem;
 }
+
+
+
 
 .projectsHeader h2 {
   font-size: 2rem;
