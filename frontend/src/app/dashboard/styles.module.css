@@ -3159,46 +3159,7 @@
   color: #8075ff;
 }
 
-.editInputContainer {
-  position: relative;
-  width: 100%;
-}
-
-.editInput {
-  width: 100%;
-  padding: 0.5rem 2.5rem 0.5rem 1rem;  /* Added right padding for the send button */
-  border-radius: 12px;
-  border: 2px solid #8075ff;
-  background-color: white;
-  color: #333;
-  font-size: inherit;
-  font-family: inherit;
-  outline: none;
-}
-
-.editSendButton {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  padding: 4px;
-  cursor: pointer;
-  color: #8075ff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.editSendButton:hover {
-  color: #6c63ff;
-}
-
-.editSendButton:disabled {
-  color: #ccc;
-  cursor: not-allowed;
-}
+/* Removed conflicting editInputContainer and editSendButton definitions */
 
 .editButtonCore{
   background: none;
@@ -3474,98 +3435,9 @@
   border-left: 4px solid #282ab3;
 }
 
-.editInputContainer {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-}
+/* Removed third set of conflicting editInputContainer and editMessageInput definitions */
 
-.editMessageInput {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  color: #1a202c;
-  background: white;
-  transition: all 0.2s ease;
-  min-height: 44px;
-  font-family: inherit;
-  text-align: left;
-  unicode-bidi: normal;
-  -webkit-text-orientation: upright;
-  text-orientation: upright;
-  -webkit-writing-mode: horizontal-tb;
-  writing-mode: horizontal-tb;
-}
-
-.editMessageInput:focus {
-  outline: none;
-  border-color: #4a5568;
-  box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.1);
-}
-
-.editMessageInput:disabled {
-  background-color: #f7fafc;
-  cursor: not-allowed;
-}
-
-.editInputContainer {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: white;
-  border-top: 1px solid #e2e8f0;
-  width: 100%;
-}
-
-.editMessageInput {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  color: #1a202c;
-  background: white;
-  transition: all 0.2s ease;
-  min-height: 44px;
-  font-family: inherit;
-  resize: none;
-  outline: none;
-}
-
-.editMessageInput:focus {
-  outline: none;
-  border-color: #4a5568;
-  box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.1);
-}
-
-.editMessageInput:disabled {
-  background-color: #f7fafc;
-  cursor: not-allowed;
-}
-
-.editSendButton {
-  padding: 0.75rem 1.5rem;
-  background-color: #6b7280;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.2s ease;
-  white-space: nowrap;
-}
-
-.editSendButton:hover {
-  background-color: #4b5563;
-}
-
-.editSendButton:disabled {
-  background-color: #d1d5db;
-  cursor: not-allowed;
-}
+/* Removed second set of conflicting editInputContainer, editMessageInput, and editSendButton definitions */
 
 /* Edit Popup Current Question Styles */
 .editCurrentQuestionSection {
@@ -10235,4 +10107,69 @@ padding: 1rem 0rem !important;
   .folderSection {
     padding: 0.2rem;
   }
+}
+
+.editInputContainer {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-top: auto;
+  z-index: 10;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.editMessageInput {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+  resize: vertical;
+  min-height: 2.5rem;
+  max-height: 8rem;
+}
+
+.editMessageInput:focus {
+  border-color: #282ab3;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.editMessageInput:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.editSendButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #282ab3;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  height: fit-content;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.editSendButton:hover {
+  background-color: #282ab3;
+}
+
+.editSendButton:disabled {
+  background-color: #e5e7eb;
+  cursor: not-allowed;
 }
