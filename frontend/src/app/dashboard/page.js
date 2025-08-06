@@ -1060,7 +1060,7 @@ const MemoizedEditPopup = memo(({
             <div className={styles.editInputContainer}>
               
               <textarea
-                className={styles.editMessageInput}
+                className={styles.editMessageInput} 
                 value={localInputMessage}
                 onChange={handleLocalInputChange}
                 onKeyDown={(e) => {
@@ -3003,8 +3003,8 @@ export default function Dashboard() {
               
               {/* Checkpoint Indicators */}
               <div className={styles.checkpointContainer}>
-                {/* Discovery sub-checkpoints */}
-                {parentBrandStep === 1 && showDiscoveryChildForm && [
+                {/* Discovery sub-checkpoints - always show */}
+                {[
                   { position: 11.11, step: 1, icon: "📝", title: "Discovery" },
                   { position: 22.22, step: 2, icon: "🎯", title: "Brand Voice" },
                   { position: 33.33, step: 3, icon: "📋", title: "Compliance" }
@@ -3012,12 +3012,13 @@ export default function Dashboard() {
                   <div
                     key={checkpoint.step}
                     className={`${styles.checkpoint} ${
-                      brandDiscoveryStep >= checkpoint.step ? styles.checkpointActive : ''
-                    } ${brandDiscoveryStep > checkpoint.step ? styles.checkpointCompleted : ''}`}
+                      parentBrandStep === 1 && showDiscoveryChildForm && brandDiscoveryStep >= checkpoint.step ? styles.checkpointActive : ''
+                    } ${parentBrandStep === 1 && showDiscoveryChildForm && brandDiscoveryStep > checkpoint.step ? styles.checkpointCompleted : ''
+                    } ${parentBrandStep > 1 ? styles.checkpointCompleted : ''}`}
                     style={{ left: `${checkpoint.position}%` }}
                   >
                     <div className={styles.checkpointIcon}>
-                      {brandDiscoveryStep > checkpoint.step ? (
+                      {(parentBrandStep === 1 && showDiscoveryChildForm && brandDiscoveryStep > checkpoint.step) || parentBrandStep > 1 ? (
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                           <polyline points="20,6 9,17 4,12"></polyline>
                         </svg>
@@ -3031,50 +3032,55 @@ export default function Dashboard() {
         </div>
                 ))}
                 
-                {/* Messaging checkpoint (when reached) */}
-                {parentBrandStep >= 2 && (
-                  <div
-                    className={`${styles.checkpoint} ${styles.checkpointMajor} ${
-                      parentBrandStep >= 2 ? styles.checkpointActive : ''
-                    } ${parentBrandStep > 2 ? styles.checkpointCompleted : ''}`}
-                    style={{ left: '50%' }}
-                  >
-                    <div className={styles.checkpointIcon}>
-                      {parentBrandStep > 2 ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="20,6 9,17 4,12"></polyline>
-                        </svg>
-                      ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-                          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                          <line x1="12" y1="19" x2="12" y2="23"/>
-                          <line x1="8" y1="23" x2="16" y2="23"/>
-                        </svg>
-                      )}
-                    </div>
-                    <div className={styles.checkpointTooltip}>
-                      Voice & Tone Complete
-                    </div>
-                  </div>
-                )}
-                
-                {/* Guidelines checkpoint (when reached) */}
-                {parentBrandStep >= 3 && (
-                  <div
-                    className={`${styles.checkpoint} ${styles.checkpointMajor} ${styles.checkpointCompleted}`}
-                    style={{ left: '100%' }}
-                  >
-                    <div className={styles.checkpointIcon}>
+                {/* Messaging checkpoint - always show */}
+                <div
+                  className={`${styles.checkpoint} ${styles.checkpointMajor} ${
+                    parentBrandStep >= 2 ? styles.checkpointActive : ''
+                  } ${parentBrandStep > 2 ? styles.checkpointCompleted : ''}`}
+                  style={{ left: '50%' }}
+                >
+                  <div className={styles.checkpointIcon}>
+                    {parentBrandStep > 2 ? (
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <polyline points="20,6 9,17 4,12"></polyline>
                       </svg>
-                    </div>
-                    <div className={styles.checkpointTooltip}>
-                      Brand Complete
-                    </div>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                      </svg>
+                    )}
                   </div>
-                )}
+                  <div className={styles.checkpointTooltip}>
+                    Voice & Tone Complete
+                  </div>
+                </div>
+                
+                {/* Guidelines checkpoint - always show */}
+                <div
+                  className={`${styles.checkpoint} ${styles.checkpointMajor} ${
+                    parentBrandStep >= 3 ? styles.checkpointActive : ''
+                  } ${parentBrandStep > 3 ? styles.checkpointCompleted : ''}`}
+                  style={{ left: '100%' }}
+                >
+                  <div className={styles.checkpointIcon}>
+                    {parentBrandStep > 3 ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="20,6 9,17 4,12"></polyline>
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M9 12l2 2 4-4"/>
+                        <path d="M21 12c-1 0-2-.4-2.7-1.1l-1.4-1.4c-.6-.6-1.4-.9-2.2-.9H9c-.8 0-1.6.3-2.2.9L5.4 10.9C4.7 11.6 3.7 12 2.7 12"/>
+                      </svg>
+                    )}
+                  </div>
+                  <div className={styles.checkpointTooltip}>
+                    Brand Complete
+                  </div>
+                </div>
               </div>
             </div>
             <div className={styles.progressSteps}>
@@ -5919,7 +5925,7 @@ export default function Dashboard() {
                       className={styles.getStartedButton}
                       onClick={() => {
                         setShowWelcome(false);
-                        setShowStepForm(true);
+                        setShowBrandDiscovery(true);
                       }}
                     >
                       <span>Get Started</span>
