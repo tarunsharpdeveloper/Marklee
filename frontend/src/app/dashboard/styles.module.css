@@ -3102,39 +3102,18 @@
 }
 
 .chatInterface {
-  /* margin-top: 1.5rem; */
+  margin-top: 1.5rem;
   border-top: 1px solid #eee;
-  /* padding-top: 1.5rem; */
-  /* height: 100%; */
+  padding-top: 1.5rem;
 }
 
 .chatMessages {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 1rem;
-  max-height: 400px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-  scroll-behavior: smooth;
-}
-
-.chatMessages::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chatMessages::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.chatMessages::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-
-.chatMessages::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.3);
 }
 
 .messageContent {
@@ -3151,11 +3130,11 @@
 }
 
 .userMessage p {
-  background-color: #282ab3;
+  background-color: #1d4ed8;
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 12px;
-  border-left: 4px solid #282ab3;
+  border-left: 4px solid #1d4ed8;
 }
 
 .editButton {
@@ -3446,6 +3425,231 @@
   cursor: not-allowed;
 }
 
+/* Edit Popup Chat Interface - Unique Classes */
+.editChatInterface {
+  margin-top: 1.5rem;
+  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
+}
+
+.editChatMessages {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.editMessageContent {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  max-width: 80%;
+}
+
+.editUserMessage {
+  justify-content: flex-end;
+  margin-left: auto;
+  position: relative;
+  position: relative;
+}
+
+.editUserMessage p {
+  background-color: #1d4ed8;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  border-left: 4px solid #1d4ed8;
+}
+
+.editAiMessage {
+  justify-content: flex-start;
+  margin-right: auto;
+}
+
+.editAiMessage p {
+  background-color: #f8fafc;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  border-left: 4px solid #282ab3;
+}
+
+.editInputContainer {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.editMessageInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #1a202c;
+  background: white;
+  transition: all 0.2s ease;
+  min-height: 44px;
+  font-family: inherit;
+  text-align: left;
+  unicode-bidi: normal;
+  -webkit-text-orientation: upright;
+  text-orientation: upright;
+  -webkit-writing-mode: horizontal-tb;
+  writing-mode: horizontal-tb;
+}
+
+.editMessageInput:focus {
+  outline: none;
+  border-color: #4a5568;
+  box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.1);
+}
+
+.editMessageInput:disabled {
+  background-color: #f7fafc;
+  cursor: not-allowed;
+}
+
+.editInputContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  width: 100%;
+}
+
+.editMessageInput {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #1a202c;
+  background: white;
+  transition: all 0.2s ease;
+  min-height: 44px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+}
+
+.editMessageInput:focus {
+  outline: none;
+  border-color: #4a5568;
+  box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.1);
+}
+
+.editMessageInput:disabled {
+  background-color: #f7fafc;
+  cursor: not-allowed;
+}
+
+.editSendButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.editSendButton:hover {
+  background-color: #4b5563;
+}
+
+.editSendButton:disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
+}
+
+/* Edit Popup Current Question Styles */
+.editCurrentQuestionSection {
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #8b5cf6;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.1);
+  position: relative;
+}
+
+.editCurrentQuestionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.editQuestionIcon {
+  font-size: 1.5rem;
+  color: #ef4444;
+}
+
+.editQuestionText {
+  font-weight: 600;
+  color: #8b5cf6;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+}
+
+.editSkipQuestionsButton {
+  padding: 0.5rem 1rem;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editSkipQuestionsButton:hover {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.editQuestionProgress {
+  margin-bottom: 1rem;
+}
+
+.editProgressBar {
+  width: 100%;
+  height: 2px;
+  background-color: #e5e7eb;
+  border-radius: 1px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.editProgressFill {
+  height: 100%;
+  background-color: #8b5cf6;
+  transition: width 0.3s ease;
+}
+
+.editProgressText {
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.editCurrentQuestionText {
+  font-size: 1.125rem;
+  color: #1f2937;
+  line-height: 1.6;
+  margin: 0;
+  font-weight: 500;
+}
+
 /* Mobile Styles */
 @media (max-width: 480px) {
   .messageOptions {
@@ -3531,56 +3735,60 @@
 
 /* Current Question Styles */
 .currentQuestionSection {
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background: linear-gradient(135deg, rgba(40, 42, 179, 0.08) 0%, rgba(0, 74, 173, 0.08) 100%);
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: white;
   border-radius: 12px;
-  border: 1px solid rgba(40, 42, 179, 0.15);
-  border-left: 4px solid #282ab3;
+  border: 2px solid #8b5cf6;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.1);
+  position: relative;
 }
 
 .currentQuestionHeader {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .questionIcon {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
+  color: #ef4444;
 }
 
 .questionText {
   font-size: 0.9rem;
-  font-weight: 600;
-  color: #282ab3;
+  font-weight: 700;
+  color: #8b5cf6;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
 }
 
 .skipQuestionsButton {
   margin-left: auto;
-  padding: 0.25rem 0.75rem;
-  background: transparent;
-  border: 1px solid rgba(40, 42, 179, 0.3);
-  border-radius: 6px;
-  color: #282ab3;
-  font-size: 0.8rem;
+  padding: 0.5rem 1rem;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 0.85rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .skipQuestionsButton:hover {
-  background: rgba(40, 42, 179, 0.1);
-  border-color: #282ab3;
+  background: #e5e7eb;
+  border-color: #9ca3af;
+  color: #374151;
 }
 
 .currentQuestionText {
-  font-size: 1rem;
-  color: var(--foreground);
+  font-size: 1.1rem;
+  color: #1f2937;
   margin: 0;
-  line-height: 1.5;
-  font-weight: 500;
+  line-height: 1.6;
+  font-weight: 600;
 }
 
 .questionProgress {
@@ -3589,24 +3797,25 @@
 
 .progressBar {
   width: 100%;
-  height: 6px;
-  background: rgba(40, 42, 179, 0.1);
-  border-radius: 3px;
+  height: 4px;
+  background: #f3f4f6;
+  border-radius: 2px;
   overflow: hidden;
 }
 
 .progressFill {
   height: 100%;
-  background: linear-gradient(90deg, #282ab3, #004aad);
-  border-radius: 3px;
+  background: #8b5cf6;
+  border-radius: 2px;
   transition: width 0.3s ease;
 }
 
 .progressText {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  font-size: 0.75rem;
+  color: #6b7280;
   margin-top: 0.5rem;
   text-align: center;
+  font-weight: 500;
 }
 
 .updatingMessage {
@@ -4110,7 +4319,7 @@
 .messageContent {
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  max-width: 80%;
+  max-width: 60%;
 }
 
 .userMessage {
@@ -4892,8 +5101,39 @@
 
 .stepFormHeader {
   text-align: center;
-  margin-bottom: 4rem;
+  /* margin-bottom: 4rem; */
   position: relative;
+}
+
+.stepFormHeaderTop {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.stepFormHeaderTop h3 {
+  margin: 0;
+}
+
+.stepFormHeaderTop .closeButton {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  color: #6b7280;
+}
+
+.stepFormHeaderTop .closeButton:hover {
+  background: #f3f4f6;
+  color: #374151;
 }
 .stepFormHeader span {
   color: var(--foreground);
@@ -5249,17 +5489,13 @@
   gap: 1rem;
   background: white;
   border-radius: 16px;
-  padding: 2rem;
+  padding: 1rem;
   border: 1px solid rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); */
 }
 
-.formField:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-  border-color: rgba(0, 74, 173, 0.2);
-}
+
 
 .formField label {
   font-size: 1.1rem;
@@ -5350,21 +5586,33 @@
   transform: none;
 }
 /* Material-UI Stepper Styles - Using wrapper class */
+/* Parent Stepper - More Stretched Out */
+.stepperWrapper {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
 .stepperWrapper :global(.MuiStepLabel-label.Mui-active) {
   color: #282ab3 !important;
+  font-weight: 600 !important;
+  font-size: 1.1rem !important;
 }
 
 .stepperWrapper :global(.MuiStepLabel-label) {
   color: var(--foreground);
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 .stepperWrapper :global(.MuiStepLabel-label.Mui-completed) {
   color: #282ab3 !important;
+  font-weight: 600 !important;
 }
 
-/* Material-UI Stepper Icon Styles */
 .stepperWrapper :global(.MuiStepIcon-root.Mui-active) {
   color: #282ab3 !important;
+  transform: scale(1.15);
 }
 
 .stepperWrapper :global(.MuiStepIcon-root.Mui-completed) {
@@ -5375,13 +5623,57 @@
   color: #d32f2f !important;
 }
 
-/* Material-UI Stepper Connector Styles */
 .stepperWrapper :global(.MuiStepConnector-root.Mui-active .MuiStepConnector-line) {
   border-color: #282ab3 !important;
+  border-width: 2.5px;
 }
 
 .stepperWrapper :global(.MuiStepConnector-root.Mui-completed .MuiStepConnector-line) {
   border-color: #282ab3 !important;
+  border-width: 2.5px;
+}
+
+/* Child Stepper - More Compact */
+.childStepperWrapper {
+  flex: 1;
+  /* margin-left: 1rem; */
+  max-width: 450px;
+}
+
+.childStepperWrapper :global(.MuiStepLabel-label.Mui-active) {
+  color: #282ab3 !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+}
+
+.childStepperWrapper :global(.MuiStepLabel-label) {
+  color: var(--foreground);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.childStepperWrapper :global(.MuiStepLabel-label.Mui-completed) {
+  color: #282ab3 !important;
+  font-weight: 600 !important;
+}
+
+.childStepperWrapper :global(.MuiStepIcon-root.Mui-active) {
+  color: #282ab3 !important;
+  transform: scale(1.05);
+}
+
+.childStepperWrapper :global(.MuiStepIcon-root.Mui-completed) {
+  color: #282ab3 !important;
+}
+
+.childStepperWrapper :global(.MuiStepConnector-root.Mui-active .MuiStepConnector-line) {
+  border-color: #282ab3 !important;
+  border-width: 1.5px;
+}
+
+.childStepperWrapper :global(.MuiStepConnector-root.Mui-completed .MuiStepConnector-line) {
+  border-color: #282ab3 !important;
+  border-width: 1.5px;
 }
 
 
@@ -5793,8 +6085,12 @@
   color: var(--foreground);
   margin: 0;
 }
-
-.createProjectButton {
+.headerButtons {
+  display: flex;
+  gap: 1rem;
+}
+.createProjectButton,
+.createBrandButton {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -5982,7 +6278,7 @@
   }
   
   .formField {
-    padding: 1.5rem;
+    padding: 1rem;
   }
   
   .formTextarea {
@@ -6305,4 +6601,3157 @@ padding: 1rem 0rem !important;
   /* .stepperWrapper :global(.MuiStepper-root) {
     padding-right: 1rem !important;
   } */
+}
+
+/* Modern Brand Form Styles */
+.modernBrandContainer {
+  background: var(--background);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+/* Modern Brand Header */
+.modernBrandHeader {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  color: white;
+}
+
+.brandHeaderContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.brandHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brandIconWrapper {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.brandHeaderText h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  color: white;
+}
+
+.brandHeaderText p {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.modernCloseButton {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+}
+
+.modernCloseButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+/* Modern Progress Indicator */
+.modernProgressContainer {
+  position: relative;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  margin-bottom: 1.5rem;
+  overflow: visible;
+  position: relative;
+}
+
+.progressBar {
+  height: 100%;
+  background: linear-gradient(90deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progressSteps {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.progressStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.progressStepActive {
+  opacity: 1;
+}
+
+.progressStepCompleted {
+  opacity: 1;
+}
+
+.progressStepCurrent {
+  opacity: 1;
+}
+
+.progressStepNumber {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.progressStepActive .progressStepNumber {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.1);
+}
+
+.progressStepCurrent .progressStepNumber {
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: scale(1.15);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.progressStepCompleted .progressStepNumber {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 1);
+  color: #667eea;
+}
+
+/* Current Step Indicator */
+.currentStepIndicator {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pulsingDot {
+  width: 12px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+}
+
+/* Sub Progress */
+.subProgress {
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.subProgressBar {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 0.25rem;
+}
+
+.subProgressFill {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.subProgressText {
+  font-size: 0.625rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+/* Checkpoint Indicators */
+.checkpointContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  pointer-events: none;
+}
+
+.checkpoint {
+  position: absolute;
+  top: -8px;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.checkpointMajor {
+  top: -12px;
+}
+
+.checkpointIcon {
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: white;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.checkpointMajor .checkpointIcon {
+  width: 28px;
+  height: 28px;
+  font-size: 0.875rem;
+}
+
+.checkpointActive .checkpointIcon {
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.7);
+  transform: scale(1.1);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+}
+
+.checkpointCompleted .checkpointIcon {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 1);
+  color: #667eea;
+  transform: scale(1.1);
+}
+
+.checkpointTooltip {
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.625rem;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.checkpoint:hover .checkpointTooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+/* Tooltip arrow */
+.checkpointTooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.8);
+}
+
+.progressStepText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.progressStepTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: white;
+}
+
+.progressStepSubtitle {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Modern Content Area */
+.modernBrandContent {
+  padding: 2rem;
+}
+
+.modernDiscoveryStep {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.stepIntro {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.stepIntro h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0 0 0.5rem 0;
+}
+
+.stepIntro p {
+  font-size: 1rem;
+  color: var(--foreground-muted);
+  margin: 0;
+}
+
+/* Discovery Start Card */
+.discoveryStartCard {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.startCardContent {
+  margin-bottom: 2rem;
+}
+
+.startCardIcon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem auto;
+  color: white;
+}
+
+.discoveryStartCard h4 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0 0 1rem 0;
+}
+
+.discoveryStartCard p {
+  font-size: 1rem;
+  color: var(--foreground-muted);
+  line-height: 1.6;
+  margin: 0 0 2rem 0;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.startCardFeatures {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--foreground-muted);
+}
+
+.featureItem svg {
+  color: #10b981;
+}
+
+.modernStartButton {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.modernStartButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+}
+
+/* Modern Form Container */
+.modernFormContainer {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+/* Sub-step Indicator */
+.subStepIndicator {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.subStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0.5;
+  transition: all 0.3s ease;
+}
+
+.subStepActive {
+  opacity: 1;
+}
+
+.subStepIcon {
+  width: 48px;
+  height: 48px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.subStepActive .subStepIcon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: white;
+  transform: scale(1.1);
+}
+
+.subStepTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--foreground-muted);
+  text-align: center;
+}
+
+.subStepActive .subStepTitle {
+  color: var(--foreground);
+}
+
+/* Modern Form Fields */
+.modernFormFields {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.modernDiscoveryForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.modernFormField {
+  display: flex;
+  flex-direction: column;
+}
+
+.modernLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.labelText {
+  color: var(--foreground);
+}
+
+.labelRequired {
+  color: #ef4444;
+}
+
+.inputWrapper,
+.textareaWrapper {
+  position: relative;
+}
+
+.modernInput,
+.modernTextarea {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  background: #ffffff;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.modernInput:focus,
+.modernTextarea:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  transform: translateY(-1px);
+}
+
+.modernInput::placeholder,
+.modernTextarea::placeholder {
+  color: #94a3b8;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  transition: color 0.3s ease;
+}
+
+.modernInput:focus + .inputIcon {
+  color: #667eea;
+}
+
+.textareaCounter {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 1rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Modern Navigation */
+.modernNavigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.finalNavigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 1.5rem 2rem;
+  background: #f8fafc;
+  border-radius: 0 0 20px 20px;
+  margin-left: -2rem;
+  margin-right: -2rem;
+  margin-bottom: -2rem;
+}
+
+.modernNavButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.modernBackButton {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.modernBackButton:hover:not(:disabled) {
+  background: #e2e8f0;
+  color: #475569;
+  transform: translateX(-2px);
+}
+
+.modernBackButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modernNextButton {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.modernNextButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.modernNextButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.modernCompleteButton {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.modernCompleteButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+.navProgress {
+  flex: 1;
+  text-align: center;
+}
+
+.navStepIndicator {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground-muted);
+  background: #f8fafc;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Modern Tone of Voice Section */
+.modernToneOfVoiceSection {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.toneVoiceHeader {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: white;
+}
+
+.toneHeaderIcon {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.toneHeaderText h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  color: white;
+}
+
+.toneHeaderText p {
+  font-size: 0.875rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Tone Generation Card */
+.toneGenerationCard {
+  padding: 2rem;
+  text-align: center;
+}
+
+.toneGenerationContent {
+  margin-bottom: 2rem;
+}
+
+.generationIcon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem auto;
+  color: white;
+}
+
+.toneGenerationCard h4 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0 0 1rem 0;
+}
+
+.toneGenerationCard p {
+  font-size: 1rem;
+  color: var(--foreground-muted);
+  line-height: 1.6;
+  margin: 0 0 2rem 0;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.generationFeatures {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.generateToneButton {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+}
+
+.generateToneButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(139, 92, 246, 0.4);
+}
+
+/* Modern Tone Results */
+.modernToneResults {
+  padding: 2rem;
+}
+
+.toneResultsHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.modernBackButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+}
+
+.modernBackButton:hover {
+  background: #e2e8f0;
+  color: #475569;
+  transform: translateX(-2px);
+}
+
+.successIndicator {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+}
+
+.successIcon {
+  width: 40px;
+  height: 40px;
+  background: #10b981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.successText h4 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #065f46;
+  margin: 0 0 0.25rem 0;
+}
+
+.successText p {
+  font-size: 0.875rem;
+  color: #047857;
+  margin: 0;
+}
+
+/* Modern Tone Document */
+.modernToneDocument {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.modernDocumentSection {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.modernDocumentSection:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: #cbd5e1;
+}
+
+.modernSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.modernSectionIcon {
+  width: 32px;
+  height: 32px;
+  background: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.modernSectionHeader h4 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.modernSectionContent {
+  color: var(--foreground-muted);
+  line-height: 1.6;
+  font-size: 0.875rem;
+}
+
+/* Archetype Grid */
+.archetypeGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.modernArchetypeTag {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+/* Example and Guidelines Sections */
+.exampleSection,
+.guidelinesSection {
+  margin-bottom: 1rem;
+}
+
+.exampleSection:last-child,
+.guidelinesSection:last-child {
+  margin-bottom: 0;
+}
+
+.exampleContent,
+.guidelinesContent {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  border-left: 4px solid #8b5cf6;
+}
+
+/* Tone Actions */
+.toneActions {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: center;
+}
+
+.regenerateButton {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.regenerateButton:hover {
+  background: #e2e8f0;
+  color: #475569;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Reuse existing styles for form elements */
+.brandFormContainer .formField,
+.stepFormContainer .formField {
+  /* margin-bottom: 1.5rem; */
+}
+
+.brandFormContainer .formField label,
+.stepFormContainer .formField label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.brandFormContainer .formField input,
+.brandFormContainer .formField textarea,
+.stepFormContainer .formField input,
+.stepFormContainer .formField textarea {
+  width: 100%;
+  padding: 0.75rem;
+  /* border: 1px solid #d1d5db; */
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: border-color 0.2s;
+}
+
+.brandFormContainer .formField input:focus,
+.brandFormContainer .formField textarea:focus,
+.stepFormContainer .formField input:focus,
+.stepFormContainer .formField textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  /* box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); */
+}
+
+.brandFormContainer .formField textarea {
+  resize: vertical;
+  min-height: 6rem;
+}
+
+.brandFormContainer .previousButton,
+.brandFormContainer .nextButton {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.brandFormContainer .previousButton {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.brandFormContainer .previousButton:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.brandFormContainer .previousButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.brandFormContainer .nextButton {
+  background: #3b82f6;
+  color: white;
+}
+
+.brandFormContainer .nextButton:hover {
+  background: #2563eb;
+}
+
+.brandFormContainer .tabButton {
+  padding: 0.75rem 1.5rem;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.brandFormContainer .tabButton:hover {
+  color: #3b82f6;
+}
+
+.brandFormContainer .tabButton.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+
+.brandFormContainer .progressStep {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.brandFormContainer .progressStep.active {
+  color: #3b82f6;
+}
+
+.brandFormContainer .progressCircle {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.brandFormContainer .progressStep.active .progressCircle {
+  background: #3b82f6;
+  color: white;
+  }
+
+/* Responsive Design for Modern Brand Form */
+@media (max-width: 768px) {
+  .modernBrandContainer {
+    margin: 1rem;
+    border-radius: 16px;
+  }
+
+  .modernBrandHeader {
+    padding: 1.5rem;
+  }
+
+  .brandHeaderContent {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .brandHeaderLeft {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .brandIconWrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+
+  .brandHeaderText h2 {
+    font-size: 1.5rem;
+  }
+
+  .brandHeaderText p {
+    font-size: 0.875rem;
+  }
+
+  .modernCloseButton {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 36px;
+    height: 36px;
+  }
+
+  .progressSteps {
+    gap: 1rem;
+  }
+
+  .progressStepNumber {
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
+  }
+
+  .progressStepTitle {
+    font-size: 0.75rem;
+  }
+
+  .progressStepSubtitle {
+    font-size: 0.625rem;
+  }
+
+  .pulsingDot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .subProgressText {
+    font-size: 0.5625rem;
+  }
+
+  /* Checkpoint responsive styles */
+  .checkpointIcon {
+    width: 16px;
+    height: 16px;
+    font-size: 0.625rem;
+  }
+
+  .checkpointMajor .checkpointIcon {
+    width: 22px;
+    height: 22px;
+    font-size: 0.75rem;
+  }
+
+  .checkpointTooltip {
+    font-size: 0.5625rem;
+    padding: 0.125rem 0.375rem;
+  }
+
+  .modernBrandContent {
+    padding: 1.5rem;
+  }
+
+  .stepIntro h3 {
+    font-size: 1.25rem;
+  }
+
+  .stepIntro p {
+    font-size: 0.875rem;
+  }
+
+  .discoveryStartCard {
+    padding: 2rem 1.5rem;
+  }
+
+  .startCardIcon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+  }
+
+  .discoveryStartCard h4 {
+    font-size: 1.25rem;
+  }
+
+  .startCardFeatures {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .modernFormContainer {
+    padding: 1.5rem;
+  }
+
+  .subStepIndicator {
+    gap: 1rem;
+  }
+
+  .subStepIcon {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .subStepTitle {
+    font-size: 0.625rem;
+  }
+
+  .modernFormFields {
+    max-width: 100%;
+  }
+
+  .modernInput,
+  .modernTextarea {
+    padding: 0.875rem 0.875rem 0.875rem 2.5rem;
+    font-size: 0.875rem;
+  }
+
+  .inputIcon {
+    left: 0.875rem;
+  }
+
+  .modernNavigation {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .navProgress {
+    order: -1;
+  }
+
+  .finalNavigation {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .modernNavButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .modernBrandContainer {
+    margin: 0.5rem;
+  }
+
+  .modernBrandHeader {
+    padding: 1rem;
+  }
+
+  .brandHeaderText h2 {
+    font-size: 1.25rem;
+  }
+
+  .progressSteps {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .progressStep {
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+
+  .modernBrandContent {
+    padding: 1rem;
+  }
+
+  .discoveryStartCard {
+    padding: 1.5rem 1rem;
+  }
+
+  .modernFormContainer {
+    padding: 1rem;
+  }
+
+  .subStepIndicator {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* Tone of Voice Section Mobile */
+  .toneVoiceHeader {
+    padding: 1rem 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .toneHeaderIcon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .toneHeaderText h3 {
+    font-size: 1.125rem;
+  }
+
+  .toneGenerationCard {
+    padding: 1.5rem 1rem;
+  }
+
+  .generationIcon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .toneGenerationCard h4 {
+    font-size: 1.25rem;
+  }
+
+  .generationFeatures {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .modernToneResults {
+    padding: 1.5rem;
+  }
+
+  .toneResultsHeader {
+    gap: 0.75rem;
+  }
+
+  .modernBackButton {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+
+  .successIndicator {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.875rem;
+  }
+
+  .modernDocumentSection {
+    padding: 1rem;
+  }
+
+  .modernSectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .archetypeGrid {
+    justify-content: center;
+  }
+}
+
+/* New Brand Form Styles */
+.formSection {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+}
+
+.formSection h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.aiGenerationSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.generateAIButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.generateAIButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.generateAIButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.aiGeneratedContent {
+  background: var(--background);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.aiGeneratedContent h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.archetypeSelection {
+  margin-bottom: 1rem;
+}
+
+.archetypeSelection label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.archetypeSelection select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  transition: border-color 0.3s ease;
+}
+
+.archetypeSelection select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.toneAudienceForm {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.complianceForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+  .discoveryForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .toneDetails {
+    margin-bottom: 1rem;
+  }
+
+  .toneSection {
+    margin-bottom: 0.75rem;
+  }
+
+  .toneSection strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--foreground);
+    font-size: 0.875rem;
+  }
+
+  .toneSection p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--foreground);
+    line-height: 1.4;
+  }
+
+  .audienceList {
+    margin-bottom: 1rem;
+  }
+
+  .audienceItem {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .audienceItem h5 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  .audienceItem p {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.875rem;
+    color: var(--foreground);
+    line-height: 1.4;
+  }
+
+  .audienceItem p:last-child {
+    margin-bottom: 0;
+  }
+
+  .complianceDetails {
+    margin-bottom: 1rem;
+  }
+
+  .complianceSection {
+    margin-bottom: 0.75rem;
+  }
+
+  .complianceSection strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--foreground);
+    font-size: 0.875rem;
+  }
+
+  .complianceSection p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--foreground);
+    line-height: 1.4;
+  }
+
+  @media (max-width: 768px) {
+    .formSection {
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .formSection h3 {
+      font-size: 1.125rem;
+    }
+
+    .generateAIButton {
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+    }
+
+    .toneAudienceForm {
+      gap: 1.5rem;
+    }
+
+    .discoveryForm {
+      gap: 1rem;
+    }
+
+    .audienceItem {
+      padding: 0.75rem;
+    }
+
+    .audienceItem h5 {
+      font-size: 0.875rem;
+    }
+
+    .audienceItem p {
+      font-size: 0.8125rem;
+    }
+  }
+
+/* Tone of Voice Chat Styles */
+.toneOfVoiceChat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 600px;
+}
+
+/* Brand Tone Chat Interface - Unique Styles */
+.brandToneChatContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 600px;
+}
+
+.brandToneChatHeader {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.brandToneChatHeader h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--foreground);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.brandToneChatHeader p {
+  margin: 0;
+  color: var(--foreground-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.brandToneChatMessages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 400px;
+}
+
+.brandToneChatMessage {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.brandToneUserMessage {
+  justify-content: flex-end;
+}
+
+.brandToneBotMessage {
+  justify-content: flex-start;
+  flex-direction: column;
+}
+
+.brandToneMessageContent {
+  max-width: 80%;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.brandToneUserMessage .brandToneMessageContent {
+  background: var(--primary);
+  color: white;
+  padding: 0.75rem 1rem;
+}
+
+.brandToneBotMessage .brandToneMessageContent {
+  background: var(--card-bg);
+  color: var(--foreground);
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+}
+
+.brandToneTypingIndicator {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.brandToneTypingIndicator span {
+  width: 8px;
+  height: 8px;
+  background: var(--muted-foreground);
+  border-radius: 50%;
+  animation: brandToneTypingBounce 1.4s infinite ease-in-out;
+}
+
+.brandToneTypingIndicator span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.brandToneTypingIndicator span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes brandToneTypingBounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.brandToneChatInput {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  padding: 1rem 0;
+  border-top: 1px solid var(--card-border);
+}
+
+.brandToneChatInput textarea {
+  flex: 1;
+  min-height: 60px;
+  max-height: 120px;
+  padding: 0.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.brandToneChatInput textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.brandToneChatInput textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.brandToneSendButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  background: blue;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+
+
+.brandToneSendButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.brandToneSendButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Brand Tone Results Styles */
+.brandToneResults {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.brandToneResultsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.brandToneBackButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.brandToneBackButton:hover {
+  background: var(--card-bg);
+  border-color: var(--primary);
+}
+
+.brandToneSuccessIndicator {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+}
+
+.brandToneSuccessIcon {
+  width: 40px;
+  height: 40px;
+  background: #10b981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.brandToneSuccessText h4 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #065f46;
+  margin: 0 0 0.25rem 0;
+}
+
+.brandToneSuccessText p {
+  font-size: 0.875rem;
+  color: #047857;
+  margin: 0;
+}
+
+/* Brand Tone Document Styles */
+.brandToneDocument {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.brandToneDocumentSection {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.brandToneDocumentSection:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: #cbd5e1;
+}
+
+.brandToneSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.brandToneSectionIcon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background: var(--card-bg);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.brandToneSectionHeader h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.brandToneSectionContent {
+  color: var(--foreground-muted);
+  line-height: 1.6;
+  font-size: 0.875rem;
+}
+
+.brandToneArchetypeGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.brandToneArchetypeTag {
+  padding: 0.5rem 1rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.brandToneArchetypeTag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.brandToneExampleSection,
+.brandToneGuidelinesSection {
+  margin-bottom: 1rem;
+}
+
+.brandToneExampleSection:last-child,
+.brandToneGuidelinesSection:last-child {
+  margin-bottom: 0;
+}
+
+.brandToneExampleContent,
+.brandToneGuidelinesContent {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: var(--card-bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Brand Tone Message Suggestions */
+.brandToneMessageSuggestions {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.brandToneSuggestionChip {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--primary);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.brandToneSuggestionChip:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive styles for brand tone chat */
+@media (max-width: 768px) {
+  .brandToneChatContainer {
+    max-height: 500px;
+  }
+  
+  .brandToneChatMessages {
+    max-height: 300px;
+  }
+  
+  .brandToneMessageContent {
+    max-width: 90%;
+  }
+  
+  .brandToneChatInput {
+    padding: 0.75rem 0;
+  }
+  
+  .brandToneSendButton {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .brandToneMessageSuggestions {
+    flex-direction: column;
+  }
+  
+  .brandToneSuggestionChip {
+    text-align: left;
+    white-space: normal;
+  }
+}
+
+.chatHeader {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.chatHeader h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--foreground);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.chatHeader p {
+  margin: 0;
+  color: var(--foreground-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.chatMessages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 400px;
+}
+
+.chatMessage {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.userMessage {
+  justify-content: flex-end;
+}
+
+.botMessage {
+  justify-content: flex-start;
+  flex-direction: column;
+}
+
+.messageContent {
+  max-width: 80%;
+  /* padding: 0.75rem 1rem; */
+  border-radius: 12px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.userMessage .messageContent {
+  background: var(--primary-color);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.botMessage .messageContent {
+  background: var(--card-bg);
+  color: var(--foreground);
+  border: 1px solid var(--card-border);
+  border-bottom-left-radius: 4px;
+}
+
+.typingIndicator {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.typingIndicator span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--foreground-muted);
+  animation: typingBounce 1.4s infinite ease-in-out;
+}
+
+.typingIndicator span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typingIndicator span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes typingBounce {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.chatInput {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  padding: 1rem 0;
+  border-top: 1px solid var(--card-border);
+}
+
+.chatInput textarea {
+  flex: 1;
+  min-height: 60px;
+  max-height: 120px;
+  padding: 0.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.chatInput textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.chatInput textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sendButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sendButton:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.sendButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.sendButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+.toneResult {
+  padding: 1.5rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  margin-top: 1rem;
+}
+
+.toneResult h4 {
+  margin: 0 0 1rem 0;
+  color: var(--foreground);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.archetypeResult {
+  margin-bottom: 1.5rem;
+}
+
+.archetypeResult strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.archetypeTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  min-height: 1.5rem;
+}
+
+.archetypeTag {
+  padding: 0.25rem 0.75rem;
+  background: #007bff;
+  color: white;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-block;
+  margin: 0.125rem;
+}
+
+.noArchetypes {
+  color: #999;
+  font-style: italic;
+  font-size: 0.75rem;
+}
+
+.toneDetails {
+  margin-bottom: 1.5rem;
+}
+
+.toneSection {
+  margin-bottom: 1rem;
+}
+
+.toneSection strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.toneSection p {
+  margin: 0;
+  color: var(--foreground-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .toneOfVoiceChat {
+    max-height: 500px;
+  }
+  
+  .chatMessages {
+    max-height: 300px;
+  }
+  
+  .messageContent {
+    max-width: 90%;
+  }
+  
+  .chatInput {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .sendButton {
+    align-self: flex-end;
+  }
+}
+
+.suggestionButtons {
+  margin-bottom: 1rem;
+}
+
+.suggestionButtons p {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.suggestionContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.suggestionButton {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--card-border);
+  border-radius: 20px;
+  background: var(--card-bg);
+  color: var(--foreground);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.suggestionButton:hover {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .suggestionContainer {
+    flex-direction: column;
+  }
+
+  .suggestionButton {
+    text-align: left;
+    white-space: normal;
+  }
+}
+
+/* New styles for chat suggestions */
+.messageSuggestions {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.suggestionChip {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--primary);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.suggestionChip:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .messageSuggestions {
+    flex-direction: column;
+  }
+
+  .suggestionChip {
+    text-align: left;
+    white-space: normal;
+  }
+}
+
+/* Parent-Child Step Form Styles */
+.discoveryQuestionnaireStep {
+  /* padding: 2rem; */
+}
+
+.discoveryOverview {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.discoveryOverview h4 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 1rem;
+}
+
+.discoveryOverview p {
+  color: var(--muted-foreground);
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.discoveryStart {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.startDiscoveryButton {
+  background: linear-gradient(135deg, #282ab3 0%, #1e40af 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(40, 42, 179, 0.2);
+}
+
+.startDiscoveryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(40, 42, 179, 0.3);
+}
+
+.childFormContainer {
+  background: var(--card-bg);
+  border-radius: 16px;
+  /* padding: 2rem; */
+  /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
+}
+
+.childFormHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* margin-bottom: 2rem; */
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.backToParentButton {
+  background: none;
+  border: none;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.backToParentButton:hover {
+  color: var(--foreground);
+  background: var(--accent);
+}
+
+.childStepperWrapper {
+  flex: 1;
+  /* margin-left: 2rem; */
+}
+
+.childFormContent {
+  /* margin-top: 2rem; */
+}
+
+.messagingStep,
+.copyStep {
+  padding: 2rem;
+  text-align: center;
+}
+
+.messagingStep h4,
+.copyStep h4 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 1rem;
+}
+
+.messagingStep p,
+.copyStep p {
+  color: var(--muted-foreground);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.messagingContent,
+.copyContent {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .childFormHeader {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .childStepperWrapper {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .discoveryQuestionnaireStep,
+  .messagingStep,
+  .copyStep {
+    padding: 1rem;
+  }
+}
+
+.messagingContent,
+.copyContent {
+  padding: 2rem;
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+}
+
+/* Discovery Form Styles */
+.discoveryForm {
+  background: var(--card-bg);
+ 
+  padding: 2rem;
+  margin-top: 1rem;
+}
+
+.discoveryForm .formField {
+  /* margin-bottom: 1.5rem; */
+}
+
+.discoveryForm .formField:last-child {
+  margin-bottom: 0;
+}
+
+.discoveryForm .formField label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.discoveryForm .formField label::before {
+  content: "✏️";
+  font-size: 0.8rem;
+}
+
+.discoveryForm .formField input,
+.discoveryForm .formField textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--card-border);
+  border-radius: 8px;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.discoveryForm .formField input:focus,
+.discoveryForm .formField textarea:focus {
+  outline: none;
+  border-color: #282ab3;
+  /* box-shadow: 0 0 0 3px rgba(40, 42, 179, 0.1); */
+}
+
+.discoveryForm .formField input::placeholder,
+.discoveryForm .formField textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* Child Form Content Styles */
+.childFormContent {
+  background: var(--card-bg);
+ 
+  /* padding: 2rem; */
+  margin-top: 1rem;
+}
+
+  .childFormContent .brandFormActions {
+    margin-top: 2rem;
+    /* padding-top: 1.5rem; */
+    border-top: 1px solid var(--card-border);
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+
+  .childFormContent .brandFormActions .previousButton,
+  .childFormContent .brandFormActions .nextButton {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+  }
+
+  .childFormContent .brandFormActions .previousButton {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+  }
+
+  .childFormContent .brandFormActions .previousButton:hover:not(:disabled) {
+    background: #e2e8f0;
+    color: #475569;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+
+  .childFormContent .brandFormActions .nextButton {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    border: 1px solid #3b82f6;
+  }
+
+  .childFormContent .brandFormActions .nextButton:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  }
+
+/* Tone of Voice Chat Styles */
+  .toneOfVoiceChat {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    padding: 2rem;
+    margin-top: 1.5rem;
+    min-height: 900px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+  }
+
+.toneOfVoiceChat::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #282ab3, #6366f1, #8b5cf6);
+  border-radius: 20px 20px 0 0;
+}
+
+.chatHeader {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  text-align: center;
+}
+
+.chatHeader h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, #282ab3, #6366f1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.chatHeader p {
+  color: #64748b;
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+  .chatMessages {
+    min-height: 300px;
+    max-height: 50vh;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    backdrop-filter: blur(10px);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+.chatMessage {
+  margin-bottom: 1.25rem;
+  padding: 1.25rem;
+  border-radius: 16px;
+  max-width: 85%;
+  position: relative;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.userMessage {
+  background: linear-gradient(135deg, #282ab3, #6366f1);
+  color: white;
+  margin-left: auto;
+  box-shadow: 0 4px 12px rgba(40, 42, 179, 0.2);
+}
+
+.botMessage {
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.messageContent {
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.userMessage .messageContent {
+  color: white;
+}
+
+.botMessage .messageContent {
+  color: var(--foreground);
+}
+
+.typingIndicator {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem;
+}
+
+.typingIndicator span {
+  width: 6px;
+  height: 6px;
+  background: #9ca3af;
+  border-radius: 50%;
+  animation: typingBounce 1.4s infinite ease-in-out;
+}
+
+.typingIndicator span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typingIndicator span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes typingBounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+.chatInput {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  background: white;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  margin-top: 1rem;
+}
+
+.chatInput textarea {
+  flex: 1;
+  padding: 1rem 1.25rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #1e293b;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 48px;
+  max-height: 120px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.chatInput textarea:focus {
+  outline: none;
+  border-color: #282ab3;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(40, 42, 179, 0.1);
+}
+
+.chatInput textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #f1f5f9;
+}
+
+.sendButton {
+  padding: 1rem;
+  background: linear-gradient(135deg, #282ab3, #6366f1);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 48px;
+  box-shadow: 0 4px 12px rgba(40, 42, 179, 0.2);
+}
+
+.sendButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1f1d8a, #4f46e5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(40, 42, 179, 0.3);
+}
+
+.sendButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.sendButton svg {
+  width: 18px;
+  height: 18px;
+}
+
+  .toneResult {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    padding: 2rem;
+    margin-top: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    position: relative;
+    min-height: 600px;
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .toneResult::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .toneResult::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+
+  .toneResult::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+
+  .toneResult::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+
+.toneResult::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #10b981, #059669, #047857);
+  border-radius: 16px 16px 0 0;
+}
+
+  .toneResultHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .toneResult h4 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    background: linear-gradient(135deg, #059669, #047857);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .backToChatButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+  }
+
+  .backToChatButton:hover {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  }
+
+  .backToChatButton svg {
+    width: 14px;
+    height: 14px;
+  }
+
+.archetypeResult {
+  margin-bottom: 1.5rem;
+}
+
+.archetypeResult strong {
+  display: block;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+  .archetypeTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    min-height: 1.5rem;
+  }
+
+  .archetypeTag {
+    background: linear-gradient(135deg, #059669, #047857);
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-block;
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.2);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .archetypeTag:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  }
+
+.noArchetypes {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+  .toneDocument {
+    background: white;
+    border-radius: 16px;
+    padding: 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-top: 1.5rem;
+    overflow: hidden;
+  }
+
+  .documentHeader {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    padding: 2rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .documentTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.5rem 0;
+    background: linear-gradient(135deg, #059669, #047857);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .documentSubtitle {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  .documentBody {
+    padding: 2rem;
+  }
+
+  .documentSection {
+    margin-bottom: 2.5rem;
+    padding: 1.5rem;
+    background: #fafbfc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .documentSection:last-child {
+    margin-bottom: 0;
+  }
+
+  .sectionHeader {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .sectionIcon {
+    font-size: 1.25rem;
+    margin-right: 0.75rem;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .sectionContent {
+    color: #374151;
+    font-size: 1rem;
+    line-height: 1.7;
+    /* margin: 0; */
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    /* border-left: 3px solid #6366f1; */
+  }
+
+  .archetypeContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+.messageSuggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.suggestionChip {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  color: #374151;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.suggestionChip:hover {
+  background: blue;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .childFormHeader {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .childStepperWrapper {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .discoveryQuestionnaireStep,
+  .messagingStep,
+  .copyStep {
+    padding: 1rem;
+  }
+
+  .discoveryForm,
+  .childFormContent,
+  .toneOfVoiceChat {
+    padding: 1.5rem;
+  }
+
+  .chatMessages {
+    max-height: 300px;
+  }
+
+  .messageContent {
+    font-size: 0.9rem;
+  }
+
+  .chatInput {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sendButton {
+    align-self: flex-end;
+    width: 44px;
+  }
+
+  .messageSuggestions {
+    gap: 0.25rem;
+  }
+
+  .suggestionChip {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.6rem;
+  }
 }

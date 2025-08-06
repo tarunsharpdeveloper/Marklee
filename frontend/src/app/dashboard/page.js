@@ -630,6 +630,7 @@ const MemoizedEditPopup = memo(({
               formData,
               currentMessage: projectCoreMessage || (isOpen ? editedCoreMessage : coreMessage), // Use project-specific core message if available
               userPrompt: userInput,
+              isAudienceEdit: false
             }),
           }
         );
@@ -816,6 +817,7 @@ const MemoizedEditPopup = memo(({
             formData,
             currentMessage: projectCoreMessage || localEditedCoreMessage, // Use project-specific core message if available
             userPrompt: modificationPrompt,
+            isAudienceEdit: false
           }),
         }
       );
@@ -935,14 +937,14 @@ const MemoizedEditPopup = memo(({
                 </svg>
               </button>
             </div>
-            <div className={styles.chatMessages} ref={chatContainerRef}>
+            <div className={styles.editChatMessages} ref={chatContainerRef}>
               {messages.map((message, index) => (
                 <div
                   key={`message-${index}`}
-                  className={`${styles.messageContent} ${
+                  className={`${styles.editMessageContent} ${
                     message.type === "user"
-                      ? styles.userMessage
-                      : styles.aiMessage
+                      ? styles.editUserMessage
+                      : styles.editAiMessage
                   }`}
                 >
                   {message.type === "user" &&
@@ -1022,12 +1024,12 @@ const MemoizedEditPopup = memo(({
             </div>
             {/* Current Question Display */}
             {isQuestionMode && currentQuestion && (
-              <div className={styles.currentQuestionSection}>
-                <div className={styles.currentQuestionHeader}>
-                  <span className={styles.questionIcon}>❓</span>
-                  <span className={styles.questionText}>Refining your message</span>
+              <div className={styles.editCurrentQuestionSection}>
+                <div className={styles.editCurrentQuestionHeader}>
+                  <span className={styles.editQuestionIcon}>❓</span>
+                  <span className={styles.editQuestionText}>Refining your message</span>
                   <button 
-                    className={styles.skipQuestionsButton}
+                    className={styles.editSkipQuestionsButton}
                     onClick={async () => {
                       if (userAnswers.length > 0) {
                         await updateCoreMessageWithAnswers();
@@ -1040,25 +1042,25 @@ const MemoizedEditPopup = memo(({
                     {userAnswers.length > 0 ? "Complete & Refine" : "Skip Questions"}
                   </button>
                 </div>
-                <div className={styles.questionProgress}>
-                  <div className={styles.progressBar}>
+                <div className={styles.editQuestionProgress}>
+                  <div className={styles.editProgressBar}>
                     <div 
-                      className={styles.progressFill} 
+                      className={styles.editProgressFill} 
                       style={{ width: `${Math.min((userAnswers.length / 3) * 100, 100)}%` }}
                     ></div>
                   </div>
-                  <div className={styles.progressText}>
+                  <div className={styles.editProgressText}>
                     {userAnswers.length > 0 ? `${userAnswers.length} answers collected` : "Getting started..."}
                   </div>
                 </div>
-                <p className={styles.currentQuestionText}>{currentQuestion}</p>
+                <p className={styles.editCurrentQuestionText}>{currentQuestion}</p>
               </div>
             )}
 
-            <div className={styles.inputContainer}>
+            <div className={styles.editInputContainer}>
               
               <textarea
-                className={styles.messageInput}
+                className={styles.editMessageInput}
                 value={localInputMessage}
                 onChange={handleLocalInputChange}
                 onKeyDown={(e) => {
@@ -1072,7 +1074,7 @@ const MemoizedEditPopup = memo(({
                 rows={1}
               />
               <button
-                className={styles.sendButton}
+                className={styles.editSendButton}
                 onClick={handleLocalSendMessage}
                 disabled={!localInputMessage.trim() || isRefreshing}
               >
@@ -1500,6 +1502,36 @@ export default function Dashboard() {
   const [editInputValue, setEditInputValue] = useState("");
   const [sidebarProjectName, setSidebarProjectName] = useState("");
 
+  // Brand Discovery Form State
+  const [showBrandDiscovery, setShowBrandDiscovery] = useState(false);
+  const [brandDiscoveryStep, setBrandDiscoveryStep] = useState(1);
+  const [brandDiscoveryTab, setBrandDiscoveryTab] = useState("discovery");
+  const [parentBrandStep, setParentBrandStep] = useState(1);
+  const [showDiscoveryChildForm, setShowDiscoveryChildForm] = useState(false);
+  const [brandFormData, setBrandFormData] = useState({
+    brandName: "",
+    industry: "",
+    shortDescription: "",
+    websiteLink: "",
+    toneOfVoice: "",
+    targetAudience: "",
+    compliance: ""
+  });
+
+  // Tone of Voice Chat Flow State
+  const [showToneOfVoiceChat, setShowToneOfVoiceChat] = useState(false);
+  const [toneChatMessages, setToneChatMessages] = useState([]);
+  const [toneChatInput, setToneChatInput] = useState("");
+  const [isToneChatLoading, setIsToneChatLoading] = useState(false);
+  const [toneChatStep, setToneChatStep] = useState(0);
+  const [toneChatAnswers, setToneChatAnswers] = useState([]);
+  const [toneChatQuestions, setToneChatQuestions] = useState([]);
+  const [currentToneQuestion, setCurrentToneQuestion] = useState('');
+  const [selectedArchetypes, setSelectedArchetypes] = useState([]);
+  const [toneOfVoiceResult, setToneOfVoiceResult] = useState(null);
+  const toneChatContainerRef = useRef(null);
+
+
   const [folderStructure, setFolderStructure] = useState({});
 
   const [selectedFolder, setSelectedFolder] = useState(null);
@@ -1566,6 +1598,14 @@ export default function Dashboard() {
 
   // Add loading state
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Auto-scroll for tone chat messages
+  useEffect(() => {
+    if (toneChatContainerRef.current && toneChatMessages.length > 0 && toneChatMessages[toneChatMessages.length - 1].type === 'bot') {
+      toneChatContainerRef.current.scrollTop = toneChatContainerRef.current.scrollHeight;
+    }
+  }, [toneChatMessages]);
+  
   const loadingMessages = useMemo(() => [
    "Analyzing your inputs...",
     "Generating your marketing content...",
@@ -2111,13 +2151,42 @@ export default function Dashboard() {
     // Remove the finally block since we're setting loading to false in each condition
   }, [router]);
 
+  // Fetch brands with their projects
+  const fetchBrandsWithProjects = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
+      const response = await fetch(
+        `${baseUrl}/api/brands/with-projects`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const { data } = await response.json();
+        console.log("Fetched brands with projects:", data);
+        setBrands(data);
+      } else {
+        console.error("Failed to fetch brands:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching brands:", error);
+    }
+  }, []);
+
   const fetchProjectName = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
 
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/onboarding/get`,
+        `${baseUrl}/api/onboarding/get`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -2150,11 +2219,12 @@ export default function Dashboard() {
         .toUpperCase();
       setUser({ ...parsedUser, initials });
 
-      // Fetch projects and project name when user data is available
+      // Fetch projects, project name, and brands when user data is available
       fetchProjects();
       fetchProjectName();
+      fetchBrandsWithProjects();
     }
-  }, [fetchProjects, fetchProjectName]);
+  }, [fetchProjects, fetchProjectName, fetchBrandsWithProjects]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -2409,6 +2479,7 @@ export default function Dashboard() {
             formData,
             currentMessage: data.core_message || (isEditPopupOpen ? editedCoreMessage : coreMessage), // Use project-specific core message if available
             userPrompt: inputMessage,
+            isAudienceEdit: false
           }),
         }
       );
@@ -2700,6 +2771,7 @@ export default function Dashboard() {
             formData,
             currentMessage: data.core_message || coreMessage, // Use project-specific core message if available
             userPrompt: editInputValue,
+            isAudienceEdit: false
           }),
         }
       );
@@ -2847,6 +2919,672 @@ export default function Dashboard() {
     );
   };
 
+  const renderBrandForm = () => {
+    if (!showBrandDiscovery) return null;
+
+    return (
+      <div className={styles.modernBrandContainer}>
+        {/* Header Section */}
+        <div className={styles.modernBrandHeader}>
+          <div className={styles.brandHeaderContent}>
+            <div className={styles.brandHeaderLeft}>
+              <div className={styles.brandIconWrapper}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
+              </div>
+              <div className={styles.brandHeaderText}>
+                <h2>Create New Brand</h2>
+                <p>Build your brand identity with AI-powered insights</p>
+              </div>
+            </div>
+            <button
+              className={styles.modernCloseButton}
+              onClick={() => {
+                setShowBrandDiscovery(false);
+                setBrandFormData({
+                  brandName: "",
+                  industry: "",
+                  shortDescription: "",
+                  websiteLink: "",
+                  toneOfVoice: "",
+                  targetAudience: "",
+                  compliance: ""
+                });
+                setBrandDiscoveryStep(1);
+                setBrandDiscoveryTab("discovery");
+                setParentBrandStep(1);
+                setShowDiscoveryChildForm(false);
+                setAiGeneratedTone(null);
+                setAiGeneratedAudience(null);
+                setAiGeneratedCompliance(null);
+                setToneChatMessages([]);
+                setToneChatInput("");
+                setToneChatStep(0);
+                setToneChatAnswers([]);
+                setSelectedArchetypes([]);
+                setToneOfVoiceResult(null);
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          
+          {/* Modern Progress Indicator with Checkpoints */}
+          <div className={styles.modernProgressContainer}>
+            <div className={styles.progressTrack}>
+              <div 
+                className={styles.progressBar}
+                style={{ 
+                  width: `${(() => {
+                    // Calculate more precise progress based on current state
+                    if (parentBrandStep === 1) {
+                      // If in discovery and child form is shown, show partial progress
+                      if (showDiscoveryChildForm) {
+                        // Progress within discovery: 0% + (brandDiscoveryStep / 3) * 33.33%
+                        return (brandDiscoveryStep / 3) * 33.33;
+                      }
+                      // Just started discovery
+                      return 5; // Small initial progress
+                    } else if (parentBrandStep === 2) {
+                      // Messaging step - show up to messaging (33.33% for completed discovery + some progress in messaging)
+                      return 50; // Show progress up to middle of messaging step
+                    } else if (parentBrandStep === 3) {
+                      // Guidelines step - show up to guidelines (66.66% for completed discovery + messaging)
+                      return 100;
+                    }
+                    return 0;
+                  })()}%` 
+                }}
+              ></div>
+              
+              {/* Checkpoint Indicators */}
+              <div className={styles.checkpointContainer}>
+                {/* Discovery sub-checkpoints */}
+                {parentBrandStep === 1 && showDiscoveryChildForm && [
+                  { position: 11.11, step: 1, icon: "📝", title: "Discovery" },
+                  { position: 22.22, step: 2, icon: "🎯", title: "Brand Voice" },
+                  { position: 33.33, step: 3, icon: "📋", title: "Compliance" }
+                ].map((checkpoint) => (
+                  <div
+                    key={checkpoint.step}
+                    className={`${styles.checkpoint} ${
+                      brandDiscoveryStep >= checkpoint.step ? styles.checkpointActive : ''
+                    } ${brandDiscoveryStep > checkpoint.step ? styles.checkpointCompleted : ''}`}
+                    style={{ left: `${checkpoint.position}%` }}
+                  >
+                    <div className={styles.checkpointIcon}>
+                      {brandDiscoveryStep > checkpoint.step ? (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                      ) : (
+                        checkpoint.icon
+                      )}
+            </div>
+                    <div className={styles.checkpointTooltip}>
+                      {checkpoint.title}
+          </div>
+        </div>
+                ))}
+                
+                {/* Messaging checkpoint (when reached) */}
+                {parentBrandStep >= 2 && (
+                  <div
+                    className={`${styles.checkpoint} ${styles.checkpointMajor} ${
+                      parentBrandStep >= 2 ? styles.checkpointActive : ''
+                    } ${parentBrandStep > 2 ? styles.checkpointCompleted : ''}`}
+                    style={{ left: '50%' }}
+                  >
+                    <div className={styles.checkpointIcon}>
+                      {parentBrandStep > 2 ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                          <line x1="12" y1="19" x2="12" y2="23"/>
+                          <line x1="8" y1="23" x2="16" y2="23"/>
+                        </svg>
+                      )}
+                    </div>
+                    <div className={styles.checkpointTooltip}>
+                      Voice & Tone Complete
+                    </div>
+                  </div>
+                )}
+                
+                {/* Guidelines checkpoint (when reached) */}
+                {parentBrandStep >= 3 && (
+                  <div
+                    className={`${styles.checkpoint} ${styles.checkpointMajor} ${styles.checkpointCompleted}`}
+                    style={{ left: '100%' }}
+                  >
+                    <div className={styles.checkpointIcon}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="20,6 9,17 4,12"></polyline>
+                      </svg>
+                    </div>
+                    <div className={styles.checkpointTooltip}>
+                      Brand Complete
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className={styles.progressSteps}>
+              {[
+                { step: 1, title: "Discovery", subtitle: "Brand basics" },
+                { step: 2, title: "Messaging", subtitle: "Voice & tone" },
+                { step: 3, title: "Copy", subtitle: "Brand rules" }
+              ].map((item) => {
+                // Determine if step is active, completed, or current
+                const isCompleted = parentBrandStep > item.step;
+                const isCurrent = parentBrandStep === item.step;
+                const isActive = parentBrandStep >= item.step;
+                
+                // Special case for Discovery step - check if child form is completed
+                const isDiscoveryCompleted = item.step === 1 && parentBrandStep > 1;
+                const isDiscoveryInProgress = item.step === 1 && parentBrandStep === 1 && showDiscoveryChildForm;
+                
+                return (
+                  <div 
+                    key={item.step}
+                    className={`${styles.progressStep} ${
+                      isActive ? styles.progressStepActive : ''
+                    } ${isCompleted ? styles.progressStepCompleted : ''} ${
+                      isCurrent ? styles.progressStepCurrent : ''
+                    }`}
+                  >
+                    <div className={styles.progressStepNumber}>
+                      {isCompleted ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                      ) : isCurrent ? (
+                        <div className={styles.currentStepIndicator}>
+                          <div className={styles.pulsingDot}></div>
+                        </div>
+                      ) : (
+                        item.step
+                      )}
+                    </div>
+                    <div className={styles.progressStepText}>
+                      <span className={styles.progressStepTitle}>{item.title}</span>
+                      <span className={styles.progressStepSubtitle}>{item.subtitle}</span>
+                      {/* Show sub-progress for Discovery step */}
+                      {item.step === 1 && parentBrandStep === 1 && showDiscoveryChildForm && (
+                        <div className={styles.subProgress}>
+                          <div className={styles.subProgressBar}>
+                            <div 
+                              className={styles.subProgressFill}
+                              style={{ width: `${(brandDiscoveryStep / 3) * 100}%` }}
+                            ></div>
+                          </div>
+                          <span className={styles.subProgressText}>
+                            Step {brandDiscoveryStep} of 3
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Modern Form Content */}
+        <div className={styles.modernBrandContent}>
+          {parentBrandStep === 1 && (
+            <div className={styles.modernDiscoveryStep}>
+              <div className={styles.stepIntro}>
+                <h3>Let's discover your brand</h3>
+                <p>Tell us about your brand fundamentals to create a personalized strategy</p>
+              </div>
+              
+                {!showDiscoveryChildForm ? (
+                <div className={styles.discoveryStartCard}>
+                  <div className={styles.startCardContent}>
+                    <div className={styles.startCardIcon}>
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                    </div>
+                    <h4>Ready to build your brand?</h4>
+                    <p>Our AI-powered questionnaire will help you define your brand's core identity, values, and messaging strategy.</p>
+                    <div className={styles.startCardFeatures}>
+                      <div className={styles.featureItem}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                        <span>AI-powered insights</span>
+                      </div>
+                      <div className={styles.featureItem}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                        <span>Personalized recommendations</span>
+                      </div>
+                      <div className={styles.featureItem}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                        <span>5-minute setup</span>
+                      </div>
+                    </div>
+                  </div>
+                    <button 
+                    className={styles.modernStartButton}
+                      onClick={() => setShowDiscoveryChildForm(true)}
+                    >
+                    <span>Start Discovery Questionnaire</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                    </button>
+                  </div>
+                ) : (
+                <div className={styles.modernFormContainer}>
+                  {/* Discovery Sub-steps */}
+                  <div className={styles.subStepIndicator}>
+                    {[
+                      { step: 1, title: "Discovery", icon: "📝" },
+                      { step: 2, title: "Brand Voice", icon: "🎯" },
+                      { step: 3, title: "Compliance", icon: "📋" }
+                    ].map((item) => (
+                      <div 
+                        key={item.step}
+                        className={`${styles.subStep} ${
+                          brandDiscoveryStep >= item.step ? styles.subStepActive : ''
+                        }`}
+                      >
+                        <div className={styles.subStepIcon}>{item.icon}</div>
+                        <span className={styles.subStepTitle}>{item.title}</span>
+                      </div>
+                    ))}
+                    </div>
+
+                  {/* Form Fields */}
+                  <div className={styles.modernFormFields}>
+                      {brandDiscoveryStep === 1 && (
+                      <div className={styles.modernDiscoveryForm}>
+                        <div className={styles.formGroup}>
+                          <div className={styles.modernFormField}>
+                            <label className={styles.modernLabel}>
+                              <span className={styles.labelText}>What's the name of this brand?</span>
+                              <span className={styles.labelRequired}>*</span>
+                            </label>
+                            <div className={styles.inputWrapper}>
+                            <input
+                              type="text"
+                              value={brandFormData.brandName}
+                              onChange={(e) => handleBrandFormChange('brandName', e.target.value)}
+                              placeholder="Enter your brand name"
+                                className={styles.modernInput}
+                            />
+                              <div className={styles.inputIcon}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                  <circle cx="12" cy="7" r="4" />
+                                </svg>
+                          </div>
+                            </div>
+                          </div>
+
+                          <div className={styles.modernFormField}>
+                            <label className={styles.modernLabel}>
+                              <span className={styles.labelText}>What industry is the brand in?</span>
+                              <span className={styles.labelRequired}>*</span>
+                            </label>
+                            <div className={styles.inputWrapper}>
+                            <input
+                              type="text"
+                              value={brandFormData.industry}
+                              onChange={(e) => handleBrandFormChange('industry', e.target.value)}
+                              placeholder="e.g., Technology, Healthcare, Fashion"
+                                className={styles.modernInput}
+                            />
+                              <div className={styles.inputIcon}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                                </svg>
+                          </div>
+                            </div>
+                          </div>
+
+                          <div className={styles.modernFormField}>
+                            <label className={styles.modernLabel}>
+                              <span className={styles.labelText}>Describe what this brand is and what it does</span>
+                              <span className={styles.labelRequired}>*</span>
+                            </label>
+                            <div className={styles.textareaWrapper}>
+                            <textarea
+                              value={brandFormData.shortDescription}
+                              onChange={(e) => handleBrandFormChange('shortDescription', e.target.value)}
+                                placeholder="Describe what your brand does and its unique value proposition..."
+                              rows={4}
+                                className={styles.modernTextarea}
+                            />
+                              <div className={styles.textareaCounter}>
+                                {brandFormData.shortDescription.length}/500
+                          </div>
+                            </div>
+                          </div>
+
+                          <div className={styles.modernFormField}>
+                            <label className={styles.modernLabel}>
+                              <span className={styles.labelText}>Brand website (optional)</span>
+                            </label>
+                            <div className={styles.inputWrapper}>
+                            <input
+                              type="url"
+                              value={brandFormData.websiteLink}
+                              onChange={(e) => handleBrandFormChange('websiteLink', e.target.value)}
+                              placeholder="https://yourwebsite.com"
+                                className={styles.modernInput}
+                              />
+                              <div className={styles.inputIcon}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                                </svg>
+                              </div>
+                            </div>
+                          </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {brandDiscoveryStep === 2 && (
+                        <div className={styles.brandToneChatContainer}>
+                          <div className={styles.brandToneChatHeader}>
+                            <h3>Tone of Voice Discovery</h3>
+                            <p>I'll help you identify {brandFormData.brandName}'s tone of voice by asking a series of questions to understand your brand's personality.</p>
+                          </div>
+                          
+                                                    {(toneOfVoiceResult || (selectedArchetypes && selectedArchetypes.length > 0)) ? (
+                            <div className={styles.brandToneResults}>
+                              <div className={styles.brandToneResultsHeader}>
+                                <div className={styles.brandToneBackButton} onClick={() => {
+                                    setToneOfVoiceResult(null);
+                                    setSelectedArchetypes([]);
+                                }}>
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                                  </svg>
+                                  <span>Back to Chat</span>
+                              </div>
+                                <div className={styles.brandToneSuccessIndicator}>
+                                  <div className={styles.brandToneSuccessIcon}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <polyline points="20,6 9,17 4,12"></polyline>
+                                    </svg>
+                                  </div>
+                                  <div className={styles.brandToneSuccessText}>
+                                    <h4>Tone of Voice Generated!</h4>
+                                    <p>Your brand's personality and communication style has been defined</p>
+                                  </div>
+                                </div>
+                                </div>
+                                
+                              <div className={styles.brandToneDocument}>
+                                {selectedArchetypes && selectedArchetypes.length > 0 && (
+                                  <div className={styles.brandToneDocumentSection}>
+                                    <div className={styles.brandToneSectionHeader}>
+                                      <div className={styles.brandToneSectionIcon}>🎯</div>
+                                      <h4>Brand Archetypes</h4>
+                                    </div>
+                                    <div className={styles.brandToneArchetypeGrid}>
+                                      {selectedArchetypes.map((archetype, index) => (
+                                        <div key={index} className={styles.brandToneArchetypeTag}>
+                                            {archetype}
+                                    </div>
+                                      ))}
+                                  </div>
+                                  </div>
+                                )}
+                                  
+                                  {toneOfVoiceResult && (
+                                    <>
+                                    <div className={styles.brandToneDocumentSection}>
+                                      <div className={styles.brandToneSectionHeader}>
+                                        <div className={styles.brandToneSectionIcon}>✨</div>
+                                        <h4>Key Traits</h4>
+                                        </div>
+                                      <div className={styles.brandToneSectionContent}>
+                                          {typeof toneOfVoiceResult.keyTraits === 'string' ? toneOfVoiceResult.keyTraits : JSON.stringify(toneOfVoiceResult.keyTraits)}
+                                        </div>
+                                      </div>
+                                      
+                                    <div className={styles.brandToneDocumentSection}>
+                                      <div className={styles.brandToneSectionHeader}>
+                                        <div className={styles.brandToneSectionIcon}>💬</div>
+                                        <h4>Communication Style</h4>
+                                        </div>
+                                      <div className={styles.brandToneSectionContent}>
+                                          {typeof toneOfVoiceResult.communicationStyle === 'string' ? toneOfVoiceResult.communicationStyle : JSON.stringify(toneOfVoiceResult.communicationStyle)}
+                                        </div>
+                                      </div>
+                                      
+                                    <div className={styles.brandToneDocumentSection}>
+                                      <div className={styles.brandToneSectionHeader}>
+                                        <div className={styles.brandToneSectionIcon}>📝</div>
+                                        <h4>Examples & Guidelines</h4>
+                                        </div>
+                                      <div className={styles.brandToneSectionContent}>
+                                        <div className={styles.brandToneExampleSection}>
+                                          <strong>Examples:</strong>
+                                          <div className={styles.brandToneExampleContent}>
+                                          {typeof toneOfVoiceResult.examples === 'string' ? toneOfVoiceResult.examples : JSON.stringify(toneOfVoiceResult.examples)}
+                                        </div>
+                                      </div>
+                                        <div className={styles.brandToneGuidelinesSection}>
+                                          <strong>Guidelines:</strong>
+                                          <div className={styles.brandToneGuidelinesContent}>
+                                          {typeof toneOfVoiceResult.guidelines === 'string' ? toneOfVoiceResult.guidelines : JSON.stringify(toneOfVoiceResult.guidelines)}
+                                          </div>
+                                        </div>
+                                        </div>
+                                      </div>
+                                    </>
+                                  )}
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className={styles.brandToneChatMessages} ref={toneChatContainerRef}>
+                                {toneChatMessages.map((message, index) => (
+                                  <div key={index} className={`${styles.brandToneChatMessage} ${message.type === 'user' ? styles.brandToneUserMessage : styles.brandToneBotMessage}`}>
+                                    <div className={styles.brandToneMessageContent}>
+                                      {message.content}
+                                    </div>
+                                    {/* Show suggestions for bot messages if available */}
+                                    {message.type === 'bot' && message.suggestions && message.suggestions.length > 0 && (
+                                      <div className={styles.brandToneMessageSuggestions}>
+                                        {message.suggestions.map((suggestion, suggestionIndex) => (
+                                          <button
+                                            key={suggestionIndex}
+                                            className={styles.brandToneSuggestionChip}
+                                            onClick={() => handleSuggestionClick(suggestion)}
+                                          >
+                                            {suggestion}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                                {isToneChatLoading && (
+                                  <div className={`${styles.brandToneChatMessage} ${styles.brandToneBotMessage}`}>
+                                    <div className={styles.brandToneMessageContent}>
+                                      <div className={styles.brandToneTypingIndicator}>
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <div className={styles.brandToneChatInput}>
+                                <textarea
+                                  value={toneChatInput}
+                                  onChange={(e) => setToneChatInput(e.target.value)}
+                                  placeholder="Type your answer here..."
+                                  onKeyPress={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                      e.preventDefault();
+                                      handleToneChatSend();
+                                    }
+                                  }}
+                                />
+                                <button 
+                                  onClick={handleToneChatSend}
+                                  disabled={!toneChatInput.trim() || isToneChatLoading}
+                                  className={styles.brandToneSendButton}
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      {brandDiscoveryStep === 3 && (
+                        <div className={styles.complianceForm}>
+                          <div className={styles.formField}>
+                            <label>Forbidden Words/Phrases</label>
+                            <textarea
+                              value={brandFormData.compliance}
+                              onChange={(e) => handleBrandFormChange('compliance', e.target.value)}
+                              placeholder="Enter words or phrases that should not be used in your brand content"
+                              rows={4}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                  {/* Modern Navigation */}
+                  <div className={styles.modernNavigation}>
+                        <button
+                      className={`${styles.modernNavButton} ${styles.modernBackButton}`}
+                          onClick={handleBrandPreviousStep}
+                          disabled={brandDiscoveryStep === 1}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7" />
+                          </svg>
+                      <span>Back</span>
+                        </button>
+                    
+                    <div className={styles.navProgress}>
+                      <span className={styles.navStepIndicator}>
+                        Step {brandDiscoveryStep} of 3
+                      </span>
+                    </div>
+                    
+                        <button
+                      className={`${styles.modernNavButton} ${styles.modernNextButton}`}
+                          onClick={() => {
+                            if (brandDiscoveryStep === 3) {
+                              // Complete child form and move to parent step 2
+                              setParentBrandStep(2);
+                              setShowDiscoveryChildForm(false);
+                            } else {
+                              handleBrandNextStep();
+                            }
+                          }}
+                          disabled={
+                            (brandDiscoveryStep === 1 && (!brandFormData.brandName || !brandFormData.industry || !brandFormData.shortDescription)) ||
+                            (brandDiscoveryStep === 2 && !toneOfVoiceResult)
+                          }
+                        >
+                      <span>{brandDiscoveryStep === 3 ? 'Complete Discovery' : 'Continue'}</span>
+                          {brandDiscoveryStep !== 3 && (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+            </div>
+          )}
+
+          {parentBrandStep === 2 && (
+            <div className={styles.messagingStep}>
+              <h4>Messaging</h4>
+              <p>This step will contain messaging-related content.</p>
+              <div className={styles.messagingContent}>
+                <p>Messaging step content will be implemented here.</p>
+              </div>
+            </div>
+          )}
+
+          {parentBrandStep === 3 && (
+            <div className={styles.copyStep}>
+              <h4>Copy</h4>
+              <p>This step will contain copy-related content.</p>
+              <div className={styles.copyContent}>
+                <p>Copy step content will be implemented here.</p>
+              </div>
+            </div>
+          )}
+
+          {/* Final Navigation */}
+          {parentBrandStep > 1 && (
+            <div className={styles.finalNavigation}>
+            <button
+                className={`${styles.modernNavButton} ${styles.modernBackButton}`}
+              onClick={() => setParentBrandStep(prev => Math.max(1, prev - 1))}
+              disabled={parentBrandStep === 1}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              <span>Previous</span>
+            </button>
+              
+            <button
+                className={`${styles.modernNavButton} ${styles.modernCompleteButton}`}
+              onClick={() => {
+                if (parentBrandStep === 3) {
+                  // Handle final submission
+                  console.log('Brand creation completed');
+                } else {
+                  setParentBrandStep(prev => prev + 1);
+                }
+              }}
+            >
+                <span>{parentBrandStep === 3 ? 'Create Brand' : 'Continue'}</span>
+                {parentBrandStep === 3 ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="20,6 9,17 4,12"></polyline>
+                  </svg>
+                ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              )}
+            </button>
+          </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderFolderContent = (folder) => {
     return (
       <div className={styles.folderContent}>
@@ -2925,37 +3663,48 @@ export default function Dashboard() {
       <div className={styles.projectsSection}>
         <div className={styles.projectsHeader}>
           <h2>Your Library</h2>
-          <button 
-            className={styles.createProjectButton}
-            onClick={() => {
-              // Clear any existing project context
-              localStorage.removeItem('currentProjectId');
-              
-              // Clear form fields to trigger loading state (same as Get Started)
-              setFormFields(null);
-              setMarketingFormAnswers({});
-                            setCoreMessage('');
-              
-              // Clear the newly created library name
-              setNewlyCreatedLibraryName('');
-              
-              
-              
-              // Show the step form directly (same as Get Started)
-              setShowStepForm(true);
-              setCurrentStep(1);
-              setShowProjects(false);
-              setShowWelcome(false);
-              setShowSaveAndContinue(false);
-              
-              console.log('Create New Project clicked - opening discovery questionnaire with loading state');
-            }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            Create New Library
-          </button>
+          <div className={styles.headerButtons}>
+            <button 
+              className={styles.createBrandButton}
+              onClick={handleCreateBrand}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              </svg>
+              Create Brand
+            </button>
+            <button 
+              className={styles.createProjectButton}
+              onClick={() => {
+                // Clear any existing project context
+                localStorage.removeItem('currentProjectId');
+                
+                // Clear form fields to trigger loading state (same as Get Started)
+                setFormFields(null);
+                setMarketingFormAnswers({});
+                              setCoreMessage('');
+                
+                // Clear the newly created library name
+                setNewlyCreatedLibraryName('');
+                
+                
+                
+                // Show the step form directly (same as Get Started)
+                setShowStepForm(true);
+                setCurrentStep(1);
+                setShowProjects(false);
+                setShowWelcome(false);
+                setShowSaveAndContinue(false);
+                
+                console.log('Create New Project clicked - opening discovery questionnaire with loading state');
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Create New Library
+            </button>
+          </div>
         </div>
         
         <div className={styles.projectsGrid}>
@@ -4549,6 +5298,393 @@ export default function Dashboard() {
     }));
   };
 
+  // Brand Discovery Form Handlers
+  const handleCreateBrand = () => {
+    setShowBrandDiscovery(true);
+    setBrandDiscoveryStep(1);
+    setBrandDiscoveryTab("discovery");
+  };
+
+  const handleBrandFormChange = (field, value) => {
+    setBrandFormData(prev => {
+      const updated = {
+        ...prev,
+        [field]: value
+      };
+      
+      // Ensure the brand name is always updated when the first field changes
+      if (field === 'brandName') {
+        updated.brandName = value;
+      }
+      
+      return updated;
+    });
+  };
+
+  const handleBrandNextStep = async () => {
+    if (brandDiscoveryStep === 1) {
+      // Start tone of voice chat when moving to step 2
+      if (brandFormData.brandName && brandFormData.industry && brandFormData.shortDescription) {
+        setBrandDiscoveryStep(2);
+        await initializeToneOfVoiceChat();
+      }
+            } else if (brandDiscoveryStep < 3) {
+      setBrandDiscoveryStep(prev => prev + 1);
+    }
+  };
+
+  const handleBrandPreviousStep = () => {
+    if (brandDiscoveryStep > 1) {
+      setBrandDiscoveryStep(prev => prev - 1);
+    }
+  };
+
+  const handleBrandTabChange = (tab) => {
+    setBrandDiscoveryTab(tab);
+  };
+
+  const handleBrandSubmit = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
+      const response = await fetch(`${baseUrl}/api/brands/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(brandFormData),
+      });
+
+      if (response.ok) {
+        // Reset form and close
+        setBrandFormData({
+          brandName: "",
+          industry: "",
+          shortDescription: "",
+          websiteLink: "",
+          toneOfVoice: "",
+          targetAudience: "",
+          compliance: ""
+        });
+        setShowBrandDiscovery(false);
+        setBrandDiscoveryStep(1);
+        setBrandDiscoveryTab("discovery");
+        
+        // Refresh brands and projects to show new brand
+        fetchBrandsWithProjects();
+        fetchProjects();
+      }
+    } catch (error) {
+      console.error("Error creating brand:", error);
+    }
+  };
+
+  // Generate AI suggestions for tone of voice
+  const generateToneOfVoice = async () => {
+    try {
+      setIsGeneratingAI(true);
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
+      // Get marketing archetypes first
+      const archetypesResponse = await fetch(`${baseUrl}/api/brands/archetypes/marketing`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (archetypesResponse.ok) {
+        const { data } = await archetypesResponse.json();
+        setMarketingArchetypes(data);
+      }
+
+      // Generate AI suggestions
+      const response = await fetch(`${baseUrl}/api/brands/ai-suggestions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          brandData: brandFormData
+        }),
+      });
+
+      if (response.ok) {
+        const { data } = await response.json();
+        setAiGeneratedTone(data.tone);
+        setAiGeneratedAudience(data.audiences);
+        setAiGeneratedCompliance(data.compliance);
+      }
+    } catch (error) {
+      console.error("Error generating tone of voice:", error);
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  // Tone of Voice Chat Functions
+  const initializeToneOfVoiceChat = async () => {
+    // Clear all chat-related state
+    setToneChatMessages([
+      {
+        type: 'bot',
+        content: `Hi! I'm here to help you identify ${brandFormData.brandName}'s tone of voice. I'll ask you a series of questions to understand your brand's personality and then suggest the most fitting brand archetypes from the 12 marketing archetypes. Let's start with the first question:`
+      }
+    ]);
+    setToneChatStep(0);
+    setToneChatAnswers([]);
+    setToneChatQuestions([]);
+    setCurrentToneQuestion(''); // Reset current question
+    setSelectedArchetypes([]);
+    setToneOfVoiceResult(null);
+    setToneChatInput(''); // Clear input field
+
+    setIsToneChatLoading(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      // Get the first question from the backend
+      console.log('Initializing tone of voice chat with brand data:', brandFormData);
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
+      console.log('API URL:', `${baseUrl}/api/brands/tone-of-voice-chat`);
+      const response = await fetch(`${baseUrl}/api/brands/tone-of-voice-chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          brandData: brandFormData,
+          currentStep: 0,
+          userAnswer: null,
+          previousAnswers: []
+        }),
+      });
+
+      console.log('Response status:', response.status);
+      if (response.ok) {
+        const { data } = await response.json();
+        console.log('Received data from backend:', data);
+        
+                     // Add the first question to the chat with suggestions
+             setToneChatMessages(prev => [...prev, { 
+               type: 'bot', 
+               content: data.nextQuestion,
+               suggestions: data.suggestions || []
+             }]);
+             setCurrentToneQuestion(data.nextQuestion);
+      } else {
+        const errorData = await response.json();
+        console.error('Backend error:', errorData);
+        setToneChatMessages(prev => [...prev, { 
+          type: 'bot', 
+          content: `Error: ${errorData.message || 'Unknown error occurred'}` 
+        }]);
+      }
+    } catch (error) {
+      console.error("Error initializing tone of voice chat:", error);
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      setToneChatMessages(prev => [...prev, { 
+        type: 'bot', 
+        content: `Error: ${error.message || 'Unknown error occurred'}` 
+      }]);
+    } finally {
+      setIsToneChatLoading(false);
+    }
+  };
+
+  const handleToneChatSend = async () => {
+    if (!toneChatInput.trim() || isToneChatLoading) return;
+
+    const userAnswer = toneChatInput.trim();
+    setToneChatMessages(prev => [...prev, { type: 'user', content: userAnswer }]);
+    setToneChatInput('');
+    setIsToneChatLoading(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      // Use the tracked current question
+      console.log('Current question from state:', currentToneQuestion);
+      
+      // Store the question-answer pair (like in edit core message chatbot)
+      const newQAPair = { question: currentToneQuestion, answer: userAnswer };
+      
+      // Create the updated array with the new Q&A pair
+      const updatedQAPairs = [...toneChatAnswers, newQAPair];
+      setToneChatAnswers(updatedQAPairs);
+      
+      // Filter out duplicate questions based on content (like in edit core message chatbot)
+      const uniqueQAPairs = updatedQAPairs.reduce((acc, current) => {
+        const isDuplicate = acc.some(item => 
+          item.question.trim().toLowerCase() === current.question.trim().toLowerCase()
+        );
+        if (!isDuplicate) {
+          acc.push(current);
+        }
+        return acc;
+      }, []);
+      
+      console.log('Unique Q&A pairs:', uniqueQAPairs);
+      
+      // Send the answer to the backend for processing
+      console.log('Sending tone chat data:', {
+        brandData: brandFormData,
+        currentStep: toneChatStep,
+        userAnswer: userAnswer,
+        previousAnswers: uniqueQAPairs
+      });
+      
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
+      const response = await fetch(`${baseUrl}/api/brands/tone-of-voice-chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          brandData: brandFormData,
+          currentStep: toneChatStep,
+          userAnswer: userAnswer,
+          previousAnswers: uniqueQAPairs
+        }),
+      });
+
+      console.log('Tone chat response status:', response.status);
+      if (response.ok) {
+        const { data } = await response.json();
+        console.log('Tone chat response data:', data);
+        
+        if (data.isComplete) {
+          // Chat is complete, show results
+          console.log('Chat completed, received archetypes:', data.archetypes);
+          console.log('Chat completed, received tone data:', data.toneOfVoice);
+          console.log('Setting selectedArchetypes to:', data.archetypes);
+          console.log('Type of data.archetypes:', typeof data.archetypes);
+          console.log('Is data.archetypes an array?', Array.isArray(data.archetypes));
+          setSelectedArchetypes(data.archetypes || []);
+          setToneOfVoiceResult(data.toneOfVoice || {});
+          setBrandFormData(prev => ({
+            ...prev,
+            toneOfVoice: data.toneOfVoice?.guidelines || ''
+          }));
+        } else {
+          // Add next question with suggestions
+          setToneChatMessages(prev => [...prev, { 
+            type: 'bot', 
+            content: data.nextQuestion,
+            suggestions: data.suggestions || []
+          }]);
+          setCurrentToneQuestion(data.nextQuestion);
+          setToneChatStep(prev => prev + 1);
+        }
+      }
+    } catch (error) {
+      console.error("Error in tone of voice chat:", error);
+      setToneChatMessages(prev => [...prev, { 
+        type: 'bot', 
+        content: 'Sorry, I encountered an error. Please try again.' 
+      }]);
+    } finally {
+      setIsToneChatLoading(false);
+    }
+  };
+
+  // Handle suggestion click
+  const handleSuggestionClick = (suggestion) => {
+    setToneChatInput(suggestion);
+  };
+
+  // Generate AI suggestions for target audience
+  const generateTargetAudience = async () => {
+    try {
+      setIsGeneratingAI(true);
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
+      const response = await fetch(`${baseUrl}/api/brands/ai-suggestions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          brandData: brandFormData
+        }),
+      });
+
+      if (response.ok) {
+        const { data } = await response.json();
+        setAiGeneratedAudience(data.audiences);
+      }
+    } catch (error) {
+      console.error("Error generating target audience:", error);
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  // Generate AI suggestions for compliance
+  const generateCompliance = async () => {
+    try {
+      setIsGeneratingAI(true);
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
+      const response = await fetch(`${baseUrl}/api/brands/ai-suggestions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          brandData: brandFormData
+        }),
+      });
+
+      if (response.ok) {
+        const { data } = await response.json();
+        setAiGeneratedCompliance(data.compliance);
+      }
+    } catch (error) {
+      console.error("Error generating compliance:", error);
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  // New state for brands and AI generation
+  const [brands, setBrands] = useState([]);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [aiGeneratedTone, setAiGeneratedTone] = useState(null);
+  const [aiGeneratedAudience, setAiGeneratedAudience] = useState(null);
+  const [aiGeneratedCompliance, setAiGeneratedCompliance] = useState(null);
+
+  // Debug useEffect for selectedArchetypes
+  useEffect(() => {
+    console.log('selectedArchetypes state changed:', selectedArchetypes);
+  }, [selectedArchetypes]);
+
+  // Debug useEffect for toneOfVoiceResult
+  useEffect(() => {
+    console.log('toneOfVoiceResult state changed:', toneOfVoiceResult);
+  }, [toneOfVoiceResult]);
+  const [marketingArchetypes, setMarketingArchetypes] = useState([]);
+
   return (
     <div className={styles.container}>
       {renderProjectPopup()}
@@ -4630,6 +5766,9 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+
+
       <aside
         className={`${styles.sidebar} ${
           isSidebarCollapsed ? styles.collapsed : ""
@@ -5316,8 +6455,13 @@ export default function Dashboard() {
             )}
 
             {/* Projects Section */}
-            {showProjects && (
+            {showProjects && !showBrandDiscovery && (
               renderProjectsSection()
+            )}
+
+            {/* Brand Form Section */}
+            {showBrandDiscovery && (
+              renderBrandForm()
             )}
 
             {/* Save and Continue Section */}

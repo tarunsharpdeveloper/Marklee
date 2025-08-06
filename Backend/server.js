@@ -7,6 +7,7 @@ import briefRoutes from './routes/briefRoutes.js';
 import adminRoutes from './routes/admin.js';
 import { pool as db , testConnection } from './config/database.js';
 import marketingRoutes from './routes/marketingRoutes.js';
+import brandRoutes from './routes/brandRoutes.js';
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/api/onboarding', onboardingRoutes);
 app.use('/api', briefRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/marketing', marketingRoutes);
+app.use('/api/brands', brandRoutes);
 
 // Test database connection
 testConnection()

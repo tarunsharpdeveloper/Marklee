@@ -5,8 +5,8 @@ class Project {
     static async create(projectData) {
         try {
             const [result] = await db.execute(
-                'INSERT INTO projects (user_id, project_name, status) VALUES (?, ?, ?)',
-                [projectData.userId, projectData.projectName, 'active']
+                'INSERT INTO projects (user_id, project_name, brand_id, status) VALUES (?, ?, ?, ?)',
+                [projectData.userId, projectData.projectName, projectData.brandId || null, 'active']
             );
             return result.insertId;
         } catch (error) {
@@ -19,7 +19,7 @@ class Project {
         try {
             const [rows] = await db.execute('SELECT * FROM projects WHERE project_name = ? AND user_id = ?', [name, userId]);
             return rows[0];
-        }
+        }   
         catch (error) {
             console.error('Error fetching project by name:', error);
             throw error;
@@ -38,8 +38,8 @@ class Project {
     static async update(id, updateData) {
         try {
             const [result] = await db.execute(
-                'UPDATE projects SET project_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-                [updateData.projectName, id]
+                'UPDATE projects SET project_name = ?, brand_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                [updateData.projectName, updateData.brandId || null, id]
             );
             return result.affectedRows > 0;
         } catch (error) {
@@ -56,6 +56,7 @@ class Project {
                         projects.project_name,
                         projects.user_id,
                         projects.status,
+                        projects.brand_id,
                         briefs.id AS brief_id,
                         briefs.purpose AS brief_title
                     FROM projects 
@@ -74,6 +75,7 @@ class Project {
                             name: row.project_name,
                             user_id: row.user_id,
                             status: row.status,
+                            brand_id: row.brand_id,
                             briefs: []
                         };
                     }
@@ -91,7 +93,17 @@ class Project {
             console.error('Error fetching projects:', error);
             throw error;
         }
-    }   
-}
+    }
+
+    static async findByBrandId(brandId) {
+        try {
+            const [rows] = await db.execute('SELECT * FROM projects WHERE brand_id = ? ORDER BY created_at DESC', [brandId]);
+            return rows;
+        } catch (error) {
+            console.error('Error fetching projects by brand ID:', error);
+            throw error;
+        }
+    }
+}   
 
 export default Project; 

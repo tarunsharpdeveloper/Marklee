@@ -252,3 +252,68 @@ ADD COLUMN IF NOT EXISTS core_message_seen BOOLEAN DEFAULT FALSE;
 ALTER TABLE user_onboarding
 ADD COLUMN IF NOT EXISTS current_form_step INT DEFAULT 1;
 
+-- Add brand_id column to projects table
+ALTER TABLE projects
+ADD COLUMN IF NOT EXISTS brand_id INT;
+
+-- Create brands table
+CREATE TABLE IF NOT EXISTS brands (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    brand_name VARCHAR(255) NOT NULL,
+    industry VARCHAR(255) NOT NULL,
+    short_description TEXT NOT NULL,
+    website_link VARCHAR(500),
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Create tone_of_voice table
+CREATE TABLE IF NOT EXISTS tone_of_voice (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    brand_id INT NOT NULL,
+    archetype VARCHAR(100) NOT NULL,
+    key_traits TEXT,
+    examples TEXT,
+    tips TEXT,
+    guidelines TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE CASCADE
+);
+
+-- Create brand_compliance table
+CREATE TABLE IF NOT EXISTS brand_compliance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    brand_id INT NOT NULL,
+    forbidden_words TEXT,
+    required_phrases TEXT,
+    disclaimers TEXT,
+    compliance_docs_url VARCHAR(500),
+    do_list TEXT,
+    dont_list TEXT,
+    enforce_compliance BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE CASCADE
+);
+
+-- Create brand_audiences table (for brand-level audience management)
+CREATE TABLE IF NOT EXISTS brand_audiences (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    brand_id INT NOT NULL,
+    audience_name VARCHAR(255) NOT NULL,
+    audience_description TEXT,
+    audience_type VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE CASCADE
+);
+
+-- Add foreign key constraint for projects.brand_id
+ALTER TABLE projects
+ADD CONSTRAINT fk_projects_brand
+FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE SET NULL;
+

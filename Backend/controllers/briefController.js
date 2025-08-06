@@ -38,7 +38,8 @@ class BriefController {
             }
             const projectId = await Project.create({
                 projectName: req.body.projectName.trim(),
-                userId: req.user.id
+                userId: req.user.id,
+                brandId: req.body.brandId || null
             });
             const project = await Project.findById(projectId);
             res.status(201).json({
@@ -55,7 +56,7 @@ class BriefController {
     async updateProject(req, res) {
         try {
             const { id } = req.params;
-            const { projectName } = req.body;
+            const { projectName, brandId } = req.body;
             
             if (!projectName || !projectName.trim()) {
                 return res.status(400).json({
@@ -91,7 +92,8 @@ class BriefController {
 
             // Update the project
             await Project.update(id, {
-                projectName: projectName.trim()
+                projectName: projectName.trim(),
+                brandId: brandId || null
             });
 
             const updatedProject = await Project.findById(id);
