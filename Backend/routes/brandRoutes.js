@@ -33,6 +33,7 @@ router.post('/workflow/initialize', brandController.initializeBrandWorkflow);
 router.post('/workflow/discovery', brandController.processDiscoveryStep);
 router.post('/workflow/tone-analysis', brandController.processToneAnalysis);
 router.post('/workflow/audience-generation', brandController.processAudienceGeneration);
+router.post('/workflow/target-audience-generation', brandController.processTargetAudienceGeneration);
 router.post('/workflow/compliance-generation', brandController.processComplianceGeneration);
 router.get('/workflow/:workflowId/status', brandController.getWorkflowStatus);
 

@@ -3836,58 +3836,148 @@ export default function Dashboard() {
                     {messagingStep === 1 && (
                       <div className={styles.modernTargetAudienceForm}>
                         <div className={styles.formGroup}>
+                          {/* AI Generation Button */}
                           <div className={styles.modernFormField}>
-                            <label className={styles.modernLabel}>
-                              <span className={styles.labelText}>Primary Target Audience</span>
-                              <span className={styles.labelRequired}>*</span>
-                            </label>
-                            <div className={styles.textareaWrapper}>
-                              <textarea
-                                placeholder="Who is your main target audience?"
-                                rows={4}
-                                className={styles.modernTextarea}
-                              />
-                            </div>
+                            <button
+                              type="button"
+                              className={styles.modernGenerateButton}
+                              onClick={generateTargetAudience}
+                              disabled={isGeneratingAI}
+                            >
+                              {isGeneratingAI ? (
+                                <>
+                                  <svg className={styles.spinner} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M21 12a9 9 0 11-6.219-8.56" />
+                                  </svg>
+                                  <span>Generating...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                    <line x1="12" y1="19" x2="12" y2="23"/>
+                                    <line x1="8" y1="23" x2="16" y2="23"/>
+                                  </svg>
+                                  <span>Generate AI Suggestions</span>
+                                </>
+                              )}
+                            </button>
                           </div>
-
-                          <div className={styles.modernFormField}>
-                            <label className={styles.modernLabel}>
-                              <span className={styles.labelText}>Secondary Audience</span>
-                            </label>
-                            <div className={styles.textareaWrapper}>
-                              <textarea
-                                placeholder="Any secondary audience segments?"
-                                rows={3}
-                                className={styles.modernTextarea}
-                              />
-                            </div>
-                          </div>
-
-                          <div className={styles.modernFormField}>
-                            <label className={styles.modernLabel}>
-                              <span className={styles.labelText}>Demographics</span>
-                            </label>
-                            <div className={styles.textareaWrapper}>
-                              <textarea
-                                placeholder="Age, location, income, education, etc."
-                                rows={3}
-                                className={styles.modernTextarea}
-                              />
-                            </div>
-                          </div>
-
-                          <div className={styles.modernFormField}>
-                            <label className={styles.modernLabel}>
-                              <span className={styles.labelText}>Psychographics</span>
-                            </label>
-                            <div className={styles.textareaWrapper}>
-                              <textarea
-                                placeholder="Values, interests, lifestyle, personality"
-                                rows={3}
-                                className={styles.modernTextarea}
-                              />
-                            </div>
-                          </div>
+                          
+                                                     {/* Display Generated Categories */}
+                           {targetAudienceCategories.length > 0 && (
+                             <div className={styles.modernFormField}>
+                               <label className={styles.modernLabel}>
+                                 <span className={styles.labelText}>AI Suggested Categories</span>
+                               </label>
+                               <div className={styles.suggestedCategories}>
+                                 {targetAudienceCategories.map((category, index) => (
+                                   <div key={index} className={styles.categoryChip}>
+                                     <span>{category}</span>
+                                   </div>
+                                 ))}
+                               </div>
+                             </div>
+                           )}
+                           
+                           {/* Add New Audience Input */}
+                           <div className={styles.modernFormField}>
+                             <label className={styles.modernLabel}>
+                               <span className={styles.labelText}>Add New Audience</span>
+                               <span className={styles.labelDescription}>Add custom audience types to your list</span>
+                             </label>
+                             <div className={styles.enhancedInputContainer}>
+                               <div className={styles.inputWrapper}>
+                                 <svg className={styles.inputIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                   <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                   <circle cx="8.5" cy="7" r="4" />
+                                   <line x1="20" y1="8" x2="20" y2="14" />
+                                   <line x1="23" y1="11" x2="17" y2="11" />
+                                 </svg>
+                                 <input
+                                   type="text"
+                                   placeholder="e.g., 'tech-savvy millennials', 'enterprise decision makers'"
+                                   value={newAudienceInput}
+                                   onChange={(e) => setNewAudienceInput(e.target.value)}
+                                   className={styles.enhancedInput}
+                                   onKeyPress={(e) => {
+                                     if (e.key === 'Enter') {
+                                       handleAddNewAudience();
+                                     }
+                                   }}
+                                 />
+                               </div>
+                               <button
+                                 type="button"
+                                 className={styles.enhancedAddButton}
+                                 onClick={handleAddNewAudience}
+                                 disabled={!newAudienceInput.trim()}
+                               >
+                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                   <line x1="12" y1="5" x2="12" y2="19" />
+                                   <line x1="5" y1="12" x2="19" y2="12" />
+                                 </svg>
+                                 <span>Add Audience</span>
+                               </button>
+                             </div>
+                           </div>
+                           
+                           {/* Display All Audiences (AI + Custom) */}
+                           {(targetAudienceCategories.length > 0 || customAudiences.length > 0) && (
+                             <div className={styles.modernFormField}>
+                               <label className={styles.modernLabel}>
+                                 <span className={styles.labelText}>All Audiences</span>
+                                 <span className={styles.labelDescription}>
+                                   {targetAudienceCategories.length + customAudiences.length} audience types
+                                 </span>
+                               </label>
+                               <div className={styles.enhancedAudiencesGrid}>
+                                 {targetAudienceCategories.map((audience, index) => (
+                                   <div key={`ai-${index}`} className={styles.enhancedAudienceCard}>
+                                     <div className={styles.audienceContent}>
+                                       <svg className={styles.audienceIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                         <circle cx="9" cy="7" r="4" />
+                                       </svg>
+                                       <span className={styles.audienceText}>{audience}</span>
+                                     </div>
+                                     <div className={styles.audienceBadge}>
+                                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                         <path d="M9 12l2 2 4-4" />
+                                         <path d="M21 12c-1 0-2-1-2-2s1-2 2-2 2 1 2 2-1 2-2 2z" />
+                                       </svg>
+                                       <span>AI</span>
+                                     </div>
+                                   </div>
+                                 ))}
+                                 {customAudiences.map((audience, index) => (
+                                   <div key={`custom-${index}`} className={styles.enhancedAudienceCard}>
+                                     <div className={styles.audienceContent}>
+                                       <svg className={styles.audienceIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                         <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                         <circle cx="8.5" cy="7" r="4" />
+                                         <line x1="20" y1="8" x2="20" y2="14" />
+                                         <line x1="23" y1="11" x2="17" y2="11" />
+                                       </svg>
+                                       <span className={styles.audienceText}>{audience}</span>
+                                     </div>
+                                     <button
+                                       type="button"
+                                       className={styles.enhancedRemoveButton}
+                                       onClick={() => removeCustomAudience(index)}
+                                       title="Remove audience"
+                                     >
+                                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                         <line x1="18" y1="6" x2="6" y2="18"></line>
+                                         <line x1="6" y1="6" x2="18" y2="18"></line>
+                                       </svg>
+                                     </button>
+                                   </div>
+                                 ))}
+                               </div>
+                             </div>
+                           )}
                         </div>
                       </div>
                     )}
@@ -6264,7 +6354,7 @@ export default function Dashboard() {
       if (!token) return;
 
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
-      const response = await fetch(`${baseUrl}/api/brands/workflow/audience-generation`, {
+      const response = await fetch(`${baseUrl}/api/brands/workflow/target-audience-generation`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -6277,7 +6367,10 @@ export default function Dashboard() {
 
       if (response.ok) {
         const { data } = await response.json();
-        setAiGeneratedAudience(data.audiences);
+        console.log('Target audience generation response:', data);
+        if (data.targetAudienceCategories) {
+          setTargetAudienceCategories(data.targetAudienceCategories);
+        }
       }
     } catch (error) {
       console.error("Error generating target audience:", error);
@@ -6364,9 +6457,21 @@ export default function Dashboard() {
     }
   };
 
-  const removeUploadedFile = () => {
-    setUploadedFile(null);
-  };
+      const removeUploadedFile = () => {
+      setUploadedFile(null);
+    };
+
+    // Target Audience Handlers
+    const handleAddNewAudience = () => {
+      if (newAudienceInput.trim()) {
+        setCustomAudiences(prev => [...prev, newAudienceInput.trim()]);
+        setNewAudienceInput('');
+      }
+    };
+
+    const removeCustomAudience = (index) => {
+      setCustomAudiences(prev => prev.filter((_, i) => i !== index));
+    };
 
   // New state for brands and AI generation
   const [brands, setBrands] = useState([]);
@@ -6381,6 +6486,9 @@ export default function Dashboard() {
   const [disclaimersList, setDisclaimersList] = useState([]);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [enforceCompliance, setEnforceCompliance] = useState(true);
+  const [targetAudienceCategories, setTargetAudienceCategories] = useState([]);
+  const [newAudienceInput, setNewAudienceInput] = useState('');
+  const [customAudiences, setCustomAudiences] = useState([]);
 
   // Debug useEffect for selectedArchetypes
   useEffect(() => {

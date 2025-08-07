@@ -658,6 +658,94 @@ Format as JSON array with fields: name, description, characteristics, interest`;
         };
     }
 
+    // Target Audience Generation Agent - Generates broad audience categories
+    static async targetAudienceAgent(state) {
+        const { brandData } = state;
+        
+        // Initialize the chat model
+        const chatModel = new ChatOpenAI({
+            modelName: "gpt-4o-mini",
+            temperature: 0.7,
+            openAIApiKey: process.env.OPENAI_API_KEY
+        });
+        
+        const targetAudiencePrompt = `Based on the following brand details, suggest 3–6 broad audience categories this brand might serve. 
+The suggestions should be general (e.g. 'parents of toddlers', 'entry-level investors', 'mid-sized company HR teams'). 
+The suggestions should apply to Brand Industry: ${brandData.industry}
+
+Brand Information:
+- Name: ${brandData.brandName}
+- Industry: ${brandData.industry}
+- Description: ${brandData.shortDescription}
+
+IMPORTANT: Respond ONLY with a valid JSON array. Do not include any explanatory text before or after the JSON.
+
+Generate 3-6 audience categories as a JSON array of strings. Each string should be a clear, specific audience category.
+
+Example format:
+[
+  "parents of toddlers",
+  "entry-level investors", 
+  "mid-sized company HR teams",
+  "small business owners",
+  "freelance professionals"
+]
+
+Respond with ONLY the JSON array, no other text.`;
+
+        let targetAudienceData;
+        
+        try {
+            const response = await chatModel.invoke(targetAudiencePrompt);
+            let cleanContent = response.content.trim();
+            console.log('Raw target audience response:', cleanContent);
+
+            // Try to extract JSON from various formats
+            let jsonMatch = cleanContent.match(/\[[\s\S]*\]/);
+            if (jsonMatch) {
+                cleanContent = jsonMatch[0];
+            }
+
+            // Remove markdown code blocks
+            if (cleanContent.startsWith('```json')) {
+                cleanContent = cleanContent.replace(/^```json\s*/, '');
+            }
+            if (cleanContent.startsWith('```')) {
+                cleanContent = cleanContent.replace(/^```\s*/, '');
+            }
+            if (cleanContent.endsWith('```')) {
+                cleanContent = cleanContent.replace(/\s*```$/, '');
+            }
+
+            // Try to fix common JSON issues
+            cleanContent = cleanContent.replace(/,\s*]/g, ']'); // Remove trailing commas
+
+            console.log('Cleaned content for parsing:', cleanContent);
+
+            targetAudienceData = JSON.parse(cleanContent);
+            console.log('Successfully parsed target audience data:', targetAudienceData);
+        } catch (parseError) {
+            console.error('Error parsing target audience response:', parseError);
+            console.error('Raw target audience response:', response?.content);
+
+            // Fallback to default target audience data if parsing fails
+            targetAudienceData = [
+                "small business owners",
+                "freelance professionals", 
+                "startup founders",
+                "mid-level managers",
+                "entrepreneurs"
+            ];
+            console.log('Using fallback target audience data due to parsing error:', targetAudienceData);
+        }
+
+        return {
+            ...state,
+            targetAudienceCategories: targetAudienceData,
+            isComplete: true
+        };
+    }
+
     // Compliance Agent - Generates compliance requirements using improved prompt
     static async complianceAgent(state) {
         const { brandData, toneAnalysis } = state;
@@ -1524,6 +1612,55 @@ class BrandController {
             res.status(500).json({
                 success: false,
                 message: 'Failed to process compliance generation',
+                error: error.message
+            });
+        }
+    }
+
+    // Process target audience generation
+    async processTargetAudienceGeneration(req, res) {
+        try {
+            const { workflowId } = req.body;
+            
+            if (!workflowId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Workflow ID is required'
+                });
+            }
+
+            const currentState = workflowStateManager.getWorkflowState(workflowId);
+            if (!currentState) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Workflow not found'
+                });
+            }
+
+            // Run the target audience agent directly
+            console.log('Calling target audience agent directly');
+            const result = await BrandCreationAgents.targetAudienceAgent({
+                ...currentState,
+                workflowId
+            });
+
+            console.log('Target audience agent result:', result);
+
+            // Update workflow state
+            workflowStateManager.updateWorkflowState(workflowId, result);
+
+            res.status(200).json({
+                success: true,
+                data: {
+                    targetAudienceCategories: result.targetAudienceCategories,
+                    isComplete: result.isComplete
+                }
+            });
+        } catch (error) {
+            console.error('Error processing target audience generation:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to process target audience generation',
                 error: error.message
             });
         }
