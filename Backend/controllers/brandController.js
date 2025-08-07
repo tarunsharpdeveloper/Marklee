@@ -38,6 +38,7 @@ class BrandController {
             const brandId = await Brand.create({
                 userId: req.user.id,
                 brandName,
+                
                 industry,
                 shortDescription,
                 websiteLink
