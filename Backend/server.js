@@ -29,6 +29,12 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/marketing', marketingRoutes);
 app.use('/api/brands', brandRoutes);
 
+// Debug middleware to log all requests
+app.use('/api/brands', (req, res, next) => {
+    console.log(`Brand API Request: ${req.method} ${req.path}`);
+    next();
+});
+
 // Test database connection
 testConnection()
   .then(success => {

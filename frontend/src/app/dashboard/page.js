@@ -1508,6 +1508,8 @@ export default function Dashboard() {
   const [brandDiscoveryTab, setBrandDiscoveryTab] = useState("discovery");
   const [parentBrandStep, setParentBrandStep] = useState(1);
   const [showDiscoveryChildForm, setShowDiscoveryChildForm] = useState(false);
+  const [messagingStep, setMessagingStep] = useState(1);
+  const [showMessagingChildForm, setShowMessagingChildForm] = useState(false);
   const [brandFormData, setBrandFormData] = useState({
     brandName: "",
     industry: "",
@@ -1529,6 +1531,7 @@ export default function Dashboard() {
   const [currentToneQuestion, setCurrentToneQuestion] = useState('');
   const [selectedArchetypes, setSelectedArchetypes] = useState([]);
   const [toneOfVoiceResult, setToneOfVoiceResult] = useState(null);
+  const [workflowId, setWorkflowId] = useState(null);
   const toneChatContainerRef = useRef(null);
 
 
@@ -2924,6 +2927,7 @@ export default function Dashboard() {
 
     return (
       <div className={styles.modernBrandContainer}>
+        
         {/* Header Section */}
         <div className={styles.modernBrandHeader}>
           <div className={styles.brandHeaderContent}>
@@ -3054,9 +3058,36 @@ export default function Dashboard() {
                     )}
                   </div>
                   <div className={styles.checkpointTooltip}>
-                    Voice & Tone Complete
+                    Messaging Complete
                   </div>
                 </div>
+                
+                {/* Messaging sub-checkpoints - show when in messaging step */}
+                {parentBrandStep === 2 && showMessagingChildForm && [
+                  { position: 66.67, step: 1, icon: "👥", title: "Target Audience" },
+                  { position: 77.78, step: 2, icon: "💬", title: "Core Message" }
+                ].map((checkpoint) => (
+                  <div
+                    key={checkpoint.step}
+                    className={`${styles.checkpoint} ${
+                      messagingStep >= checkpoint.step ? styles.checkpointActive : ''
+                    } ${messagingStep > checkpoint.step ? styles.checkpointCompleted : ''}`}
+                    style={{ left: `${checkpoint.position}%` }}
+                  >
+                    <div className={styles.checkpointIcon}>
+                      {messagingStep > checkpoint.step ? (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                      ) : (
+                        checkpoint.icon
+                      )}
+                    </div>
+                    <div className={styles.checkpointTooltip}>
+                      {checkpoint.title}
+                    </div>
+                  </div>
+                ))}
                 
                 {/* Guidelines checkpoint - always show */}
                 <div
@@ -3134,6 +3165,21 @@ export default function Dashboard() {
                           </div>
                           <span className={styles.subProgressText}>
                             Step {brandDiscoveryStep} of 3
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Show sub-progress for Messaging step */}
+                      {item.step === 2 && parentBrandStep === 2 && showMessagingChildForm && (
+                        <div className={styles.subProgress}>
+                          <div className={styles.subProgressBar}>
+                            <div 
+                              className={styles.subProgressFill}
+                              style={{ width: `${(messagingStep / 2) * 100}%` }}
+                            ></div>
+                          </div>
+                          <span className={styles.subProgressText}>
+                            {messagingStep === 1 ? 'Target Audience' : 'Core Message'}
                           </span>
                         </div>
                       )}
@@ -3413,15 +3459,26 @@ export default function Dashboard() {
                                     {/* Show suggestions for bot messages if available */}
                                     {message.type === 'bot' && message.suggestions && message.suggestions.length > 0 && (
                                       <div className={styles.brandToneMessageSuggestions}>
+                                        <div className={styles.brandToneSuggestionsLabel}>
+                                          Suggested answers:
+                                        </div>
                                         {message.suggestions.map((suggestion, suggestionIndex) => (
                                           <button
                                             key={suggestionIndex}
                                             className={styles.brandToneSuggestionChip}
                                             onClick={() => handleSuggestionClick(suggestion)}
+                                            title="Click to use this suggestion"
                                           >
                                             {suggestion}
                                           </button>
                                         ))}
+                                      </div>
+                                    )}
+                                    
+                                    {/* Show compliance rules if available */}
+                                    {message.type === 'bot' && message.showCompliance && message.compliance && (
+                                      <div className={styles.brandToneMessageCompliance}>
+                                        {renderComplianceRules(message.compliance)}
                                       </div>
                                     )}
                                   </div>
@@ -3466,15 +3523,190 @@ export default function Dashboard() {
                       )}
 
                       {brandDiscoveryStep === 3 && (
-                        <div className={styles.complianceForm}>
-                          <div className={styles.formField}>
-                            <label>Forbidden Words/Phrases</label>
+                        <div className={styles.complianceMicroFlow}>
+                          <div className={styles.complianceHeader}>
+                            <h3>📋 Brand Compliance</h3>
+                            <p>Set rules for what should or shouldn't be said in your messaging and copy.</p>
+                          </div>
+                          
+                          {/* AI Preset Options */}
+                          <div className={styles.complianceSection}>
+                            <h4>🚀 Quick Preset Options</h4>
+                            <p>Select from AI-generated presets to get started:</p>
+                            <div className={styles.presetOptions}>
+                              {aiGeneratedCompliance ? (
+                                aiGeneratedCompliance.map((preset, index) => {
+                                  const isChecked = selectedPresets.some(p => p === preset);
+                                  console.log(`Preset ${index} checked:`, isChecked, preset);
+                                  return (
+                                    <div key={index} className={styles.presetOption}>
+                                      <input
+                                        type="checkbox"
+                                        id={`preset-${index}`}
+                                        checked={isChecked}
+                                        onChange={(e) => handlePresetToggle(index, e.target.checked)}
+                                      />
+                                      <label htmlFor={`preset-${index}`}>
+                                        <span className={styles.presetType}>{preset.type.toUpperCase()}</span>
+                                        <span className={styles.presetRule}>{preset.rule}</span>
+                                        <span className={styles.presetEnforce}>{preset.enforce}</span>
+                                      </label>
+                                    </div>
+                                  );
+                                })
+                              ) : (
+                                <div className={styles.complianceLoading}>
+                                  <div className={styles.complianceLoadingSpinner}>
+                                    <div></div>
+                                    <div></div>
+                                    <div></div>
+                                  </div>
+                                  <p>Generating preset options...</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Custom Forbidden Words/Phrases */}
+                          <div className={styles.complianceSection}>
+                            <h4>🚫 Custom Forbidden Words/Phrases</h4>
+                            <p>Add words or phrases your brand should never use:</p>
+                            <div className={styles.customInputContainer}>
                             <textarea
-                              value={brandFormData.compliance}
-                              onChange={(e) => handleBrandFormChange('compliance', e.target.value)}
-                              placeholder="Enter words or phrases that should not be used in your brand content"
-                              rows={4}
-                            />
+                                value={customForbiddenWords}
+                                onChange={(e) => setCustomForbiddenWords(e.target.value)}
+                                placeholder="Enter forbidden words or phrases, separated by commas..."
+                                rows={3}
+                                className={styles.customTextarea}
+                              />
+                              <button 
+                                onClick={addForbiddenWords}
+                                className={styles.addButton}
+                                disabled={!customForbiddenWords.trim()}
+                              >
+                                Add to List
+                              </button>
+                          </div>
+                            {forbiddenWordsList.length > 0 && (
+                              <div className={styles.forbiddenWordsList}>
+                                {forbiddenWordsList.map((word, index) => (
+                                  <span key={index} className={styles.forbiddenWordTag}>
+                                    {word}
+                                    <button onClick={() => removeForbiddenWord(index)} className={styles.removeTag}>
+                                      ×
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Required Disclaimers */}
+                          <div className={styles.complianceSection}>
+                            <h4>⚠️ Required Disclaimers</h4>
+                            <p>Add legal disclaimers that must be included in certain content:</p>
+                            <div className={styles.customInputContainer}>
+                              <textarea
+                                value={customDisclaimers}
+                                onChange={(e) => setCustomDisclaimers(e.target.value)}
+                                placeholder="Enter required disclaimers..."
+                                rows={3}
+                                className={styles.customTextarea}
+                              />
+                              <button 
+                                onClick={addDisclaimers}
+                                className={styles.addButton}
+                                disabled={!customDisclaimers.trim()}
+                              >
+                                Add Disclaimer
+                              </button>
+                            </div>
+                            {disclaimersList.length > 0 && (
+                              <div className={styles.disclaimersList}>
+                                {disclaimersList.map((disclaimer, index) => (
+                                  <div key={index} className={styles.disclaimerItem}>
+                                    <span>{disclaimer}</span>
+                                    <button onClick={() => removeDisclaimer(index)} className={styles.removeTag}>
+                                      ×
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* File Upload */}
+                          <div className={styles.complianceSection}>
+                            <h4>📄 Legal/Compliance Guidelines</h4>
+                            <p>Upload existing legal or compliance documents (optional):</p>
+                            <div className={styles.fileUpload}>
+                              <input
+                                type="file"
+                                id="compliance-file"
+                                accept=".pdf,.doc,.docx"
+                                onChange={handleFileUpload}
+                                className={styles.fileInput}
+                              />
+                              <label htmlFor="compliance-file" className={styles.fileUploadLabel}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                                </svg>
+                                Choose File
+                              </label>
+                              {uploadedFile && (
+                                <div className={styles.uploadedFile}>
+                                  <span>{uploadedFile.name}</span>
+                                  <button onClick={removeUploadedFile} className={styles.removeTag}>×</button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Preview Do's/Don'ts */}
+                          <div className={styles.complianceSection}>
+                            <h4>📋 Content Do's & Don'ts Preview</h4>
+                            <div className={styles.dosDontsPreview}>
+                              <div className={styles.dosSection}>
+                                <h5>✅ DO</h5>
+                                <ul>
+                                  {selectedPresets.filter(p => p.type === 'style' || p.type === 'required').map((preset, index) => (
+                                    <li key={index}>{preset.rule}</li>
+                                  ))}
+                                  {disclaimersList.map((disclaimer, index) => (
+                                    <li key={`disclaimer-${index}`}>Include: {disclaimer}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <div className={styles.dontsSection}>
+                                <h5>❌ DON'T</h5>
+                                <ul>
+                                  {selectedPresets.filter(p => p.type === 'forbidden').map((preset, index) => (
+                                    <li key={index}>{preset.rule}</li>
+                                  ))}
+                                  {forbiddenWordsList.map((word, index) => (
+                                    <li key={`forbidden-${index}`}>Use: {word}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Enforcement Toggle */}
+                          <div className={styles.complianceSection}>
+                            <div className={styles.enforcementToggle}>
+                              <div className={styles.toggleInfo}>
+                                <h4>🤖 AI Content Enforcement</h4>
+                                <p>Apply these rules to future AI-generated content</p>
+                              </div>
+                              <label className={styles.toggleSwitch}>
+                                <input
+                                  type="checkbox"
+                                  checked={enforceCompliance}
+                                  onChange={(e) => setEnforceCompliance(e.target.checked)}
+                                />
+                                <span className={styles.toggleSlider}></span>
+                              </label>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -3530,11 +3762,243 @@ export default function Dashboard() {
 
           {parentBrandStep === 2 && (
             <div className={styles.messagingStep}>
-              <h4>Messaging</h4>
-              <p>This step will contain messaging-related content.</p>
-              <div className={styles.messagingContent}>
-                <p>Messaging step content will be implemented here.</p>
+              <div className={styles.stepIntro}>
+                <h3>Messaging Strategy</h3>
+                <p>Define your target audience and craft your core message</p>
               </div>
+              
+              {!showMessagingChildForm ? (
+                <div className={styles.discoveryStartCard}>
+                  <div className={styles.startCardContent}>
+                    <div className={styles.startCardIcon}>
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                    <h4>Ready to define your messaging?</h4>
+                    <p>Let's create a comprehensive messaging strategy with target audience analysis and core message development.</p>
+                    <div className={styles.startCardFeatures}>
+                      <div className={styles.featureItem}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                        <span>Target audience analysis</span>
+                      </div>
+                      <div className={styles.featureItem}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                        <span>Core message development</span>
+                      </div>
+                      <div className={styles.featureItem}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                        <span>Strategic messaging framework</span>
+                      </div>
+                    </div>
+                    <button
+                      className={styles.modernStartButton}
+                      onClick={() => {
+                        setShowMessagingChildForm(true);
+                        setMessagingStep(1);
+                      }}
+                    >
+                      <span>Start Messaging Strategy</span>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.modernFormContainer}>
+                  {/* Messaging Sub-steps */}
+                  <div className={styles.subStepIndicator}>
+                    {[
+                      { step: 1, title: "Target Audience", icon: "👥" },
+                      { step: 2, title: "Core Message", icon: "💬" }
+                    ].map((item) => (
+                      <div 
+                        key={item.step}
+                        className={`${styles.subStep} ${
+                          messagingStep >= item.step ? styles.subStepActive : ''
+                        }`}
+                      >
+                        <div className={styles.subStepIcon}>{item.icon}</div>
+                        <span className={styles.subStepTitle}>{item.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Form Fields */}
+                  <div className={styles.modernFormFields}>
+                    {messagingStep === 1 && (
+                      <div className={styles.modernTargetAudienceForm}>
+                        <div className={styles.formGroup}>
+                          <div className={styles.modernFormField}>
+                            <label className={styles.modernLabel}>
+                              <span className={styles.labelText}>Primary Target Audience</span>
+                              <span className={styles.labelRequired}>*</span>
+                            </label>
+                            <div className={styles.textareaWrapper}>
+                              <textarea
+                                placeholder="Who is your main target audience?"
+                                rows={4}
+                                className={styles.modernTextarea}
+                              />
+                            </div>
+                          </div>
+
+                          <div className={styles.modernFormField}>
+                            <label className={styles.modernLabel}>
+                              <span className={styles.labelText}>Secondary Audience</span>
+                            </label>
+                            <div className={styles.textareaWrapper}>
+                              <textarea
+                                placeholder="Any secondary audience segments?"
+                                rows={3}
+                                className={styles.modernTextarea}
+                              />
+                            </div>
+                          </div>
+
+                          <div className={styles.modernFormField}>
+                            <label className={styles.modernLabel}>
+                              <span className={styles.labelText}>Demographics</span>
+                            </label>
+                            <div className={styles.textareaWrapper}>
+                              <textarea
+                                placeholder="Age, location, income, education, etc."
+                                rows={3}
+                                className={styles.modernTextarea}
+                              />
+                            </div>
+                          </div>
+
+                          <div className={styles.modernFormField}>
+                            <label className={styles.modernLabel}>
+                              <span className={styles.labelText}>Psychographics</span>
+                            </label>
+                            <div className={styles.textareaWrapper}>
+                              <textarea
+                                placeholder="Values, interests, lifestyle, personality"
+                                rows={3}
+                                className={styles.modernTextarea}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {messagingStep === 2 && (
+                      <div className={styles.modernCoreMessageForm}>
+                        <div className={styles.formGroup}>
+                          <div className={styles.modernFormField}>
+                            <label className={styles.modernLabel}>
+                              <span className={styles.labelText}>Value Proposition</span>
+                              <span className={styles.labelRequired}>*</span>
+                            </label>
+                            <div className={styles.textareaWrapper}>
+                              <textarea
+                                placeholder="What unique value do you offer?"
+                                rows={4}
+                                className={styles.modernTextarea}
+                              />
+                            </div>
+                          </div>
+
+                          <div className={styles.modernFormField}>
+                            <label className={styles.modernLabel}>
+                              <span className={styles.labelText}>Key Benefits</span>
+                            </label>
+                            <div className={styles.textareaWrapper}>
+                              <textarea
+                                placeholder="What are the main benefits?"
+                                rows={3}
+                                className={styles.modernTextarea}
+                              />
+                            </div>
+                          </div>
+
+                          <div className={styles.modernFormField}>
+                            <label className={styles.modernLabel}>
+                              <span className={styles.labelText}>Call to Action</span>
+                            </label>
+                            <div className={styles.textareaWrapper}>
+                              <textarea
+                                placeholder="What action should they take?"
+                                rows={3}
+                                className={styles.modernTextarea}
+                              />
+                            </div>
+                          </div>
+
+                          <div className={styles.modernFormField}>
+                            <label className={styles.modernLabel}>
+                              <span className={styles.labelText}>Tone Guidelines</span>
+                            </label>
+                            <div className={styles.textareaWrapper}>
+                              <textarea
+                                placeholder="How should your message sound?"
+                                rows={3}
+                                className={styles.modernTextarea}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Modern Navigation */}
+                  <div className={styles.modernNavigation}>
+                    <button
+                      className={`${styles.modernNavButton} ${styles.modernBackButton}`}
+                      onClick={() => {
+                        if (messagingStep === 1) {
+                          setShowMessagingChildForm(false);
+                        } else {
+                          setMessagingStep(prev => prev - 1);
+                        }
+                      }}
+                      disabled={messagingStep === 1}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                      </svg>
+                      <span>Back</span>
+                    </button>
+                    
+                    <div className={styles.navProgress}>
+                      <span className={styles.navStepIndicator}>
+                        Step {messagingStep} of 2
+                      </span>
+                    </div>
+                    
+                    <button
+                      className={`${styles.modernNavButton} ${styles.modernNextButton}`}
+                      onClick={() => {
+                        if (messagingStep === 2) {
+                          // Complete messaging and move to parent step 3
+                          setParentBrandStep(3);
+                          setShowMessagingChildForm(false);
+                        } else {
+                          setMessagingStep(prev => prev + 1);
+                        }
+                      }}
+                    >
+                      <span>{messagingStep === 2 ? 'Complete Messaging' : 'Continue'}</span>
+                      {messagingStep !== 2 && (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -5456,21 +5920,18 @@ export default function Dashboard() {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      // Get the first question from the backend
-      console.log('Initializing tone of voice chat with brand data:', brandFormData);
+      // Initialize the LangGraph workflow
+      console.log('Initializing LangGraph workflow with brand data:', brandFormData);
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
-      console.log('API URL:', `${baseUrl}/api/brands/tone-of-voice-chat`);
-      const response = await fetch(`${baseUrl}/api/brands/tone-of-voice-chat`, {
+      console.log('API URL:', `${baseUrl}/api/brands/workflow/initialize`);
+      const response = await fetch(`${baseUrl}/api/brands/workflow/initialize`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          brandData: brandFormData,
-          currentStep: 0,
-          userAnswer: null,
-          previousAnswers: []
+          brandData: brandFormData
         }),
       });
 
@@ -5479,11 +5940,17 @@ export default function Dashboard() {
         const { data } = await response.json();
         console.log('Received data from backend:', data);
         
+        // Store the workflow ID for future requests
+        setWorkflowId(data.workflowId);
+        console.log('Set workflow ID:', data.workflowId);
+        
                      // Add the first question to the chat with suggestions
+        console.log('Adding first question:', data.nextQuestion);
+        console.log('Adding first suggestions:', data.suggestions);
              setToneChatMessages(prev => [...prev, { 
                type: 'bot', 
                content: data.nextQuestion,
-               suggestions: data.suggestions || []
+          suggestions: Array.isArray(data.suggestions) ? data.suggestions : []
              }]);
              setCurrentToneQuestion(data.nextQuestion);
       } else {
@@ -5545,57 +6012,61 @@ export default function Dashboard() {
       
       console.log('Unique Q&A pairs:', uniqueQAPairs);
       
-      // Send the answer to the backend for processing
-      console.log('Sending tone chat data:', {
-        brandData: brandFormData,
-        currentStep: toneChatStep,
+      // Send the answer to the backend for processing using LangGraph workflow
+      console.log('Sending discovery step data:', {
+        workflowId: workflowId,
         userAnswer: userAnswer,
-        previousAnswers: uniqueQAPairs
+        currentQuestion: currentToneQuestion
       });
       
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
-      const response = await fetch(`${baseUrl}/api/brands/tone-of-voice-chat`, {
+      const response = await fetch(`${baseUrl}/api/brands/workflow/discovery`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          brandData: brandFormData,
-          currentStep: toneChatStep,
+          workflowId: workflowId,
           userAnswer: userAnswer,
-          previousAnswers: uniqueQAPairs
+          currentQuestion: currentToneQuestion
         }),
       });
 
-      console.log('Tone chat response status:', response.status);
+      console.log('Discovery step response status:', response.status);
       if (response.ok) {
         const { data } = await response.json();
-        console.log('Tone chat response data:', data);
+        console.log('Discovery step response data:', data);
         
         if (data.isComplete) {
-          // Chat is complete, show results
-          console.log('Chat completed, received archetypes:', data.archetypes);
-          console.log('Chat completed, received tone data:', data.toneOfVoice);
-          console.log('Setting selectedArchetypes to:', data.archetypes);
-          console.log('Type of data.archetypes:', typeof data.archetypes);
-          console.log('Is data.archetypes an array?', Array.isArray(data.archetypes));
-          setSelectedArchetypes(data.archetypes || []);
-          setToneOfVoiceResult(data.toneOfVoice || {});
-          setBrandFormData(prev => ({
-            ...prev,
-            toneOfVoice: data.toneOfVoice?.guidelines || ''
-          }));
+          // Discovery phase is complete, trigger tone analysis
+          console.log('Discovery completed, triggering tone analysis');
+          setToneChatMessages(prev => [...prev, { 
+            type: 'bot', 
+            content: "Great! I've gathered enough information about your brand. Now let me analyze your tone of voice..."
+          }]);
+          
+          // Trigger tone analysis
+          await triggerToneAnalysis();
         } else {
           // Add next question with suggestions
+          console.log('Adding next question:', data.nextQuestion);
+          console.log('Adding suggestions:', data.suggestions);
           setToneChatMessages(prev => [...prev, { 
             type: 'bot', 
             content: data.nextQuestion,
-            suggestions: data.suggestions || []
+            suggestions: Array.isArray(data.suggestions) ? data.suggestions : []
           }]);
           setCurrentToneQuestion(data.nextQuestion);
           setToneChatStep(prev => prev + 1);
         }
+      } else {
+        const errorData = await response.json();
+        console.error('Discovery step error:', errorData);
+        setToneChatMessages(prev => [...prev, { 
+          type: 'bot', 
+          content: `Error: ${errorData.message || 'Failed to process discovery step'}` 
+        }]);
       }
     } catch (error) {
       console.error("Error in tone of voice chat:", error);
@@ -5608,12 +6079,184 @@ export default function Dashboard() {
     }
   };
 
-  // Handle suggestion click
-  const handleSuggestionClick = (suggestion) => {
-    setToneChatInput(suggestion);
+  // Trigger tone analysis after discovery is complete
+  const triggerToneAnalysis = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      console.log('Triggering tone analysis for workflow:', workflowId);
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
+      const response = await fetch(`${baseUrl}/api/brands/workflow/tone-analysis`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          workflowId: workflowId
+        }),
+      });
+
+      console.log('Tone analysis response status:', response.status);
+      if (response.ok) {
+        const { data } = await response.json();
+        console.log('Tone analysis response data:', data);
+        
+        // Set the tone analysis results
+        setSelectedArchetypes(data.archetypes || []);
+        setToneOfVoiceResult(data.toneOfVoice || {});
+        setBrandFormData(prev => ({
+          ...prev,
+          toneOfVoice: data.toneOfVoice?.guidelines || ''
+        }));
+        
+        // Add completion message
+        setToneChatMessages(prev => [...prev, { 
+          type: 'bot', 
+          content: "Perfect! I've analyzed your brand's tone of voice. Here are the results:",
+          results: data
+        }]);
+        
+        // Automatically trigger compliance generation after tone analysis
+        console.log('Tone analysis completed, triggering compliance generation');
+        await triggerComplianceGeneration();
+      } else {
+        const errorData = await response.json();
+        console.error('Tone analysis error:', errorData);
+        setToneChatMessages(prev => [...prev, { 
+          type: 'bot', 
+          content: `Error: ${errorData.message || 'Failed to analyze tone of voice'}` 
+        }]);
+      }
+    } catch (error) {
+      console.error("Error in tone analysis:", error);
+      setToneChatMessages(prev => [...prev, { 
+        type: 'bot', 
+        content: 'Sorry, I encountered an error during tone analysis. Please try again.' 
+      }]);
+    }
   };
 
-  // Generate AI suggestions for target audience
+  // Trigger compliance generation after tone analysis
+  const triggerComplianceGeneration = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      console.log('Triggering compliance generation for workflow:', workflowId);
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
+      const response = await fetch(`${baseUrl}/api/brands/workflow/compliance-generation`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          workflowId: workflowId
+        }),
+      });
+
+      console.log('Compliance generation response status:', response.status);
+      if (response.ok) {
+        const { data } = await response.json();
+        console.log('Compliance generation response data:', data);
+        
+        // Set the compliance results
+        setAiGeneratedCompliance(data.compliance || []);
+        
+        // Add completion message with compliance display
+        setToneChatMessages(prev => [...prev, { 
+          type: 'bot', 
+          content: "Excellent! I've generated compliance guidelines for your brand. Here are the rules and requirements:",
+          compliance: data.compliance,
+          showCompliance: true
+        }]);
+      } else {
+        const errorData = await response.json();
+        console.error('Compliance generation error:', errorData);
+        setToneChatMessages(prev => [...prev, { 
+          type: 'bot', 
+          content: `Error: ${errorData.message || 'Failed to generate compliance guidelines'}` 
+        }]);
+      }
+    } catch (error) {
+      console.error("Error in compliance generation:", error);
+      setToneChatMessages(prev => [...prev, { 
+        type: 'bot', 
+        content: 'Sorry, I encountered an error during compliance generation. Please try again.' 
+      }]);
+    }
+  };
+
+  // Handle suggestion click
+  const handleSuggestionClick = (suggestion) => {
+    // Fill the input field with the suggestion
+    setToneChatInput(suggestion);
+    
+    // Optionally, you can also auto-send the suggestion
+    // Uncomment the line below if you want suggestions to auto-send
+    // handleToneChatSend();
+    
+    // Focus the input field for better UX
+    const textarea = document.querySelector(`.${styles.brandToneChatInput} textarea`);
+    if (textarea) {
+      textarea.focus();
+    }
+  };
+
+  // Render compliance rules component
+  const renderComplianceRules = (compliance) => {
+    if (!compliance || !Array.isArray(compliance)) return null;
+
+    const getTypeColor = (type) => {
+      switch (type) {
+        case 'forbidden': return '#ef4444'; // red
+        case 'disclaimer': return '#f59e0b'; // amber
+        case 'style': return '#3b82f6'; // blue
+        case 'required': return '#10b981'; // green
+        default: return '#6b7280'; // gray
+      }
+    };
+
+    const getEnforceIcon = (enforce) => {
+      switch (enforce) {
+        case 'yes': return '🔒';
+        case 'warn': return '⚠️';
+        case 'no': return 'ℹ️';
+        default: return '📋';
+      }
+    };
+
+    return (
+      <div className={styles.complianceRules}>
+        {compliance.map((rule, index) => (
+          <div key={index} className={styles.complianceRule}>
+            <div className={styles.complianceRuleHeader}>
+              <span 
+                className={styles.complianceType}
+                style={{ backgroundColor: getTypeColor(rule.type) }}
+              >
+                {rule.type.toUpperCase()}
+              </span>
+              <span className={styles.complianceEnforce}>
+                {getEnforceIcon(rule.enforce)} {rule.enforce}
+              </span>
+            </div>
+            <div className={styles.complianceRuleContent}>
+              <p className={styles.complianceRuleText}>{rule.rule}</p>
+              <div className={styles.complianceAppliesTo}>
+                <span className={styles.complianceAppliesLabel}>Applies to:</span>
+                <span className={styles.complianceAppliesValue}>{rule.applies_to}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Generate AI suggestions for target audience using workflow
   const generateTargetAudience = async () => {
     try {
       setIsGeneratingAI(true);
@@ -5621,14 +6264,14 @@ export default function Dashboard() {
       if (!token) return;
 
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
-      const response = await fetch(`${baseUrl}/api/brands/ai-suggestions`, {
+      const response = await fetch(`${baseUrl}/api/brands/workflow/audience-generation`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          brandData: brandFormData
+          workflowId: workflowId
         }),
       });
 
@@ -5643,7 +6286,7 @@ export default function Dashboard() {
     }
   };
 
-  // Generate AI suggestions for compliance
+  // Generate AI suggestions for compliance using workflow
   const generateCompliance = async () => {
     try {
       setIsGeneratingAI(true);
@@ -5651,14 +6294,14 @@ export default function Dashboard() {
       if (!token) return;
 
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
-      const response = await fetch(`${baseUrl}/api/brands/ai-suggestions`, {
+      const response = await fetch(`${baseUrl}/api/brands/workflow/compliance-generation`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          brandData: brandFormData
+          workflowId: workflowId
         }),
       });
 
@@ -5673,12 +6316,71 @@ export default function Dashboard() {
     }
   };
 
+  // Compliance Micro-Flow Handlers
+  const handlePresetToggle = (index, checked) => {
+    console.log('Toggle preset:', index, checked, aiGeneratedCompliance[index]);
+    if (checked) {
+      setSelectedPresets(prev => {
+        const newPresets = [...prev, aiGeneratedCompliance[index]];
+        console.log('Added preset, new list:', newPresets);
+        return newPresets;
+      });
+    } else {
+      setSelectedPresets(prev => {
+        const newPresets = prev.filter(preset => preset !== aiGeneratedCompliance[index]);
+        console.log('Removed preset, new list:', newPresets);
+        return newPresets;
+      });
+    }
+  };
+
+  const addForbiddenWords = () => {
+    if (customForbiddenWords.trim()) {
+      const words = customForbiddenWords.split(',').map(word => word.trim()).filter(word => word);
+      setForbiddenWordsList(prev => [...prev, ...words]);
+      setCustomForbiddenWords('');
+    }
+  };
+
+  const removeForbiddenWord = (index) => {
+    setForbiddenWordsList(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addDisclaimers = () => {
+    if (customDisclaimers.trim()) {
+      setDisclaimersList(prev => [...prev, customDisclaimers.trim()]);
+      setCustomDisclaimers('');
+    }
+  };
+
+  const removeDisclaimer = (index) => {
+    setDisclaimersList(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setUploadedFile(file);
+    }
+  };
+
+  const removeUploadedFile = () => {
+    setUploadedFile(null);
+  };
+
   // New state for brands and AI generation
   const [brands, setBrands] = useState([]);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiGeneratedTone, setAiGeneratedTone] = useState(null);
   const [aiGeneratedAudience, setAiGeneratedAudience] = useState(null);
   const [aiGeneratedCompliance, setAiGeneratedCompliance] = useState(null);
+  const [selectedPresets, setSelectedPresets] = useState([]);
+  const [customForbiddenWords, setCustomForbiddenWords] = useState('');
+  const [forbiddenWordsList, setForbiddenWordsList] = useState([]);
+  const [customDisclaimers, setCustomDisclaimers] = useState('');
+  const [disclaimersList, setDisclaimersList] = useState([]);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [enforceCompliance, setEnforceCompliance] = useState(true);
 
   // Debug useEffect for selectedArchetypes
   useEffect(() => {
@@ -5689,6 +6391,14 @@ export default function Dashboard() {
   useEffect(() => {
     console.log('toneOfVoiceResult state changed:', toneOfVoiceResult);
   }, [toneOfVoiceResult]);
+
+  // Auto-trigger compliance generation when step 3 is reached
+  useEffect(() => {
+    if (brandDiscoveryStep === 3 && !aiGeneratedCompliance) {
+      console.log('Step 3 reached, triggering compliance generation');
+      triggerComplianceGeneration();
+    }
+  }, [brandDiscoveryStep, aiGeneratedCompliance]);
   const [marketingArchetypes, setMarketingArchetypes] = useState([]);
 
   return (
