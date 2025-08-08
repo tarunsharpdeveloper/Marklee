@@ -1520,6 +1520,15 @@ export default function Dashboard() {
     compliance: ""
   });
 
+  // Brand Core Message micro-flow state
+  const [brandCoreMessage, setBrandCoreMessage] = useState("");
+  const [brandCoreSuggestions, setBrandCoreSuggestions] = useState([]);
+  const [brandCoreIntro, setBrandCoreIntro] = useState("");
+  const [brandCoreQA, setBrandCoreQA] = useState([]); // [{question, answer}]
+  const [brandCoreQuestion, setBrandCoreQuestion] = useState("");
+  const [brandCoreAnswer, setBrandCoreAnswer] = useState("");
+  const [isBrandCoreLoading, setIsBrandCoreLoading] = useState(false);
+
   // Tone of Voice Chat Flow State
   const [showToneOfVoiceChat, setShowToneOfVoiceChat] = useState(false);
   const [toneChatMessages, setToneChatMessages] = useState([]);
@@ -1531,8 +1540,25 @@ export default function Dashboard() {
   const [currentToneQuestion, setCurrentToneQuestion] = useState('');
   const [selectedArchetypes, setSelectedArchetypes] = useState([]);
   const [toneOfVoiceResult, setToneOfVoiceResult] = useState(null);
+  const [toneExplanation, setToneExplanation] = useState("");
   const [workflowId, setWorkflowId] = useState(null);
   const toneChatContainerRef = useRef(null);
+
+  // Friendly, user-understandable summaries for the 12 archetypes (presentation only)
+  const ARCHETYPE_DESCRIPTIONS = {
+    "The Hero": "Bold, action‑oriented, motivates progress and achievement.",
+    "The Explorer": "Curious, adventurous, seeks new ideas and possibilities.",
+    "The Caregiver": "Warm, supportive, puts people first and builds trust.",
+    "The Sage": "Wise, clear, evidence‑led guidance with calm authority.",
+    "The Innocent": "Simple, optimistic, honest and feel‑good.",
+    "The Outlaw": "Challenging, disruptive, breaks norms to spark change.",
+    "The Magician": "Visionary, transformative, turns complex into remarkable.",
+    "Regular Guy": "Down‑to‑earth, relatable, everyday and approachable.",
+    "The Lover": "Emotional, intimate, focuses on connection and desire.",
+    "The Jester": "Playful, witty, light‑hearted and memorable.",
+    "The Creator": "Imaginative, design‑driven, crafts original, expressive work.",
+    "The Ruler": "Confident, premium, leads with standards and control."
+  };
 
 
   const [folderStructure, setFolderStructure] = useState({});
@@ -2946,6 +2972,12 @@ export default function Dashboard() {
               className={styles.modernCloseButton}
               onClick={() => {
                 setShowBrandDiscovery(false);
+                // If there are no projects, return to welcome
+                if (!hasExistingProjects) {
+                  setShowWelcome(true);
+                  setShowProjects(false);
+                  setShowStepForm(false);
+                }
                 setBrandFormData({
                   brandName: "",
                   industry: "",
@@ -3394,26 +3426,17 @@ export default function Dashboard() {
                                     </div>
                                     <div className={styles.brandToneArchetypeGrid}>
                                       {selectedArchetypes.map((archetype, index) => (
-                                        <div key={index} className={styles.brandToneArchetypeTag}>
-                                            {archetype}
-                                    </div>
+                                        <div key={index} className={styles.brandToneArchetypeTag} title={ARCHETYPE_DESCRIPTIONS[archetype] || ''}>
+                                          <span>{archetype}</span>
+                                        </div>
                                       ))}
                                   </div>
+                                         
                                   </div>
                                 )}
                                   
                                   {toneOfVoiceResult && (
                                     <>
-                                    <div className={styles.brandToneDocumentSection}>
-                                      <div className={styles.brandToneSectionHeader}>
-                                        <div className={styles.brandToneSectionIcon}>✨</div>
-                                        <h4>Key Traits</h4>
-                                        </div>
-                                      <div className={styles.brandToneSectionContent}>
-                                          {typeof toneOfVoiceResult.keyTraits === 'string' ? toneOfVoiceResult.keyTraits : JSON.stringify(toneOfVoiceResult.keyTraits)}
-                                        </div>
-                                      </div>
-                                      
                                     <div className={styles.brandToneDocumentSection}>
                                       <div className={styles.brandToneSectionHeader}>
                                         <div className={styles.brandToneSectionIcon}>💬</div>
@@ -3423,27 +3446,6 @@ export default function Dashboard() {
                                           {typeof toneOfVoiceResult.communicationStyle === 'string' ? toneOfVoiceResult.communicationStyle : JSON.stringify(toneOfVoiceResult.communicationStyle)}
                                         </div>
                                       </div>
-                                      
-                                    <div className={styles.brandToneDocumentSection}>
-                                      <div className={styles.brandToneSectionHeader}>
-                                        <div className={styles.brandToneSectionIcon}>📝</div>
-                                        <h4>Examples & Guidelines</h4>
-                                        </div>
-                                      <div className={styles.brandToneSectionContent}>
-                                        <div className={styles.brandToneExampleSection}>
-                                          <strong>Examples:</strong>
-                                          <div className={styles.brandToneExampleContent}>
-                                          {typeof toneOfVoiceResult.examples === 'string' ? toneOfVoiceResult.examples : JSON.stringify(toneOfVoiceResult.examples)}
-                                        </div>
-                                      </div>
-                                        <div className={styles.brandToneGuidelinesSection}>
-                                          <strong>Guidelines:</strong>
-                                          <div className={styles.brandToneGuidelinesContent}>
-                                          {typeof toneOfVoiceResult.guidelines === 'string' ? toneOfVoiceResult.guidelines : JSON.stringify(toneOfVoiceResult.guidelines)}
-                                          </div>
-                                        </div>
-                                        </div>
-                                      </div>
                                     </>
                                   )}
                               </div>
@@ -3451,38 +3453,48 @@ export default function Dashboard() {
                           ) : (
                             <>
                               <div className={styles.brandToneChatMessages} ref={toneChatContainerRef}>
-                                {toneChatMessages.map((message, index) => (
-                                  <div key={index} className={`${styles.brandToneChatMessage} ${message.type === 'user' ? styles.brandToneUserMessage : styles.brandToneBotMessage}`}>
-                                    <div className={styles.brandToneMessageContent}>
-                                      {message.content}
-                                    </div>
-                                    {/* Show suggestions for bot messages if available */}
-                                    {message.type === 'bot' && message.suggestions && message.suggestions.length > 0 && (
-                                      <div className={styles.brandToneMessageSuggestions}>
-                                        <div className={styles.brandToneSuggestionsLabel}>
-                                          Suggested answers:
+                                {(() => {
+                                  let questionCounter = 0;
+                                  return toneChatMessages.map((message, index) => {
+                                    const isQuestion = message.type === 'bot' && Array.isArray(message.suggestions) && message.suggestions.length > 0;
+                                    const badgeNumber = isQuestion ? ++questionCounter : null;
+                                    return (
+                                      <div key={index} className={`${styles.brandToneChatMessage} ${message.type === 'user' ? styles.brandToneUserMessage : styles.brandToneBotMessage}`}>
+                                        <div className={styles.brandToneMessageContent}>
+                                          {isQuestion && (
+                                            <span className={styles.brandToneQuestionBadge}>{badgeNumber}</span>
+                                          )}
+                                          <span>{message.content}</span>
                                         </div>
-                                        {message.suggestions.map((suggestion, suggestionIndex) => (
-                                          <button
-                                            key={suggestionIndex}
-                                            className={styles.brandToneSuggestionChip}
-                                            onClick={() => handleSuggestionClick(suggestion)}
-                                            title="Click to use this suggestion"
-                                          >
-                                            {suggestion}
-                                          </button>
-                                        ))}
+                                        {/* Show suggestions for bot messages if available */}
+                                        {isQuestion && (
+                                          <div className={styles.brandToneMessageSuggestions}>
+                                            <div className={styles.brandToneSuggestionsLabel}>
+                                              Suggested answers:
+                                            </div>
+                                            {message.suggestions.map((suggestion, suggestionIndex) => (
+                                              <button
+                                                key={suggestionIndex}
+                                                className={styles.brandToneSuggestionChip}
+                                                onClick={() => handleSuggestionClick(suggestion)}
+                                                title="Click to use this suggestion"
+                                              >
+                                                {suggestion}
+                                              </button>
+                                            ))}
+                                          </div>
+                                        )}
+                                        
+                                        {/* Show compliance rules if available */}
+                                        {message.type === 'bot' && message.showCompliance && message.compliance && (
+                                          <div className={styles.brandToneMessageCompliance}>
+                                            {renderComplianceRules(message.compliance)}
+                                          </div>
+                                        )}
                                       </div>
-                                    )}
-                                    
-                                    {/* Show compliance rules if available */}
-                                    {message.type === 'bot' && message.showCompliance && message.compliance && (
-                                      <div className={styles.brandToneMessageCompliance}>
-                                        {renderComplianceRules(message.compliance)}
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
+                                    );
+                                  });
+                                })()}
                                 {isToneChatLoading && (
                                   <div className={`${styles.brandToneChatMessage} ${styles.brandToneBotMessage}`}>
                                     <div className={styles.brandToneMessageContent}>
@@ -3985,58 +3997,181 @@ export default function Dashboard() {
                     {messagingStep === 2 && (
                       <div className={styles.modernCoreMessageForm}>
                         <div className={styles.formGroup}>
+                          {/* Generate Core Message */}
+                          {!brandCoreMessage && (
                           <div className={styles.modernFormField}>
-                            <label className={styles.modernLabel}>
-                              <span className={styles.labelText}>Value Proposition</span>
-                              <span className={styles.labelRequired}>*</span>
-                            </label>
-                            <div className={styles.textareaWrapper}>
-                              <textarea
-                                placeholder="What unique value do you offer?"
-                                rows={4}
-                                className={styles.modernTextarea}
-                              />
+                              <button
+                                type="button"
+                                className={styles.modernGenerateButton}
+                                onClick={async () => {
+                                  try {
+                                    setIsBrandCoreLoading(true);
+                                    const token = localStorage.getItem('token');
+                                    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
+                                    const body = {
+                                      brandData: {
+                                        brandName: brandFormData.brandName,
+                                        industry: brandFormData.industry,
+                                        shortDescription: brandFormData.shortDescription
+                                      },
+                                      toneOfVoice: toneOfVoiceResult || {},
+                                      targetAudience: targetAudienceCategories || [],
+                                      positioningStatement: '',
+                                      extraInputs: {}
+                                    };
+                                    const resp = await fetch(`${baseUrl}/api/brands/core-message/generate`, {
+                                      method: 'POST',
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                        Authorization: `Bearer ${token}`,
+                                      },
+                                      body: JSON.stringify(body)
+                                    });
+                                    const data = await resp.json();
+                                    if (!resp.ok || !data.success) throw new Error(data.message || 'Failed to generate');
+                                    setBrandCoreMessage(data.data.coreMessage || '');
+                                    setBrandCoreSuggestions(Array.isArray(data.data.suggestions) ? data.data.suggestions : []);
+                                    setBrandCoreIntro(data.data.intro || '');
+                                  } catch (e) {
+                                    console.error('Core message generate error:', e);
+                                  } finally {
+                                    setIsBrandCoreLoading(false);
+                                  }
+                                }}
+                                disabled={isBrandCoreLoading || !brandFormData.brandName || !brandFormData.industry || !brandFormData.shortDescription}
+                              >
+                                {isBrandCoreLoading ? 'Generating…' : 'Generate Core Message'}
+                              </button>
                             </div>
-                          </div>
+                          )}
 
+                          {/* Show Intro and current Core Message */}
+                          {brandCoreMessage && (
                           <div className={styles.modernFormField}>
-                            <label className={styles.modernLabel}>
-                              <span className={styles.labelText}>Key Benefits</span>
-                            </label>
+                              {brandCoreIntro && (
+                                <p className={styles.labelDescription}>{brandCoreIntro}</p>
+                              )}
                             <div className={styles.textareaWrapper}>
                               <textarea
-                                placeholder="What are the main benefits?"
+                                  value={brandCoreMessage}
+                                  onChange={(e) => setBrandCoreMessage(e.target.value)}
                                 rows={3}
                                 className={styles.modernTextarea}
                               />
                             </div>
                           </div>
+                          )}
 
+                          {/* Suggestions */}
+                          {brandCoreSuggestions && brandCoreSuggestions.length > 0 && (
                           <div className={styles.modernFormField}>
                             <label className={styles.modernLabel}>
-                              <span className={styles.labelText}>Call to Action</span>
+                                <span className={styles.labelText}>Suggestions</span>
                             </label>
+                              <div className={styles.suggestedCategories}>
+                                {brandCoreSuggestions.map((s, i) => (
+                                  <button key={i} className={styles.categoryChip} onClick={() => setBrandCoreMessage(s)}>
+                                    {s}
+                                  </button>
+                                ))}
+                            </div>
+                          </div>
+                          )}
+
+                          {/* One-by-one refinement Q&A */}
+                          {brandCoreMessage && (
+                          <div className={styles.modernFormField}>
+                              {!brandCoreQuestion ? (
+                                <button
+                                  type="button"
+                                  className={styles.modernGenerateButton}
+                                  onClick={async () => {
+                                    try {
+                                      setIsBrandCoreLoading(true);
+                                      const token = localStorage.getItem('token');
+                                      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
+                                      const body = {
+                                        brandData: { brandName: brandFormData.brandName },
+                                        currentMessage: brandCoreMessage,
+                                        previousQA: brandCoreQA
+                                      };
+                                      const resp = await fetch(`${baseUrl}/api/brands/core-message/question`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                                        body: JSON.stringify(body)
+                                      });
+                                      const data = await resp.json();
+                                      if (!resp.ok || !data.success) throw new Error(data.message || 'Failed to get question');
+                                      setBrandCoreQuestion(data.data.question || '');
+                                    } catch (e) {
+                                      console.error('Get question error:', e);
+                                    } finally {
+                                      setIsBrandCoreLoading(false);
+                                    }
+                                  }}
+                                >
+                                  {isBrandCoreLoading ? 'Thinking…' : 'Ask a refining question'}
+                                </button>
+                              ) : (
+                                <div>
+                                  <div className={styles.labelText}>{brandCoreQuestion}</div>
                             <div className={styles.textareaWrapper}>
                               <textarea
-                                placeholder="What action should they take?"
+                                      value={brandCoreAnswer}
+                                      onChange={(e) => setBrandCoreAnswer(e.target.value)}
+                                      placeholder="Type your answer…"
                                 rows={3}
                                 className={styles.modernTextarea}
                               />
                             </div>
+                                  <div className={styles.startCardFeatures}>
+                                    <button
+                                      type="button"
+                                      className={styles.modernBackButton}
+                                      onClick={() => { setBrandCoreQuestion(''); setBrandCoreAnswer(''); }}
+                                    >
+                                      Skip
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={styles.modernNextButton}
+                                      disabled={!brandCoreAnswer.trim()}
+                                      onClick={async () => {
+                                        const nextQA = [...brandCoreQA, { question: brandCoreQuestion, answer: brandCoreAnswer.trim() }];
+                                        setBrandCoreQA(nextQA);
+                                        setBrandCoreQuestion('');
+                                        setBrandCoreAnswer('');
+                                        try {
+                                          setIsBrandCoreLoading(true);
+                                          const token = localStorage.getItem('token');
+                                          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
+                                          const body = {
+                                            brandData: { brandName: brandFormData.brandName },
+                                            currentMessage: brandCoreMessage,
+                                            userAnswers: nextQA
+                                          };
+                                          const resp = await fetch(`${baseUrl}/api/brands/core-message/update-with-answers`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                                            body: JSON.stringify(body)
+                                          });
+                                          const data = await resp.json();
+                                          if (!resp.ok || !data.success) throw new Error(data.message || 'Failed to refine');
+                                          setBrandCoreMessage(data.data.coreMessage || brandCoreMessage);
+                                        } catch (e) {
+                                          console.error('Refine error:', e);
+                                        } finally {
+                                          setIsBrandCoreLoading(false);
+                                        }
+                                      }}
+                                    >
+                                      Submit answer & refine
+                                    </button>
                           </div>
-
-                          <div className={styles.modernFormField}>
-                            <label className={styles.modernLabel}>
-                              <span className={styles.labelText}>Tone Guidelines</span>
-                            </label>
-                            <div className={styles.textareaWrapper}>
-                              <textarea
-                                placeholder="How should your message sound?"
-                                rows={3}
-                                className={styles.modernTextarea}
-                              />
+                                </div>
+                              )}
                             </div>
-                          </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -5950,18 +6085,6 @@ export default function Dashboard() {
       if (!token) return;
 
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
-      // Get marketing archetypes first
-      const archetypesResponse = await fetch(`${baseUrl}/api/brands/archetypes/marketing`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (archetypesResponse.ok) {
-        const { data } = await archetypesResponse.json();
-        setMarketingArchetypes(data);
-      }
-
       // Generate AI suggestions
       const response = await fetch(`${baseUrl}/api/brands/ai-suggestions`, {
         method: "POST",
@@ -6193,9 +6316,10 @@ export default function Dashboard() {
         const { data } = await response.json();
         console.log('Tone analysis response data:', data);
         
-        // Set the tone analysis results
+        // Set the tone analysis results (now includes optional explanation)
         setSelectedArchetypes(data.archetypes || []);
         setToneOfVoiceResult(data.toneOfVoice || {});
+        setToneExplanation(data.explanation || "");
         setBrandFormData(prev => ({
           ...prev,
           toneOfVoice: data.toneOfVoice?.guidelines || ''
@@ -6746,19 +6870,23 @@ export default function Dashboard() {
                         setShowBrandDiscovery(true);
                       }}
                     >
-                      <span>Get Started</span>
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                        <span>Create Brand</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                      </button>
+                      <button 
+                        className={styles.secondaryButton}
+                        onClick={() => {
+                          setShowWelcome(false);
+                          // Open library (projects) creation flow
+                          setShowProjects(false);
+                          setShowStepForm(true);
+                          setCurrentStep(1);
+                          // Clear any current project to create new
+                          localStorage.removeItem('currentProjectId');
+                        }}
                       >
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                      </svg>
+                        <span>Create Library</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
                     </button>
                     </div>
                   </div>

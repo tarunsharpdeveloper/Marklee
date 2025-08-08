@@ -28,6 +28,11 @@ router.post('/ai-suggestions', brandController.generateAISuggestions);
 // Tone of Voice Chat
 router.post('/tone-of-voice-chat', brandController.toneOfVoiceChat);
 
+// Core Message micro-flow
+router.post('/core-message/generate', brandController.generateCoreMessage);
+router.post('/core-message/question', brandController.getCoreMessageContextualQuestion);
+router.post('/core-message/update-with-answers', brandController.updateCoreMessageWithAnswers);
+
 // LangGraph Workflow Routes
 router.post('/workflow/initialize', brandController.initializeBrandWorkflow);
 router.post('/workflow/discovery', brandController.processDiscoveryStep);

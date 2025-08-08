@@ -168,12 +168,7 @@ Format your response as JSON with this structure:
     ]
 }
 
-Examples of good questions with suggestions:
-- Question: "How would you describe your brand's personality in 3-5 words?"
-  Suggestions: ["Friendly and approachable", "Professional and trustworthy", "Innovative and bold", "Reliable and consistent"]
 
-- Question: "What emotions do you want your brand to evoke in your customers?"
-  Suggestions: ["Trust and confidence", "Excitement and energy", "Comfort and security", "Inspiration and motivation"]
 
 Make sure the suggestions are relevant to the brand's industry and help guide the user toward understanding their brand personality.`;
 
@@ -454,45 +449,38 @@ Make sure the suggestions are contextual to the previous answers and help guide 
             openAIApiKey: process.env.OPENAI_API_KEY
         });
         
-        const toneAnalysisPrompt = `Based on the following brand information and user answers, identify the most fitting brand archetypes and create a comprehensive tone of voice:
+        const toneAnalysisPrompt = `BRAND - Create archetype - STEPS
+Help the user identify ${brandData.brandName}’s tone of voice by asking the user a series of questions that will help identify the brand’s personality from the 12 brand archetypes. Inform the user what you’re doing. Give them a few prompts (one at a time) that they can answer for you to get a clearer picture of what ${brandData.brandName}’s personality is. Once you have all the information you need about the Brand’s personality, help identify one or more (up to 3) brand archetypes that align with that personality. Base your suggestions on the user’s responses. Suggest the most fitting brand tone of voice from the 12 brand archetypes of marketing. Explain why this tone matches.
+Help the user lock in their brand archetypes. Once they’ve done so, create a brand tone of voice from that or those archetypes for them.
+Notes: Once chosen, tone guides voice and phrasing across all content.
 
-Brand Information:
-- Name: ${brandData.brandName}
+Additional context to use (already collected from the chat):
+- Brand Name: ${brandData.brandName}
 - Industry: ${brandData.industry}
 - Description: ${brandData.shortDescription}
-
-User Answers:
+- Discovery Answers (chronological):
 ${discoveryAnswers.map((qa, index) => {
     if (typeof qa === 'object' && qa.answer) {
-        return `Question ${index + 1}: ${qa.answer}`;
+        return `Q${index + 1}: ${qa.question || '(question)'} | A${index + 1}: ${qa.answer}`;
     } else {
-        return `Question ${index + 1}: ${qa}`;
+        return `A${index + 1}: ${qa}`;
     }
 }).join('\n')}
 
-Please analyze the responses and:
-1. Identify up to 3 most fitting brand archetypes from the 12 marketing archetypes: The Innocent, The Sage, The Explorer, The Hero, The Outlaw, The Magician, The Regular Guy/Gal, The Lover, The Jester, The Creator, The Ruler, The Caregiver
-2. Create a comprehensive tone of voice profile
-3. Provide specific guidelines for communication
+Constraints for names:
+- Each archetype name must be exactly TWO WORDS, user‑friendly, and plain English
+- Do NOT start with "The"
+- Do NOT use these canonical archetype words: hero, caregiver, explorer, sage, innocent, outlaw, magician, ruler, lover, jester, creator, everyman
 
-IMPORTANT: All fields in toneOfVoice must be STRINGS, not objects or arrays.
 
-Format as JSON with fields: 
-- archetypes: array of strings (e.g., ["The Innocent", "The Sage"])
-- toneOfVoice: object with these STRING fields:
-  - keyTraits: string describing key personality traits
-  - communicationStyle: string describing how the brand communicates
-  - examples: string with example phrases or sentences
-  - guidelines: string with communication guidelines
-
-Example format:
+Return JSON ONLY in this structure (decide purely from the context above):
 {
-  "archetypes": ["The Innocent", "The Sage"],
+  "archetypes": ["Name 1", "Name 2", "Name 3"],
+  "explanation": "1–2 sentences explaining why these archetypes match the answers",
   "toneOfVoice": {
-    "keyTraits": "Friendly, trustworthy, and approachable",
-    "communicationStyle": "Clear, warm, and professional",
-    "examples": "We're here to help you succeed. Our solutions are designed with your needs in mind.",
-    "guidelines": "Use warm, encouraging language while maintaining professionalism. Focus on being helpful and supportive."`;
+    "communicationStyle": "string: how the brand sounds"
+  }
+}`;
 
         console.log('Generating tone of voice for brand:', brandData.brandName);
         console.log('Discovery answers for tone analysis:', discoveryAnswers);
@@ -510,26 +498,7 @@ Example format:
                 name: aiError.name,
                 stack: aiError.stack
             });
-            
-            // Fallback to default tone data if AI fails
-            const fallbackToneData = {
-                archetypes: ["The Innocent", "The Sage"],
-                toneOfVoice: {
-                    keyTraits: "Professional and trustworthy",
-                    communicationStyle: "Clear and direct",
-                    examples: "We deliver reliable solutions that meet your needs.",
-                    guidelines: "Maintain a professional tone while being approachable and helpful."
-                }
-            };
-            
-            console.log('Using fallback tone data due to AI error:', fallbackToneData);
-            return {
-                ...state,
-                archetypes: fallbackToneData.archetypes,
-                toneOfVoice: fallbackToneData.toneOfVoice,
-                workflowPhase: 'tone',
-                isComplete: true
-            };
+            throw aiError;
         }
         
         let toneData;
@@ -560,6 +529,75 @@ Example format:
                     }
                 });
             }
+            // Ensure explanation is a non-empty string
+            if (!toneData.explanation || typeof toneData.explanation !== 'string') {
+                const joined = Array.isArray(toneData.archetypes) ? toneData.archetypes.join(', ') : 'the chosen archetypes';
+                toneData.explanation = `Selected based on your answers; ${joined} best reflect the personality cues you provided.`;
+            }
+
+            // Normalize archetype labels to exactly two words for UI clarity
+            if (Array.isArray(toneData.archetypes)) {
+                const toTitleCase = (s) => s.replace(/\s+/g, ' ').trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+                const canonicalToDescriptive = {
+                    'hero': 'Bold Achiever',
+                    'the hero': 'Bold Achiever',
+                    'caregiver': 'Caring Partner',
+                    'the caregiver': 'Caring Partner',
+                    'explorer': 'Curious Pathfinder',
+                    'the explorer': 'Curious Pathfinder',
+                    'sage': 'Trusted Guide',
+                    'the sage': 'Trusted Guide',
+                    'innocent': 'Honest Optimist',
+                    'the innocent': 'Honest Optimist',
+                    'outlaw': 'Bold Rebel',
+                    'the outlaw': 'Bold Rebel',
+                    'magician': 'Visionary Transformer',
+                    'the magician': 'Visionary Transformer',
+                    'ruler': 'Confident Leader',
+                    'the ruler': 'Confident Leader',
+                    'lover': 'Passionate Connector',
+                    'the lover': 'Passionate Connector',
+                    'jester': 'Playful Entertainer',
+                    'the jester': 'Playful Entertainer',
+                    'creator': 'Imaginative Maker',
+                    'the creator': 'Imaginative Maker',
+                    'everyman': 'Everyday Friend',
+                    'the everyman': 'Everyday Friend'
+                };
+                const normalize = (label) => {
+                    if (!label) return label;
+                    let s = String(label).replace(/[\/_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+                    // Drop leading 'The'
+                    s = s.replace(/^the\s+/i, '').trim();
+                    // Map canonical names to descriptive two-word labels
+                    const lower = s.toLowerCase();
+                    if (canonicalToDescriptive[lower]) return canonicalToDescriptive[lower];
+                    const parts = s.split(' ');
+                    // If longer than 2 words, keep the first two as a clean title
+                    if (parts.length > 2) {
+                        return toTitleCase(`${parts[0]} ${parts[1]}`);
+                    }
+                    // If exactly two words, just title case
+                    if (parts.length === 2) {
+                        return toTitleCase(`${parts[0]} ${parts[1]}`);
+                    }
+                    // If only one word and not canonical, attempt to create a descriptive two-word phrase by adding a neutral second word
+                    if (parts.length === 1) {
+                        return toTitleCase(`${parts[0]} Voice`);
+                    }
+                    return toTitleCase(s);
+                };
+                toneData.archetypes = toneData.archetypes
+                    .filter(a => !!a)
+                    .map(normalize)
+                    .slice(0, 3);
+            }
+
+            // Sanitize toneOfVoice to only include communicationStyle
+            const communication = (toneData && toneData.toneOfVoice && typeof toneData.toneOfVoice.communicationStyle === 'string' && toneData.toneOfVoice.communicationStyle.trim())
+                ? toneData.toneOfVoice.communicationStyle.trim()
+                : 'Clear and direct';
+            toneData.toneOfVoice = { communicationStyle: communication };
         } catch (parseError) {
             console.error('Error parsing tone response:', parseError);
             console.error('Raw tone response:', response.content);
@@ -572,7 +610,8 @@ Example format:
                     communicationStyle: "Clear and direct",
                     examples: "We deliver reliable solutions",
                     guidelines: "Maintain a professional tone while being approachable"
-                }
+                },
+                explanation: "Selected for emphasis on trust, clarity, and supportive communication."
             };
             console.log('Using fallback tone data:', toneData);
             
@@ -597,6 +636,7 @@ Example format:
             ...state,
             archetypes: toneData.archetypes,
             toneOfVoice: toneData.toneOfVoice,
+            explanation: toneData.explanation,
             workflowPhase: 'tone',
             isComplete: true
         };
@@ -1186,26 +1226,9 @@ class BrandController {
     }
 
     // Get marketing archetypes
+    // Deprecated static archetypes endpoint (kept for backward compatibility but now returns empty array)
     async getMarketingArchetypes(req, res) {
-        try {
-            const archetypes = [
-                "The Innocent", "The Sage", "The Explorer", "The Hero",
-                "The Outlaw", "The Magician", "The Regular Guy", "The Lover",
-                "The Jester", "The Caregiver", "The Creator", "The Ruler"
-            ];
-            
-            res.status(200).json({
-                success: true,
-                data: archetypes
-            });
-        } catch (error) {
-            console.error('Error fetching archetypes:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to fetch archetypes',
-                error: error.message
-            });
-        }
+        return res.status(200).json({ success: true, data: [] });
     }
 
     // LangGraph Workflow Methods
@@ -1466,25 +1489,8 @@ class BrandController {
 
             // Check if this is a fallback workflow or if workflow state is not found
             if (workflowId.startsWith('fallback_') || !workflowStateManager.getWorkflowState(workflowId)) {
-                console.log('Processing fallback tone analysis or missing state:', workflowId);
-                
-                // Create a simple fallback tone analysis
-                const fallbackToneData = {
-                    archetypes: ["The Innocent", "The Sage"],
-                    toneOfVoice: {
-                        keyTraits: "Professional and trustworthy",
-                        communicationStyle: "Clear and direct",
-                        examples: "We deliver reliable solutions that meet your needs.",
-                        guidelines: "Maintain a professional tone while being approachable and helpful."
-                    }
-                };
-                
-                console.log('Sending fallback tone analysis:', fallbackToneData);
-                
-                return res.status(200).json({
-                    success: true,
-                    data: fallbackToneData
-                });
+                console.log('Missing state for tone analysis:', workflowId);
+                return res.status(400).json({ success: false, message: 'Tone analysis state not found. Please restart tone discovery.' });
             }
 
             const currentState = workflowStateManager.getWorkflowState(workflowId);
@@ -1507,6 +1513,7 @@ class BrandController {
                 data: {
                     archetypes: result.archetypes,
                     toneOfVoice: result.toneOfVoice,
+                    explanation: result.explanation,
                     workflowPhase: result.workflowPhase
                 }
             });
@@ -1952,6 +1959,170 @@ class BrandController {
                 message: 'Failed to fetch brand audiences',
                 error: error.message
             });
+        }
+    }
+
+    // Generate a brand Core Message based on brand data, tone, and audience
+    async generateCoreMessage(req, res) {
+        try {
+            const { brandData, toneOfVoice, targetAudience, positioningStatement, extraInputs } = req.body || {};
+
+            if (!brandData || !brandData.brandName || !brandData.industry || !brandData.shortDescription) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'brandData with brandName, industry, shortDescription is required'
+                });
+            }
+
+            const name = brandData.brandName;
+            const description = brandData.shortDescription;
+            const industry = brandData.industry;
+
+            const toneGuidelines = toneOfVoice?.guidelines || toneOfVoice?.communicationStyle || '';
+            const audienceText = Array.isArray(targetAudience)
+                ? targetAudience.join(', ')
+                : (typeof targetAudience === 'string' ? targetAudience : '');
+            const positioning = positioningStatement || '';
+            const other = extraInputs || '';
+
+            const systemPrompt = `You are an expert in marketing and communications strategy.
+
+Use the insights gleaned in the Discovery Questionnaire to research ${name}'s industry and target market.
+Take note of who ${name}'s target market is, their aspirations and pain points.
+Take note of ${name}'s target market tone of voice and language (casual, formal, conversational, professional, friendly, etc.).
+
+Write a compelling Core Message that describes ${name} and what it does, in a way that appeals to its audience, and in the audience's tone of voice.
+
+STRICT REQUIREMENTS:
+- One sentence, ideally 10–20 words, max 25 words
+- Clear, not clever; free from jargon; understood in 5 seconds
+- Speaks directly to the target market’s needs or identity
+- Emotional or aspirational, not dry
+- Includes the unique value or promise ${name} offers
+- Avoids hyperbole or exaggerated claims`;
+
+            const userPrompt = `Context
+- Brand: ${name}
+- Industry: ${industry}
+- Description: ${description}
+- Target audience: ${audienceText || 'N/A'}
+- Tone of voice guidance: ${toneGuidelines || 'N/A'}
+- Positioning: ${positioning || 'N/A'}
+- Other inputs: ${typeof other === 'string' ? other : JSON.stringify(other || {})}
+
+Task
+1) Produce ONE Core Message sentence meeting the STRICT REQUIREMENTS.
+2) Also propose 3 alternate phrasing suggestions that meet the same constraints.
+
+Return JSON ONLY in this exact structure:
+{
+  "coreMessage": "...one sentence...",
+  "suggestions": ["alt 1", "alt 2", "alt 3"],
+  "intro": "Thank the user for their inputs and explain how the Core Message helps (20-40 words). End with a short CTA like 'Ready to get started?'"
+}`;
+
+            const response = await chatModel.invoke([
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+            ]);
+
+            let clean = response.content.trim()
+                .replace(/^```json\s*/i, '')
+                .replace(/^```\s*/i, '')
+                .replace(/\s*```$/i, '');
+
+            let parsed;
+            try {
+                parsed = JSON.parse(clean);
+            } catch (_) {
+                // Fallback minimal structure
+                parsed = {
+                    coreMessage: `${name} empowers its audience with clear, practical value to reach their goals with confidence.`,
+                    suggestions: [
+                        `Elevate ${name}'s audience with simple, effective solutions that drive meaningful progress.`,
+                        `Helping ${name}'s audience achieve more with focused, dependable support that truly matters.`,
+                        `${name} helps its audience move forward confidently with clear, results-driven value.`
+                    ],
+                    intro: `Thanks for sharing your details. Next, we’ll craft a Core Message that guides content and aligns teams. Ready to get started?`
+                };
+            }
+
+            return res.json({ success: true, data: parsed });
+        } catch (error) {
+            console.error('Error generating core message:', error);
+            return res.status(500).json({ success: false, message: 'Failed to generate core message' });
+        }
+    }
+
+    // Ask one contextual question to refine the Core Message
+    async getCoreMessageContextualQuestion(req, res) {
+        try {
+            const { brandData, currentMessage, previousQA = [] } = req.body || {};
+
+            if (!brandData || !brandData.brandName) {
+                return res.status(400).json({ success: false, message: 'brandData.brandName is required' });
+            }
+
+            const name = brandData.brandName;
+            const previousQuestions = previousQA.map((qa) => qa.question).join('\n');
+
+            const system = `You help refine a single-sentence Core Message. Ask ONE short, specific question each time.
+Rules:
+- Do not repeat any previous question
+- Keep under 20 words
+- Focus on clarity, audience, value, tone, or Call To Action
+- No preamble, return only the question text`;
+
+            const user = `Brand: ${name}
+Current message: ${currentMessage || '(none provided)'}
+PREVIOUS QUESTIONS (do not repeat):\n${previousQuestions || '(none)'}
+Respond with ONLY the question.`;
+
+            const response = await chatModel.invoke([
+                { role: 'system', content: system },
+                { role: 'user', content: user }
+            ]);
+
+            const question = response.content.trim();
+            return res.json({ success: true, data: { question } });
+        } catch (error) {
+            console.error('Error getting core message question:', error);
+            return res.status(500).json({ success: false, message: 'Failed to get question' });
+        }
+    }
+
+    // Update/refine the Core Message using collected answers
+    async updateCoreMessageWithAnswers(req, res) {
+        try {
+            const { brandData, currentMessage, userAnswers = [] } = req.body || {};
+
+            if (!brandData || !brandData.brandName) {
+                return res.status(400).json({ success: false, message: 'brandData.brandName is required' });
+            }
+
+            const name = brandData.brandName;
+            const system = `You are an expert copywriter. Refine the Core Message to meet all constraints:
+- One sentence, 10–20 words (max 25)
+- Clear, jargon-free, understood in 5 seconds
+- Emotional/aspirational; speaks to target needs/identity
+- States unique value/promise; no hype`;
+
+            const user = `Brand: ${name}
+Current message: ${currentMessage || '(none)'}
+User answers (context): ${JSON.stringify(userAnswers, null, 2)}
+
+Return ONLY the refined single sentence.`;
+
+            const response = await chatModel.invoke([
+                { role: 'system', content: system },
+                { role: 'user', content: user }
+            ]);
+
+            const refined = response.content.trim().replace(/^"|"$/g, '');
+            return res.json({ success: true, data: { coreMessage: refined } });
+        } catch (error) {
+            console.error('Error updating core message:', error);
+            return res.status(500).json({ success: false, message: 'Failed to update core message' });
         }
     }
 
