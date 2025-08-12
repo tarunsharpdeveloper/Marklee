@@ -4,9 +4,7 @@ import { useState, useEffect, useRef, memo, useMemo,useCallback} from "react";
 import { useRouter } from "next/navigation";
 import { Typewriter } from "react-simple-typewriter";
 import Image from 'next/image';
-import Stepper from '@mui/material/Stepper';
-import Step from '@mui/material/Step';
-import StepLabel from '@mui/material/StepLabel';
+import { Stepper, Step, StepLabel } from '@mui/material';
 import styles from "./styles.module.css";
 import DarkModeToggle from "../components/DarkModeToggle";
 
@@ -3228,7 +3226,7 @@ export default function Dashboard() {
           {parentBrandStep === 1 && (
             <div className={styles.modernDiscoveryStep}>
               <div className={styles.stepIntro}>
-                <h3>Let's discover your brand</h3>
+                <h3>Let&apos;s discover your brand</h3>
                 <p>Tell us about your brand fundamentals to create a personalized strategy</p>
               </div>
               
@@ -3241,7 +3239,7 @@ export default function Dashboard() {
                       </svg>
                     </div>
                     <h4>Ready to build your brand?</h4>
-                    <p>Our AI-powered questionnaire will help you define your brand's core identity, values, and messaging strategy.</p>
+                    <p>Our AI-powered questionnaire will help you define your brand&apos;s core identity, values, and messaging strategy.</p>
                     <div className={styles.startCardFeatures}>
                       <div className={styles.featureItem}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -3301,7 +3299,7 @@ export default function Dashboard() {
                         <div className={styles.formGroup}>
                           <div className={styles.modernFormField}>
                             <label className={styles.modernLabel}>
-                              <span className={styles.labelText}>What's the name of this brand?</span>
+                              <span className={styles.labelText}>What&apos;s the name of this brand?</span>
                               <span className={styles.labelRequired}>*</span>
                             </label>
                             <div className={styles.inputWrapper}>
@@ -3389,7 +3387,7 @@ export default function Dashboard() {
                         <div className={styles.brandToneChatContainer}>
                           <div className={styles.brandToneChatHeader}>
                             <h3>Tone of Voice Discovery</h3>
-                            <p>I'll help you identify {brandFormData.brandName}'s tone of voice by asking a series of questions to understand your brand's personality.</p>
+                            <p>I&apos;ll help you identify {brandFormData.brandName}&apos;s tone of voice by asking a series of questions to understand your brand&apos;s personality.</p>
                           </div>
                           
                                                     {(toneOfVoiceResult || (selectedArchetypes && selectedArchetypes.length > 0)) ? (
@@ -3412,7 +3410,7 @@ export default function Dashboard() {
                                   </div>
                                   <div className={styles.brandToneSuccessText}>
                                     <h4>Tone of Voice Generated!</h4>
-                                    <p>Your brand's personality and communication style has been defined</p>
+                                    <p>Your brand&apos;s personality and communication style has been defined</p>
                                   </div>
                                 </div>
                                 </div>
@@ -3538,7 +3536,7 @@ export default function Dashboard() {
                         <div className={styles.complianceMicroFlow}>
                           <div className={styles.complianceHeader}>
                             <h3>📋 Brand Compliance</h3>
-                            <p>Set rules for what should or shouldn't be said in your messaging and copy.</p>
+                            <p>Set rules for what should or shouldn&apos;t be said in your messaging and copy.</p>
                           </div>
                           
                           {/* AI Preset Options */}
@@ -3676,7 +3674,7 @@ export default function Dashboard() {
 
                           {/* Preview Do's/Don'ts */}
                           <div className={styles.complianceSection}>
-                            <h4>📋 Content Do's & Don'ts Preview</h4>
+                            <h4>📋 Content Do&apos;s & Don&apos;ts Preview</h4>
                             <div className={styles.dosDontsPreview}>
                               <div className={styles.dosSection}>
                                 <h5>✅ DO</h5>
@@ -3690,7 +3688,7 @@ export default function Dashboard() {
                                 </ul>
                               </div>
                               <div className={styles.dontsSection}>
-                                <h5>❌ DON'T</h5>
+                                <h5>❌ DON&apos;T</h5>
                                 <ul>
                                   {selectedPresets.filter(p => p.type === 'forbidden').map((preset, index) => (
                                     <li key={index}>{preset.rule}</li>
@@ -3788,7 +3786,7 @@ export default function Dashboard() {
                       </svg>
                     </div>
                     <h4>Ready to define your messaging?</h4>
-                    <p>Let's create a comprehensive messaging strategy with target audience analysis and core message development.</p>
+                    <p>Let&apos;s create a comprehensive messaging strategy with target audience analysis and core message development.</p>
                     <div className={styles.startCardFeatures}>
                       <div className={styles.featureItem}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -3909,7 +3907,7 @@ export default function Dashboard() {
                                  </svg>
                                  <input
                                    type="text"
-                                   placeholder="e.g., 'tech-savvy millennials', 'enterprise decision makers'"
+                                   placeholder="e.g., &apos;tech-savvy millennials&apos;, &apos;enterprise decision makers&apos;"
                                    value={newAudienceInput}
                                    onChange={(e) => setNewAudienceInput(e.target.value)}
                                    className={styles.enhancedInput}
@@ -6116,7 +6114,7 @@ export default function Dashboard() {
     setToneChatMessages([
       {
         type: 'bot',
-        content: `Hi! I'm here to help you identify ${brandFormData.brandName}'s tone of voice. I'll ask you a series of questions to understand your brand's personality and then suggest the most fitting brand archetypes from the 12 marketing archetypes. Let's start with the first question:`
+        content: `Hi! I'm here to help you identify ${brandFormData.brandName}&apos;s tone of voice. I'll ask you a series of questions to understand your brand&apos;s personality and then suggest the most fitting brand archetypes from the 12 marketing archetypes. Let's start with the first question:`
       }
     ]);
     setToneChatStep(0);
@@ -6328,7 +6326,7 @@ export default function Dashboard() {
         // Add completion message
         setToneChatMessages(prev => [...prev, { 
           type: 'bot', 
-          content: "Perfect! I've analyzed your brand's tone of voice. Here are the results:",
+          content: "Perfect! I've analyzed your brand&apos;s tone of voice. Here are the results:",
           results: data
         }]);
         
@@ -7306,8 +7304,8 @@ export default function Dashboard() {
                                       onClick={() => handleEditAudience(audience)}
                                     >
                                       <svg width="18" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                       </svg>
                                     </button>
                                   </div>
