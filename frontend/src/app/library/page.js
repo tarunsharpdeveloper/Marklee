@@ -1503,7 +1503,8 @@ const Library = () => {
             additionalInfo: briefData.additionalInfo
           },
           currentMessage: coreMessage,
-          userPrompt: inputMessage
+          userPrompt: inputMessage,
+          isAudienceEdit: false
         })
       });
 
@@ -1559,7 +1560,8 @@ const Library = () => {
             additionalInfo: briefData.additionalInfo
           },
           currentMessage: generatedContent,
-          userPrompt: option
+          userPrompt: option,
+          isAudienceEdit: false
         })
       });
 

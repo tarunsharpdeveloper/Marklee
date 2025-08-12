@@ -35,7 +35,7 @@ class EmailService {
             <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
               <!-- Logo Header -->
               <div style="text-align: center; margin-bottom: 20px;">
-                <img src="https://i.ibb.co/ZR2nKnwd/image-3.png" alt="Company Logo" style="max-height: 60px; margin-bottom: 20px;">
+                <img src="https://i.ibb.co/HDxPnDsp/Bold.png" alt="Company Logo" style="max-height: 120px; width: auto; margin-bottom: 20px;">
                 <div style="width: 100%; height: 2px; background: linear-gradient(to right, #4CAF50, #45a049); margin: 20px 0;"></div>
               </div>
 
@@ -99,7 +99,7 @@ class EmailService {
             <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
               <!-- Logo Header -->
               <div style="text-align: center; margin-bottom: 20px;">
-                <img src="https://i.ibb.co/ZR2nKnwd/image-3.png" alt="Company Logo" style="max-height: 60px; margin-bottom: 20px;">
+                <img src="https://i.ibb.co/HDxPnDsp/Bold.png" alt="Company Logo" style="max-height: 120px; width: auto; margin-bottom: 20px;">
                 <div style="width: 100%; height: 2px; background: linear-gradient(to right, #4CAF50, #45a049); margin: 20px 0;"></div>
               </div>
 
