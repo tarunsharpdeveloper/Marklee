@@ -4,9 +4,7 @@ import { useState, useEffect, useRef, memo, useMemo,useCallback} from "react";
 import { useRouter } from "next/navigation";
 import { Typewriter } from "react-simple-typewriter";
 import Image from 'next/image';
-import Stepper from '@mui/material/Stepper';
-import Step from '@mui/material/Step';
-import StepLabel from '@mui/material/StepLabel';
+import { Stepper, Step, StepLabel } from '@mui/material';
 import styles from "./styles.module.css";
 import DarkModeToggle from "../components/DarkModeToggle";
 
@@ -3982,7 +3980,7 @@ export default function Dashboard() {
                                  </svg>
                                  <input
                                    type="text"
-                                   placeholder="e.g., 'tech-savvy millennials', 'enterprise decision makers'"
+                                   placeholder="e.g., &apos;tech-savvy millennials&apos;, &apos;enterprise decision makers&apos;"
                                    value={newAudienceInput}
                                    onChange={(e) => setNewAudienceInput(e.target.value)}
                                    className={styles.enhancedInput}
@@ -6447,7 +6445,7 @@ export default function Dashboard() {
         // Add completion message
         setToneChatMessages(prev => [...prev, { 
           type: 'bot', 
-          content: "Perfect! I've analyzed your brand's tone of voice. Here are the results:",
+          content: "Perfect! I've analyzed your brand&apos;s tone of voice. Here are the results:",
           results: data
         }]);
         
@@ -7468,8 +7466,8 @@ export default function Dashboard() {
                                       onClick={() => handleEditAudience(audience)}
                                     >
                                       <svg width="18" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                       </svg>
                                     </button>
                                   </div>
