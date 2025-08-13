@@ -6518,7 +6518,7 @@ padding: 1rem 0rem !important;
   background: var(--background);
   border-radius: 24px;
   width: 100%;
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -6528,7 +6528,7 @@ padding: 1rem 0rem !important;
 /* Modern Brand Header */
 .modernBrandHeader {
   background-color: #004aad;
-  padding: 2rem;
+  padding: 1rem;
   color: white;
 }
 
@@ -6536,7 +6536,7 @@ padding: 1rem 0rem !important;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .brandHeaderLeft {
@@ -6557,14 +6557,14 @@ padding: 1rem 0rem !important;
 }
 
 .brandHeaderText h2 {
-  font-size: 1.75rem;
+  font-size: 1.4rem;
   font-weight: 700;
   margin: 0 0 0.25rem 0;
   color: white;
 }
 
 .brandHeaderText p {
-  font-size: 1rem;
+  font-size: 0.8rem;
   opacity: 0.9;
   margin: 0;
   color: rgba(255, 255, 255, 0.8);
@@ -6592,6 +6592,7 @@ padding: 1rem 0rem !important;
 /* Modern Progress Indicator */
 .modernProgressContainer {
   position: relative;
+  padding:1rem 2rem;
 }
 
 .progressTrack {
@@ -6639,8 +6640,8 @@ padding: 1rem 0rem !important;
 }
 
 .progressStepNumber {
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   background: rgba(255, 255, 255, 0.2);
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
@@ -6649,7 +6650,7 @@ padding: 1rem 0rem !important;
   justify-content: center;
   font-size: 0.875rem;
   font-weight: 600;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.3rem;
   color: white;
   transition: all 0.3s ease;
 }
@@ -6675,16 +6676,16 @@ padding: 1rem 0rem !important;
 
 /* Current Step Indicator */
 .currentStepIndicator {
-  width: 100%;
-  height: 100%;
+  width: 90%;
+  height: 90%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .pulsingDot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 50%;
   animation: pulse 2s infinite;
@@ -6826,6 +6827,34 @@ padding: 1rem 0rem !important;
   border-top-color: rgba(0, 0, 0, 0.8);
 }
 
+.checkpointLabel {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
+
+/* Clamp labels near the edges so text is fully visible */
+.checkpointLabelLeft {
+  left: -15px;
+  transform: translateX(0);
+}
+
+.checkpointLabelRight {
+  left: auto;
+  right: 0;
+  transform: translateX(0);
+}
+
+/* Ensure the progress container allows label overflow to be visible */
+.modernProgressContainer { overflow: visible; }
+.progressTrack { overflow: visible; }
+
 .progressStepText {
   display: flex;
   flex-direction: column;
@@ -6845,9 +6874,9 @@ padding: 1rem 0rem !important;
 }
 
 /* Modern Content Area */
-.modernBrandContent {
-  padding: 2rem;
-}
+/* .modernBrandContent {
+  padding: 1rem;
+} */
 
 .modernDiscoveryStep {
   max-width: 800px;
@@ -6877,14 +6906,14 @@ padding: 1rem 0rem !important;
   background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
   border: 1px solid #e2e8f0;
   border-radius: 20px;
-  padding: 3rem 2rem;
+  padding: 0.5rem 2rem;
   text-align: center;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
   margin-bottom: 2rem;
 }
 
 .startCardContent {
-  margin-bottom: 2rem;
+  margin: 2rem;
 }
 
 .startCardIcon {
@@ -6895,22 +6924,22 @@ padding: 1rem 0rem !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1.5rem auto;
+  margin: 0 auto 0.5rem auto;
   color: white;
 }
 
 .discoveryStartCard h4 {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: var(--foreground);
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.5rem 0;
 }
 
 .discoveryStartCard p {
   font-size: 1rem;
   color: var(--foreground-muted);
   line-height: 1.6;
-  margin: 0 0 2rem 0;
+  margin: 0 0 1rem 0;
   max-width: 500px;
   margin-left: auto;
   margin-right: auto;
@@ -6921,7 +6950,7 @@ padding: 1rem 0rem !important;
   justify-content: center;
   gap: 2rem;
   flex-wrap: wrap;
-  margin-bottom: 1rem;
+  margin-bottom: 0.7rem;
 }
 
 .featureItem {
@@ -6962,7 +6991,7 @@ padding: 1rem 0rem !important;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 20px;
-  padding: 2rem;
+  padding: 1rem;
   margin-bottom: 2rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
@@ -8471,6 +8500,39 @@ padding: 1rem 0rem !important;
   color: var(--foreground-muted);
   line-height: 1.6;
   font-size: 0.875rem;
+}
+
+/* Voice Characteristics table */
+.vcTable {
+  width: 100%;
+  border-collapse: collapse;
+  display: table;
+}
+
+.vcRow {
+  display: table-row;
+}
+
+.vcHeaderRow {
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.vcCellTrait, .vcCellDesc {
+  display: table-cell;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
+.vcCellTrait {
+  width: 24%;
+  color: var(--foreground);
+}
+
+.vcCellDesc {
+  width: 76%;
+  color: var(--foreground);
 }
 
 .brandToneArchetypeGrid {
