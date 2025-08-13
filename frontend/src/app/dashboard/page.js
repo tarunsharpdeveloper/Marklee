@@ -1501,6 +1501,7 @@ export default function Dashboard() {
   const [editingMessageIndex, setEditingMessageIndex] = useState(null);
   const [editInputValue, setEditInputValue] = useState("");
   const [sidebarProjectName, setSidebarProjectName] = useState("");
+  const [sidebarBrandName, setSidebarBrandName] = useState("");
 
   // Brand Discovery Form State
   const [showBrandDiscovery, setShowBrandDiscovery] = useState(false);
@@ -2252,6 +2253,14 @@ export default function Dashboard() {
       fetchProjects();
       fetchProjectName();
       fetchBrandsWithProjects();
+
+      // Hydrate last selected brand name from localStorage (persist across sessions)
+      try {
+        const storedBrandName = localStorage.getItem('currentBrandName');
+        if (storedBrandName) {
+          setSidebarBrandName(storedBrandName);
+        }
+      } catch {}
     }
   }, [fetchProjects, fetchProjectName, fetchBrandsWithProjects]);
 
@@ -3019,12 +3028,12 @@ export default function Dashboard() {
                     // Calculate more precise progress based on current state
                     if (parentBrandStep === 1) {
                       // If in discovery and child form is shown, show partial progress
-                      if (showDiscoveryChildForm) {
-                        // Progress within discovery: 0% + (brandDiscoveryStep / 3) * 33.33%
-                        return (brandDiscoveryStep / 3) * 33.33;
-                      }
-                      // Just started discovery
-                      return 5; // Small initial progress
+                       if (showDiscoveryChildForm) {
+                         // Progress within discovery: (brandDiscoveryStep / 3) * 33.33%
+                         return (brandDiscoveryStep / 3) * 33.33;
+                       }
+                      // Just started discovery (no fill until user starts)
+                      return 0;
                     } else if (parentBrandStep === 2) {
                       // Messaging step - show up to messaging (33.33% for completed discovery + some progress in messaging)
                       return 50; // Show progress up to middle of messaging step
@@ -3037,37 +3046,57 @@ export default function Dashboard() {
                 }}
               ></div>
               
-              {/* Checkpoint Indicators */}
+              {/* Checkpoint Indicators with on-track labels (major + discovery sub-steps) */}
               <div className={styles.checkpointContainer}>
-                {/* Discovery sub-checkpoints - always show */}
-                {[
-                  { position: 11.11, step: 1, icon: "📝", title: "Discovery" },
-                  { position: 22.22, step: 2, icon: "🎯", title: "Brand Voice" },
-                  { position: 33.33, step: 3, icon: "📋", title: "Compliance" }
+                {/* Discovery major checkpoint */}
+                <div
+                  className={`${styles.checkpoint} ${styles.checkpointMajor} ${
+                    parentBrandStep >= 1 ? styles.checkpointActive : ''
+                  } ${parentBrandStep > 1 ? styles.checkpointCompleted : ''}`}
+                  style={{ left: '0%' }}
+                >
+                  <div className={styles.checkpointIcon}>
+                    {parentBrandStep > 1 ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="20,6 9,17 4,12"></polyline>
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="4" width="14" height="16" rx="2"/>
+                        <path d="M7 8h8M7 12h8M7 16h5"/>
+                      </svg>
+                    )}
+                  </div>
+                  <div className={`${styles.checkpointLabel} ${styles.checkpointLabelLeft}`}>Discovery</div>
+                  <div className={styles.checkpointTooltip}>Discovery</div>
+                </div>
+                
+                {/* Discovery sub-checkpoints - show within discovery to indicate internal progress */}
+                {parentBrandStep === 1 && [
+                  { position: 11.11, step: 1, icon: '📝', title: 'Discovery' },
+                  { position: 22.22, step: 2, icon: '🎯', title: 'Brand Voice' },
+                  { position: 33.33, step: 3, icon: '📋', title: 'Compliance' }
                 ].map((checkpoint) => (
                   <div
-                    key={checkpoint.step}
+                    key={`disc-${checkpoint.step}`}
                     className={`${styles.checkpoint} ${
-                      parentBrandStep === 1 && showDiscoveryChildForm && brandDiscoveryStep >= checkpoint.step ? styles.checkpointActive : ''
-                    } ${parentBrandStep === 1 && showDiscoveryChildForm && brandDiscoveryStep > checkpoint.step ? styles.checkpointCompleted : ''
-                    } ${parentBrandStep > 1 ? styles.checkpointCompleted : ''}`}
+                      showDiscoveryChildForm && brandDiscoveryStep >= checkpoint.step ? styles.checkpointActive : ''
+                    } ${showDiscoveryChildForm && brandDiscoveryStep > checkpoint.step ? styles.checkpointCompleted : ''}`}
                     style={{ left: `${checkpoint.position}%` }}
                   >
                     <div className={styles.checkpointIcon}>
-                      {(parentBrandStep === 1 && showDiscoveryChildForm && brandDiscoveryStep > checkpoint.step) || parentBrandStep > 1 ? (
+                      {(showDiscoveryChildForm && brandDiscoveryStep > checkpoint.step) ? (
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                           <polyline points="20,6 9,17 4,12"></polyline>
                         </svg>
                       ) : (
                         checkpoint.icon
                       )}
-            </div>
-                    <div className={styles.checkpointTooltip}>
-                      {checkpoint.title}
-          </div>
-        </div>
+                    </div>
+                    <div className={styles.checkpointTooltip}>{checkpoint.title}</div>
+                  </div>
                 ))}
-                
+
                 {/* Messaging checkpoint - always show */}
                 <div
                   className={`${styles.checkpoint} ${styles.checkpointMajor} ${
@@ -3089,6 +3118,7 @@ export default function Dashboard() {
                       </svg>
                     )}
                   </div>
+                  <div className={styles.checkpointLabel}>Messaging</div>
                   <div className={styles.checkpointTooltip}>
                     Messaging Complete
                   </div>
@@ -3140,86 +3170,14 @@ export default function Dashboard() {
                       </svg>
                     )}
                   </div>
+                  <div className={`${styles.checkpointLabel} ${styles.checkpointLabelRight}`}>Copy</div>
                   <div className={styles.checkpointTooltip}>
                     Brand Complete
                   </div>
                 </div>
               </div>
             </div>
-            <div className={styles.progressSteps}>
-              {[
-                { step: 1, title: "Discovery", subtitle: "Brand basics" },
-                { step: 2, title: "Messaging", subtitle: "Voice & tone" },
-                { step: 3, title: "Copy", subtitle: "Brand rules" }
-              ].map((item) => {
-                // Determine if step is active, completed, or current
-                const isCompleted = parentBrandStep > item.step;
-                const isCurrent = parentBrandStep === item.step;
-                const isActive = parentBrandStep >= item.step;
-                
-                // Special case for Discovery step - check if child form is completed
-                const isDiscoveryCompleted = item.step === 1 && parentBrandStep > 1;
-                const isDiscoveryInProgress = item.step === 1 && parentBrandStep === 1 && showDiscoveryChildForm;
-                
-                return (
-                  <div 
-                    key={item.step}
-                    className={`${styles.progressStep} ${
-                      isActive ? styles.progressStepActive : ''
-                    } ${isCompleted ? styles.progressStepCompleted : ''} ${
-                      isCurrent ? styles.progressStepCurrent : ''
-                    }`}
-                  >
-                    <div className={styles.progressStepNumber}>
-                      {isCompleted ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                          <polyline points="20,6 9,17 4,12"></polyline>
-                        </svg>
-                      ) : isCurrent ? (
-                        <div className={styles.currentStepIndicator}>
-                          <div className={styles.pulsingDot}></div>
-                        </div>
-                      ) : (
-                        item.step
-                      )}
-                    </div>
-                    <div className={styles.progressStepText}>
-                      <span className={styles.progressStepTitle}>{item.title}</span>
-                      <span className={styles.progressStepSubtitle}>{item.subtitle}</span>
-                      {/* Show sub-progress for Discovery step */}
-                      {item.step === 1 && parentBrandStep === 1 && showDiscoveryChildForm && (
-                        <div className={styles.subProgress}>
-                          <div className={styles.subProgressBar}>
-                            <div 
-                              className={styles.subProgressFill}
-                              style={{ width: `${(brandDiscoveryStep / 3) * 100}%` }}
-                            ></div>
-                          </div>
-                          <span className={styles.subProgressText}>
-                            Step {brandDiscoveryStep} of 3
-                          </span>
-                        </div>
-                      )}
-                      
-                      {/* Show sub-progress for Messaging step */}
-                      {item.step === 2 && parentBrandStep === 2 && showMessagingChildForm && (
-                        <div className={styles.subProgress}>
-                          <div className={styles.subProgressBar}>
-                            <div 
-                              className={styles.subProgressFill}
-                              style={{ width: `${(messagingStep / 2) * 100}%` }}
-                            ></div>
-                          </div>
-                          <span className={styles.subProgressText}>
-                            {messagingStep === 1 ? 'Target Audience' : 'Core Message'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            {/* Removed separate progressSteps; labels are now shown over the progress track */}
           </div>
         </div>
 
@@ -3227,10 +3185,7 @@ export default function Dashboard() {
         <div className={styles.modernBrandContent}>
           {parentBrandStep === 1 && (
             <div className={styles.modernDiscoveryStep}>
-              <div className={styles.stepIntro}>
-                <h3>Let's discover your brand</h3>
-                <p>Tell us about your brand fundamentals to create a personalized strategy</p>
-              </div>
+             
               
                 {!showDiscoveryChildForm ? (
                 <div className={styles.discoveryStartCard}>
@@ -3276,7 +3231,7 @@ export default function Dashboard() {
                 ) : (
                 <div className={styles.modernFormContainer}>
                   {/* Discovery Sub-steps */}
-                  <div className={styles.subStepIndicator}>
+                  {/* <div className={styles.subStepIndicator}>
                     {[
                       { step: 1, title: "Discovery", icon: "📝" },
                       { step: 2, title: "Brand Voice", icon: "🎯" },
@@ -3292,7 +3247,7 @@ export default function Dashboard() {
                         <span className={styles.subStepTitle}>{item.title}</span>
                       </div>
                     ))}
-                    </div>
+                  </div> */}
 
                   {/* Form Fields */}
                   <div className={styles.modernFormFields}>
@@ -3387,23 +3342,12 @@ export default function Dashboard() {
 
                       {brandDiscoveryStep === 2 && (
                         <div className={styles.brandToneChatContainer}>
-                          <div className={styles.brandToneChatHeader}>
-                            <h3>Tone of Voice Discovery</h3>
-                            <p>I'll help you identify {brandFormData.brandName}'s tone of voice by asking a series of questions to understand your brand's personality.</p>
-                          </div>
+                          
                           
                                                     {(toneOfVoiceResult || (selectedArchetypes && selectedArchetypes.length > 0)) ? (
                             <div className={styles.brandToneResults}>
                               <div className={styles.brandToneResultsHeader}>
-                                <div className={styles.brandToneBackButton} onClick={() => {
-                                    setToneOfVoiceResult(null);
-                                    setSelectedArchetypes([]);
-                                }}>
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M19 12H5M12 19l-7-7 7-7" />
-                                  </svg>
-                                  <span>Back to Chat</span>
-                              </div>
+                                
                                 <div className={styles.brandToneSuccessIndicator}>
                                   <div className={styles.brandToneSuccessIcon}>
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -3437,15 +3381,144 @@ export default function Dashboard() {
                                   
                                   {toneOfVoiceResult && (
                                     <>
-                                    <div className={styles.brandToneDocumentSection}>
-                                      <div className={styles.brandToneSectionHeader}>
-                                        <div className={styles.brandToneSectionIcon}>💬</div>
-                                        <h4>Communication Style</h4>
+                                      {/* Core Archetype with Personality & Purpose */}
+                                      {(toneOfVoiceResult.coreArchetype || toneOfVoiceResult.corePersonality || toneOfVoiceResult.corePurpose) && (
+                                        <div className={styles.brandToneDocumentSection}>
+                                          <div className={styles.brandToneSectionHeader}>
+                                            <div className={styles.brandToneSectionIcon}>🔮</div>
+                                            <h4>Core Archetype{toneOfVoiceResult.coreArchetype ? `: ${toneOfVoiceResult.coreArchetype}` : ''}</h4>
+                                          </div>
+                                          <div className={styles.brandToneSectionContent}>
+                                            {toneOfVoiceResult.corePersonality && (
+                                              <p><strong>Personality:</strong> {toneOfVoiceResult.corePersonality}</p>
+                                            )}
+                                            {toneOfVoiceResult.corePurpose && (
+                                              <p><strong>Purpose:</strong> {toneOfVoiceResult.corePurpose}</p>
+                                            )}
+                                          </div>
                                         </div>
-                                      <div className={styles.brandToneSectionContent}>
+                                      )}
+
+                                      {/* Supporting Archetype with Personality & Purpose */}
+                                      {(toneOfVoiceResult.supportingArchetype || toneOfVoiceResult.supportingPersonality || toneOfVoiceResult.supportingPurpose) && (
+                                        <div className={styles.brandToneDocumentSection}>
+                                          <div className={styles.brandToneSectionHeader}>
+                                            <div className={styles.brandToneSectionIcon}>✨</div>
+                                            <h4>Supporting Archetype{toneOfVoiceResult.supportingArchetype ? `: ${toneOfVoiceResult.supportingArchetype}` : ''}</h4>
+                                          </div>
+                                          <div className={styles.brandToneSectionContent}>
+                                            {toneOfVoiceResult.supportingPersonality && (
+                                              <p><strong>Personality:</strong> {toneOfVoiceResult.supportingPersonality}</p>
+                                            )}
+                                            {toneOfVoiceResult.supportingPurpose && (
+                                              <p><strong>Purpose:</strong> {toneOfVoiceResult.supportingPurpose}</p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Communication Style */}
+                                      <div className={styles.brandToneDocumentSection}>
+                                        <div className={styles.brandToneSectionHeader}>
+                                          <div className={styles.brandToneSectionIcon}>💬</div>
+                                          <h4>Communication Style</h4>
+                                        </div>
+                                        <div className={styles.brandToneSectionContent}>
                                           {typeof toneOfVoiceResult.communicationStyle === 'string' ? toneOfVoiceResult.communicationStyle : JSON.stringify(toneOfVoiceResult.communicationStyle)}
                                         </div>
                                       </div>
+
+                                      {/* Voice Characteristics (table layout) */}
+                                      {Array.isArray(toneOfVoiceResult.voiceCharacteristics) && toneOfVoiceResult.voiceCharacteristics.length > 0 && (
+                                        <div className={styles.brandToneDocumentSection}>
+                                          <div className={styles.brandToneSectionHeader}>
+                                            <div className={styles.brandToneSectionIcon}>🎙️</div>
+                                            <h4>Voice Characteristics</h4>
+                                          </div>
+                                          <div className={styles.brandToneSectionContent}>
+                                            <div className={styles.vcTable}>
+                                              <div className={`${styles.vcRow} ${styles.vcHeaderRow}`}>
+                                                <div className={styles.vcCellTrait}>Trait</div>
+                                                <div className={styles.vcCellDesc}>Description</div>
+                                              </div>
+                                              {toneOfVoiceResult.voiceCharacteristics.map((vc, i) => (
+                                                <div className={styles.vcRow} key={`vc-${i}`}>
+                                                  <div className={styles.vcCellTrait}><strong>{vc?.trait || ''}</strong></div>
+                                                  <div className={styles.vcCellDesc}>{vc?.description || ''}</div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Do Use */}
+                                      {Array.isArray(toneOfVoiceResult.doUse) && toneOfVoiceResult.doUse.length > 0 && (
+                                        <div className={styles.brandToneDocumentSection}>
+                                          <div className={styles.brandToneSectionHeader}>
+                                            <div className={styles.brandToneSectionIcon}>✅</div>
+                                            <h4>Do Use</h4>
+                                          </div>
+                                          <div className={styles.brandToneSectionContent}>
+                                            <ul>
+                                              {toneOfVoiceResult.doUse.map((item, i) => (
+                                                <li key={`do-${i}`}>{item}</li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Avoid */}
+                                      {Array.isArray(toneOfVoiceResult.avoid) && toneOfVoiceResult.avoid.length > 0 && (
+                                        <div className={styles.brandToneDocumentSection}>
+                                          <div className={styles.brandToneSectionHeader}>
+                                            <div className={styles.brandToneSectionIcon}>⛔</div>
+                                            <h4>Avoid</h4>
+                                          </div>
+                                          <div className={styles.brandToneSectionContent}>
+                                            <ul>
+                                              {toneOfVoiceResult.avoid.map((item, i) => (
+                                                <li key={`avoid-${i}`}>{item}</li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Example Phrases */}
+                                      {Array.isArray(toneOfVoiceResult.examplePhrases) && toneOfVoiceResult.examplePhrases.length > 0 && (
+                                        <div className={styles.brandToneDocumentSection}>
+                                          <div className={styles.brandToneSectionHeader}>
+                                            <div className={styles.brandToneSectionIcon}>✍️</div>
+                                            <h4>Example Phrases</h4>
+                                          </div>
+                                          <div className={styles.brandToneSectionContent}>
+                                            <ul>
+                                              {toneOfVoiceResult.examplePhrases.map((p, i) => (
+                                                <li key={`phrase-${i}`}>{p}</li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Writing Principles */}
+                                      {Array.isArray(toneOfVoiceResult.writingPrinciples) && toneOfVoiceResult.writingPrinciples.length > 0 && (
+                                        <div className={styles.brandToneDocumentSection}>
+                                          <div className={styles.brandToneSectionHeader}>
+                                            <div className={styles.brandToneSectionIcon}>📐</div>
+                                            <h4>Writing Principles</h4>
+                                          </div>
+                                          <div className={styles.brandToneSectionContent}>
+                                            <ul>
+                                              {toneOfVoiceResult.writingPrinciples.map((w, i) => (
+                                                <li key={`principle-${i}`}>{w}</li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                        </div>
+                                      )}
                                     </>
                                   )}
                               </div>
@@ -3774,10 +3847,10 @@ export default function Dashboard() {
 
           {parentBrandStep === 2 && (
             <div className={styles.messagingStep}>
-              <div className={styles.stepIntro}>
+              {/* <div className={styles.stepIntro}>
                 <h3>Messaging Strategy</h3>
                 <p>Define your target audience and craft your core message</p>
-              </div>
+              </div> */}
               
               {!showMessagingChildForm ? (
                 <div className={styles.discoveryStartCard}>
@@ -3826,7 +3899,7 @@ export default function Dashboard() {
               ) : (
                 <div className={styles.modernFormContainer}>
                   {/* Messaging Sub-steps */}
-                  <div className={styles.subStepIndicator}>
+                  {/* <div className={styles.subStepIndicator}>
                     {[
                       { step: 1, title: "Target Audience", icon: "👥" },
                       { step: 2, title: "Core Message", icon: "💬" }
@@ -3841,7 +3914,7 @@ export default function Dashboard() {
                         <span className={styles.subStepTitle}>{item.title}</span>
                       </div>
                     ))}
-                  </div>
+                  </div> */}
                   
                   {/* Form Fields */}
                   <div className={styles.modernFormFields}>
@@ -6020,6 +6093,57 @@ export default function Dashboard() {
     if (brandDiscoveryStep === 1) {
       // Start tone of voice chat when moving to step 2
       if (brandFormData.brandName && brandFormData.industry && brandFormData.shortDescription) {
+        // Create brand in DB, then reflect in sidebar
+        try {
+          const token = localStorage.getItem("token");
+          if (token) {
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
+            const resp = await fetch(`${baseUrl}/api/brands/create`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                brandName: brandFormData.brandName,
+                industry: brandFormData.industry,
+                shortDescription: brandFormData.shortDescription,
+                websiteLink: brandFormData.websiteLink
+              })
+            });
+            const result = await resp.json().catch(() => ({}));
+            if (resp.ok && result && result.data) {
+              try {
+                localStorage.setItem('currentBrandId', String(result.data.id));
+                localStorage.setItem('currentBrandName', result.data.brand_name || brandFormData.brandName);
+              } catch {}
+              setSidebarBrandName(result.data.brand_name || brandFormData.brandName);
+              // Optimistically add to sidebar brand list immediately
+              setBrands(prev => {
+                const normalized = {
+                  id: result.data.id,
+                  brandName: result.data.brand_name || brandFormData.brandName,
+                  industry: result.data.industry,
+                  shortDescription: result.data.short_description || brandFormData.shortDescription,
+                  websiteLink: result.data.website_link || brandFormData.websiteLink,
+                  projects: []
+                };
+                const exists = prev && prev.some(b => b.id === normalized.id);
+                if (exists) return prev;
+                return [normalized, ...(prev || [])];
+              });
+            } else {
+              setSidebarBrandName(brandFormData.brandName);
+              // Refresh full list to include server-side created or existing brand
+              try { await fetchBrandsWithProjects(); } catch {}
+            }
+          } else {
+            setSidebarBrandName(brandFormData.brandName);
+          }
+        } catch (_) {
+          setSidebarBrandName(brandFormData.brandName);
+          try { await fetchBrandsWithProjects(); } catch {}
+        }
         setBrandDiscoveryStep(2);
         await initializeToneOfVoiceChat();
       }
@@ -6113,12 +6237,7 @@ export default function Dashboard() {
   // Tone of Voice Chat Functions
   const initializeToneOfVoiceChat = async () => {
     // Clear all chat-related state
-    setToneChatMessages([
-      {
-        type: 'bot',
-        content: `Hi! I'm here to help you identify ${brandFormData.brandName}'s tone of voice. I'll ask you a series of questions to understand your brand's personality and then suggest the most fitting brand archetypes from the 12 marketing archetypes. Let's start with the first question:`
-      }
-    ]);
+    
     setToneChatStep(0);
     setToneChatAnswers([]);
     setToneChatQuestions([]);
@@ -6754,6 +6873,49 @@ export default function Dashboard() {
                 </svg>
                 <span>Home</span>
               </li>
+              {brands && brands.length > 0
+                ? brands.map((b) => (
+                    <li
+                      key={b.id}
+                      className={styles.childNavItem}
+                      onClick={() => {
+                        try {
+                          localStorage.setItem('currentBrandId', String(b.id));
+                          localStorage.setItem('currentBrandName', b.brandName || b.brand_name || '');
+                        } catch {}
+                        setSidebarBrandName(b.brandName || b.brand_name || '');
+                      }}
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                      </svg>
+                      <span>{b.brandName || b.brand_name}</span>
+                    </li>
+                  ))
+                : (
+                  sidebarBrandName && (
+                    <li className={styles.childNavItem}>
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                      </svg>
+                      <span>{sidebarBrandName}</span>
+                    </li>
+                  )
+                )}
              
               <li onClick={() => router.push("/settings")}> 
                 <svg

@@ -148,7 +148,9 @@ class BrandCreationAgents {
             }
 
             // Generate initial question using the traditional controller's better prompt
-            const initialQuestionPrompt = `Based on the following brand information, generate a thoughtful question to help identify the brand's personality and tone of voice. The question should be designed to uncover the brand's core personality traits.
+            const initialQuestionPrompt = `Help me identify ${brandData.brandName}’s tone of voice by asking me a series of questions that will help identify the brand’s personality from the 12 brand archetypes. Inform me what you’re doing. Give me a few questions (one at a time) to answer so you get a clearer picture of what ${brandData.brandName}’s personality is.
+
+Based on the following brand information, generate the very first thoughtful question to start this process. The question should be designed to uncover the brand's core personality traits.
 
 Brand Information:
 - Name: ${brandData.brandName}
@@ -291,7 +293,9 @@ Make sure the suggestions are relevant to the brand's industry and help guide th
             }
             
             // Generate contextual question using the traditional controller's better prompt
-            const contextualQuestionPrompt = `Based on the following brand information and previous answers, generate the next question to help identify the brand's personality and tone of voice.
+            const contextualQuestionPrompt = `Help me identify ${brandData.brandName}’s tone of voice by asking me a series of questions that will help identify the brand’s personality from the 12 brand archetypes. Inform me what you’re doing. Ask me one question at a time.
+
+Based on the following brand information and previous answers, generate the next question to help identify the brand's personality and tone of voice.
                
 Brand Information:
 - Name: ${brandData.brandName}
@@ -304,7 +308,7 @@ ${discoveryAnswers.map((qa, index) => `Q${index + 1}: ${qa.question} | A${index 
 PREVIOUS QUESTIONS ASKED (DO NOT repeat any of these):
 ${discoveryAnswers.map((qa, index) => `${index + 1}. ${qa.question}`).join('\n')}
 
-Current Step: ${currentDiscoveryStep + 1} of 4
+Current Step: ${currentDiscoveryStep + 1} of 4 (total)
 
 Generate a thoughtful, contextual question that builds upon the previous answers and helps uncover different aspects of the brand's personality. 
 
@@ -319,6 +323,7 @@ CRITICAL REQUIREMENTS:
    - Completely unique and different from the already asked questions
 
 Also provide 3-4 suggested answer options that users can choose from, based on the context of previous answers and the brand's industry.
+Important: The questions should be aimed at narrowing down which of the 12 archetypes (Innocent, Everyman, Hero, Outlaw, Explorer, Creator, Ruler, Magician, Lover, Caregiver, Jester, Sage) best fits ${brandData.brandName}. Do NOT name the archetypes in the question; just explore traits, values, tone and behaviors that help infer them.
 
 Format your response as JSON with this structure:
 {
@@ -450,8 +455,14 @@ Make sure the suggestions are contextual to the previous answers and help guide 
         });
         
         const toneAnalysisPrompt = `BRAND - Create archetype - STEPS
-Help the user identify ${brandData.brandName}’s tone of voice by asking the user a series of questions that will help identify the brand’s personality from the 12 brand archetypes. Inform the user what you’re doing. Give them a few prompts (one at a time) that they can answer for you to get a clearer picture of what ${brandData.brandName}’s personality is. Once you have all the information you need about the Brand’s personality, help identify one or more (up to 3) brand archetypes that align with that personality. Base your suggestions on the user’s responses. Suggest the most fitting brand tone of voice from the 12 brand archetypes of marketing. Explain why this tone matches.
-Help the user lock in their brand archetypes. Once they’ve done so, create a brand tone of voice from that or those archetypes for them.
+Help the user identify ${brandData.brandName}’s tone of voice by asking the user a series of questions that will help identify the brand’s personality.
+
+CRITICAL: When recommending archetypes, you MUST reference and choose ONLY from these 12 canonical archetypes (use these exact names):
+Innocent, Everyman, Hero, Outlaw, Explorer, Creator, Ruler, Magician, Lover, Caregiver, Jester, Sage
+
+Inform the user what you’re doing. Give them a few prompts (one at a time) that they can answer for you to get a clearer picture of what ${brandData.brandName}’s personality is. Once you have all the information you need about the Brand’s personality, help identify one or more (up to 3) brand archetypes that align with that personality. Base your suggestions on the user’s responses. Suggest the most fitting brand tone of voice from the 12 brand archetypes of marketing. Explain why this tone matches.
+
+Help the user lock in ${brandData.brandName}’s brand archetypes.
 Notes: Once chosen, tone guides voice and phrasing across all content.
 
 Additional context to use (already collected from the chat):
@@ -467,19 +478,32 @@ ${discoveryAnswers.map((qa, index) => {
     }
 }).join('\n')}
 
-Constraints for names:
-- Each archetype name must be exactly TWO WORDS, user‑friendly, and plain English
-- Do NOT start with "The"
-- Do NOT use these canonical archetype words: hero, caregiver, explorer, sage, innocent, outlaw, magician, ruler, lover, jester, creator, everyman
 
 
-Return JSON ONLY in this structure (decide purely from the context above):
+
+Return JSON ONLY with this minimal structure (AI decides the content details):
 {
-  "archetypes": ["Name 1", "Name 2", "Name 3"],
-  "explanation": "1–2 sentences explaining why these archetypes match the answers",
+  "contentMarkdown": "A well-structured markdown document describing the tone of voice, archetype selections and reasoning. Include any sections you find useful (e.g., Core Archetype, Supporting Archetype, Voice Characteristics table 'trait | description', Do Use, Avoid, Example Phrases, Writing Principles)."
+}
+
+Optionally, you MAY also include explicit fields (for UI convenience) if you prefer:
+{
+  "coreArchetype": "The Sage",
+  "supportingArchetype": "The Creator",
+  "explanation": "1–2 sentences explaining why these fit",
   "toneOfVoice": {
-    "communicationStyle": "string: how the brand sounds"
-  }
+    "communicationStyle": "string",
+    "voiceCharacteristics": [{ "trait": "...", "description": "..." }],
+    "doUse": ["..."],
+    "avoid": ["..."],
+    "examplePhrases": ["..."],
+    "writingPrinciples": ["..."],
+    "corePersonality": "comma-separated adjectives",
+    "corePurpose": "one concise sentence",
+    "supportingPersonality": "comma-separated adjectives",
+    "supportingPurpose": "one concise sentence"
+  },
+  "contentMarkdown": "(optional)"
 }`;
 
         console.log('Generating tone of voice for brand:', brandData.brandName);
@@ -516,6 +540,13 @@ Return JSON ONLY in this structure (decide purely from the context above):
             
             toneData = JSON.parse(cleanContent);
             console.log('Parsed tone data:', toneData);
+            // Backward-compat: if new shape present, derive old fields
+            if (!Array.isArray(toneData.archetypes) && (toneData.coreArchetype || toneData.supportingArchetype)) {
+                const list = [];
+                if (toneData.coreArchetype) list.push(toneData.coreArchetype);
+                if (toneData.supportingArchetype) list.push(toneData.supportingArchetype);
+                toneData.archetypes = list;
+            }
             console.log('Archetypes in parsed data:', toneData.archetypes);
             console.log('ToneOfVoice in parsed data:', toneData.toneOfVoice);
             
@@ -535,69 +566,90 @@ Return JSON ONLY in this structure (decide purely from the context above):
                 toneData.explanation = `Selected based on your answers; ${joined} best reflect the personality cues you provided.`;
             }
 
-            // Normalize archetype labels to exactly two words for UI clarity
+            // Normalize archetype labels to the 12 canonical names requested by product
             if (Array.isArray(toneData.archetypes)) {
-                const toTitleCase = (s) => s.replace(/\s+/g, ' ').trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-                const canonicalToDescriptive = {
-                    'hero': 'Bold Achiever',
-                    'the hero': 'Bold Achiever',
-                    'caregiver': 'Caring Partner',
-                    'the caregiver': 'Caring Partner',
-                    'explorer': 'Curious Pathfinder',
-                    'the explorer': 'Curious Pathfinder',
-                    'sage': 'Trusted Guide',
-                    'the sage': 'Trusted Guide',
-                    'innocent': 'Honest Optimist',
-                    'the innocent': 'Honest Optimist',
-                    'outlaw': 'Bold Rebel',
-                    'the outlaw': 'Bold Rebel',
-                    'magician': 'Visionary Transformer',
-                    'the magician': 'Visionary Transformer',
-                    'ruler': 'Confident Leader',
-                    'the ruler': 'Confident Leader',
-                    'lover': 'Passionate Connector',
-                    'the lover': 'Passionate Connector',
-                    'jester': 'Playful Entertainer',
-                    'the jester': 'Playful Entertainer',
-                    'creator': 'Imaginative Maker',
-                    'the creator': 'Imaginative Maker',
-                    'everyman': 'Everyday Friend',
-                    'the everyman': 'Everyday Friend'
+                const canonicalSet = new Set([
+                    'innocent','everyman','hero','outlaw','explorer','creator','ruler','magician','lover','caregiver','jester','sage'
+                ]);
+                const descriptiveToCanonical = {
+                    'bold achiever': 'Hero',
+                    'caring partner': 'Caregiver',
+                    'curious pathfinder': 'Explorer',
+                    'trusted guide': 'Sage',
+                    'honest optimist': 'Innocent',
+                    'bold rebel': 'Outlaw',
+                    'visionary transformer': 'Magician',
+                    'confident leader': 'Ruler',
+                    'passionate connector': 'Lover',
+                    'playful entertainer': 'Jester',
+                    'imaginative maker': 'Creator',
+                    'everyday friend': 'Everyman'
                 };
-                const normalize = (label) => {
-                    if (!label) return label;
-                    let s = String(label).replace(/[\/_-]+/g, ' ').replace(/\s+/g, ' ').trim();
-                    // Drop leading 'The'
-                    s = s.replace(/^the\s+/i, '').trim();
-                    // Map canonical names to descriptive two-word labels
-                    const lower = s.toLowerCase();
-                    if (canonicalToDescriptive[lower]) return canonicalToDescriptive[lower];
-                    const parts = s.split(' ');
-                    // If longer than 2 words, keep the first two as a clean title
-                    if (parts.length > 2) {
-                        return toTitleCase(`${parts[0]} ${parts[1]}`);
+                const toCanonical = (label) => {
+                    if (!label) return null;
+                    let s = String(label).trim().toLowerCase();
+                    s = s.replace(/^the\s+/, '').trim();
+                    if (descriptiveToCanonical[s]) return descriptiveToCanonical[s];
+                    const base = s.split(/[\s/_-]+/).join(' ');
+                    if (canonicalSet.has(base)) {
+                        // Capitalize canonical properly
+                        return base.charAt(0).toUpperCase() + base.slice(1);
                     }
-                    // If exactly two words, just title case
-                    if (parts.length === 2) {
-                        return toTitleCase(`${parts[0]} ${parts[1]}`);
+                    // If model returns similar wording, try singular forms
+                    const guess = base.replace(/s$/, '');
+                    if (canonicalSet.has(guess)) {
+                        return guess.charAt(0).toUpperCase() + guess.slice(1);
                     }
-                    // If only one word and not canonical, attempt to create a descriptive two-word phrase by adding a neutral second word
-                    if (parts.length === 1) {
-                        return toTitleCase(`${parts[0]} Voice`);
-                    }
-                    return toTitleCase(s);
+                    return null;
                 };
-                toneData.archetypes = toneData.archetypes
-                    .filter(a => !!a)
-                    .map(normalize)
+                const normalized = toneData.archetypes
+                    .map(toCanonical)
+                    .filter(Boolean)
                     .slice(0, 3);
+                if (normalized.length > 0) {
+                    toneData.archetypes = normalized;
+                }
             }
 
-            // Sanitize toneOfVoice to only include communicationStyle
-            const communication = (toneData && toneData.toneOfVoice && typeof toneData.toneOfVoice.communicationStyle === 'string' && toneData.toneOfVoice.communicationStyle.trim())
-                ? toneData.toneOfVoice.communicationStyle.trim()
-                : 'Clear and direct';
-            toneData.toneOfVoice = { communicationStyle: communication };
+            // Support optional contentMarkdown and ensure toneOfVoice structure while preserving extended fields if provided
+            const tov = typeof toneData.toneOfVoice === 'object' && toneData.toneOfVoice ? toneData.toneOfVoice : {};
+            const communication = (typeof tov.communicationStyle === 'string' && tov.communicationStyle.trim()) ? tov.communicationStyle.trim() : 'Clear and direct';
+            const normalizeArray = (v) => Array.isArray(v) ? v : (v ? [v] : []);
+            const normalizeVC = (vc) => {
+                if (!Array.isArray(vc)) return [];
+                return vc.map(item => {
+                    if (typeof item === 'string') return { trait: item, description: '' };
+                    if (item && typeof item === 'object') {
+                        return { trait: String(item.trait || ''), description: String(item.description || '') };
+                    }
+                    return { trait: '', description: '' };
+                });
+            };
+            // If core/supporting provided at top-level, mirror into toneOfVoice for frontend convenience
+            if (Array.isArray(toneData.archetypes) && toneData.archetypes.length > 0) {
+                tov.coreArchetype = tov.coreArchetype || toneData.archetypes[0];
+                if (toneData.archetypes.length > 1) {
+                    tov.supportingArchetype = tov.supportingArchetype || toneData.archetypes[1];
+                }
+            }
+            toneData.toneOfVoice = {
+                communicationStyle: communication,
+                voiceCharacteristics: normalizeVC(tov.voiceCharacteristics),
+                doUse: normalizeArray(tov.doUse),
+                avoid: normalizeArray(tov.avoid),
+                examplePhrases: normalizeArray(tov.examplePhrases),
+                writingPrinciples: normalizeArray(tov.writingPrinciples),
+                coreArchetype: tov.coreArchetype || null,
+                supportingArchetype: tov.supportingArchetype || null,
+                corePersonality: typeof tov.corePersonality === 'string' ? tov.corePersonality : (Array.isArray(tov.corePersonality) ? tov.corePersonality.join(', ') : null),
+                corePurpose: typeof tov.corePurpose === 'string' ? tov.corePurpose : null,
+                supportingPersonality: typeof tov.supportingPersonality === 'string' ? tov.supportingPersonality : (Array.isArray(tov.supportingPersonality) ? tov.supportingPersonality.join(', ') : null),
+                supportingPurpose: typeof tov.supportingPurpose === 'string' ? tov.supportingPurpose : null
+            };
+            // Pass through optional contentMarkdown for rich rendering on the frontend
+            if (typeof toneData.contentMarkdown === 'string') {
+                toneData.toneOfVoice.contentMarkdown = toneData.contentMarkdown;
+            }
         } catch (parseError) {
             console.error('Error parsing tone response:', parseError);
             console.error('Raw tone response:', response.content);
