@@ -3196,7 +3196,7 @@ export default function Dashboard() {
                       </svg>
                     </div>
                     <h4>Ready to build your brand?</h4>
-                    <p>Our AI-powered questionnaire will help you define your brand's core identity, values, and messaging strategy.</p>
+                    <p>Our AI-powered questionnaire will help you define your brand&apos;s core identity, values, and messaging strategy.</p>
                     <div className={styles.startCardFeatures}>
                       <div className={styles.featureItem}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -3256,7 +3256,7 @@ export default function Dashboard() {
                         <div className={styles.formGroup}>
                           <div className={styles.modernFormField}>
                             <label className={styles.modernLabel}>
-                              <span className={styles.labelText}>What's the name of this brand?</span>
+                              <span className={styles.labelText}>What&apos;s the name of this brand?</span>
                               <span className={styles.labelRequired}>*</span>
                             </label>
                             <div className={styles.inputWrapper}>
@@ -3356,7 +3356,7 @@ export default function Dashboard() {
                                   </div>
                                   <div className={styles.brandToneSuccessText}>
                                     <h4>Tone of Voice Generated!</h4>
-                                    <p>Your brand's personality and communication style has been defined</p>
+                                    <p>Your brand&apos;s personality and communication style has been defined</p>
                                   </div>
                                 </div>
                                 </div>
@@ -3611,7 +3611,7 @@ export default function Dashboard() {
                         <div className={styles.complianceMicroFlow}>
                           <div className={styles.complianceHeader}>
                             <h3>📋 Brand Compliance</h3>
-                            <p>Set rules for what should or shouldn't be said in your messaging and copy.</p>
+                            <p>Set rules for what should or shouldn&apos;t be said in your messaging and copy.</p>
                           </div>
                           
                           {/* AI Preset Options */}
@@ -3749,7 +3749,7 @@ export default function Dashboard() {
 
                           {/* Preview Do's/Don'ts */}
                           <div className={styles.complianceSection}>
-                            <h4>📋 Content Do's & Don'ts Preview</h4>
+                            <h4>📋 Content Do&apos;s & Don&apos;ts Preview</h4>
                             <div className={styles.dosDontsPreview}>
                               <div className={styles.dosSection}>
                                 <h5>✅ DO</h5>
@@ -3763,7 +3763,7 @@ export default function Dashboard() {
                                 </ul>
                               </div>
                               <div className={styles.dontsSection}>
-                                <h5>❌ DON'T</h5>
+                                <h5>❌ DON&apos;T</h5>
                                 <ul>
                                   {selectedPresets.filter(p => p.type === 'forbidden').map((preset, index) => (
                                     <li key={index}>{preset.rule}</li>
@@ -3861,7 +3861,7 @@ export default function Dashboard() {
                       </svg>
                     </div>
                     <h4>Ready to define your messaging?</h4>
-                    <p>Let's create a comprehensive messaging strategy with target audience analysis and core message development.</p>
+                    <p>Let&apos;s create a comprehensive messaging strategy with target audience analysis and core message development.</p>
                     <div className={styles.startCardFeatures}>
                       <div className={styles.featureItem}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
